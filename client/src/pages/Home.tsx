@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Check, ChevronRight, FileText, Gavel, RotateCcw, Scale, Stamp, X } from "lucide-react";
+import { Camera, Check, ChevronRight, FileText, Gavel, MapPin, MessageSquare, RotateCcw, Scale, Stamp, Users, X } from "lucide-react";
 
 const OFFICE_BG = "/manus-storage/prosecutor-office-reference_7e58c04a.png";
 
 type Decision = "prosecute" | "dismiss";
+type LocationId = "reception" | "inspection";
 type Material = { label: string; text: string };
 type CaseFile = {
   id: string;
@@ -27,11 +28,20 @@ const CASES: CaseFile[] = [
   { id: "05", number: "Т-02/25", category: "Трудовые права и оплата", person: "Трое работников", place: "Агрокомплекс в районе N", summary: "Сторожам более трёх лет оплачивали 12 часов из 24-часовой смены.", evidence: "Работники обращались с жалобами. Вопрос касается взыскания задолженности и административного нарушения, а не возбуждения уголовного дела.", correct: "dismiss", explanation: "Нарушение трудовых прав подтверждено, но выбранное решение не соответствует уголовной квалификации: материал нужно направить по гражданско-административному маршруту.", stage: "Требования работников удовлетворены", materials: [{ label: "График смен", text: "Фактический график — сутки через двое. С графиками сменности работников официально не знакомили." }, { label: "Расчётные листки", text: "В документах отражена оплата 12 часов при фактической 24-часовой смене." }, { label: "Исковое заявление", text: "Требования включают задолженность, компенсацию задержки и моральный вред. Общая выплата — 635 000 рублей." }] },
 ];
 
+const INSPECTION_POINTS: Record<string, Material[]> = {
+  "01": [{ label: "Кровля", text: "На участке виден новый слой покрытия, но маркировка рулонов не совпадает с указанной в смете." }, { label: "Склад", text: "В подсобном помещении обнаружены остатки более дешёвого материала. Упаковки частично сохранились." }, { label: "Прораб", text: "Ответственный за работы не может объяснить, почему фактический материал отличается от ведомости закупок." }],
+  "02": [{ label: "Делянка", text: "На границе квартала обнаружены свежие пни и следы тяжёлой техники." }, { label: "Следы", text: "Колеи ведут к временной дороге. На нескольких пнях сохранены свежие опилки." }, { label: "Егеря", text: "Сотрудник лесничества подтверждает, что разрешение на рубку для этого участка не выдавалось." }],
+  "03": [{ label: "Отдел выплат", text: "В заявлении указаны реквизиты сертификата и дата события, которые требуют отдельной проверки." }, { label: "Архив", text: "В архиве отсутствует запись с указанными реквизитами. Сотрудник готов предоставить заверенную справку." }, { label: "Получатель", text: "Получатель утверждает, что документы подавались лично, но не называет сотрудника, который их принял." }],
+  "04": [{ label: "Место остановки", text: "Патрульный автомобиль и место остановки соответствуют схеме в рапорте." }, { label: "Салон", text: "На видеозаписи видно движение денежных средств до момента вмешательства второго инспектора." }, { label: "Инспектор", text: "Инспектор описывает сумму, цель передачи и последовательность действий без существенных расхождений." }],
+  "05": [{ label: "Пост охраны", text: "На объекте есть журнал дежурств: смена длится 24 часа и повторяется по графику «сутки через двое»." }, { label: "Табель", text: "В табеле отмечены полные смены, а в расчётных листках оплачена только половина часов." }, { label: "Работники", text: "Трое работников независимо описывают одинаковый порядок смен и отсутствие расчётных листков." }],
+};
+
 function Stat({ label, value, tone = "default" }: { label: string; value: string | number; tone?: "default" | "good" | "bad" }) {
   return <div className="stat"><span>{label}</span><strong className={`tone-${tone}`}>{value}</strong></div>;
 }
 
 export default function Home() {
+  const [location, setLocation] = useState<LocationId | null>(null);
   const [caseIndex, setCaseIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [trust, setTrust] = useState(3);
@@ -40,9 +50,10 @@ export default function Home() {
   const [openMaterial, setOpenMaterial] = useState<number | null>(null);
   const [reviewedMaterials, setReviewedMaterials] = useState<number[]>([]);
   const current = CASES[caseIndex];
+  const activeMaterials = location === "inspection" ? INSPECTION_POINTS[current.id] : current.materials;
   const progress = Math.min(caseIndex + (feedback ? 1 : 0), CASES.length);
   const rating = useMemo(() => score >= 4 ? "Смена принята" : score >= 2 ? "Нужна внимательность" : "Разбор полётов", [score]);
-  const canDecide = reviewedMaterials.length === current.materials.length;
+  const canDecide = reviewedMaterials.length === activeMaterials.length;
 
   const decide = (decision: Decision) => {
     if (feedback || finished || !canDecide) return;
@@ -63,7 +74,13 @@ export default function Home() {
     setReviewedMaterials((items) => items.includes(index) ? items : [...items, index]);
   };
 
-  const restart = () => { setCaseIndex(0); setScore(0); setTrust(3); setFeedback(null); setFinished(false); setOpenMaterial(null); setReviewedMaterials([]); };
+  const restart = () => { setLocation(null); setCaseIndex(0); setScore(0); setTrust(3); setFeedback(null); setFinished(false); setOpenMaterial(null); setReviewedMaterials([]); };
+
+  const chooseLocation = (nextLocation: LocationId) => {
+    setLocation(nextLocation);
+    setOpenMaterial(null);
+    setReviewedMaterials([]);
+  };
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -75,12 +92,28 @@ export default function Home() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [feedback, finished, current]);
 
+  if (!location) return (
+    <main className="location-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.94), rgba(7,18,20,.42)), url(${OFFICE_BG})` }}>
+      <div className="grain" />
+      <div className="location-inner">
+        <div className="location-kicker"><span className="live-dot" /> НАЧАЛО РАБОЧЕГО ДНЯ · 09:00</div>
+        <h1>Куда направимся<br /><em>сегодня?</em></h1>
+        <p className="location-intro">Выберите маршрут работы. От этого зависят материалы, свидетели и решения, которые попадут на ваш стол.</p>
+        <div className="location-cards">
+          <button className="location-card" onClick={() => chooseLocation("reception")}><div className="location-icon"><MessageSquare size={22} /></div><div><span>МАРШРУТ 01</span><h2>Приёмная граждан</h2><p>Жалобы, заявления и документы. Сначала изучите папку, затем решите, есть ли основания для дела.</p><strong><Users size={14} /> 5 материалов · спокойный темп</strong></div><ChevronRight /></button>
+          <button className="location-card" onClick={() => chooseLocation("inspection")}><div className="location-icon"><MapPin size={22} /></div><div><span>МАРШРУТ 02</span><h2>Городская проверка</h2><p>Выезд на объект. Осмотрите точки на месте, поговорите с людьми и соберите собственный акт.</p><strong><Camera size={14} /> 5 объектов · полевая работа</strong></div><ChevronRight /></button>
+        </div>
+        <div className="location-footer"><span>ПРИЁМНАЯ № 07</span><span>СМЕНА 17 · 17 СЕНТЯБРЯ 2026</span></div>
+      </div>
+    </main>
+  );
+
   return (
     <main className="game-shell" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.94) 0%, rgba(7,18,20,.82) 33%, rgba(7,18,20,.25) 72%, rgba(7,18,20,.66) 100%), url(${OFFICE_BG})` }}>
       <div className="grain" />
       <header className="topbar">
         <div className="brand"><div className="brand-mark"><Scale size={18} /></div><div><p>ПРОКУРАТУРА</p><h1>Приёмная № 07</h1></div></div>
-        <div className="shift"><span className="live-dot" /> СМЕНА 09:00 — 18:00 <b>•</b> 17 сентября 2026</div>
+          <div className="shift"><span className="live-dot" /> {location === "inspection" ? "ГОРОДСКАЯ ПРОВЕРКА" : "ПРИЁМНАЯ ГРАЖДАН"} <b>•</b> 17 сентября 2026</div>
         <div className="seal">ДЕЛО<br /><span>В РАБОТЕ</span></div>
       </header>
 
@@ -111,7 +144,7 @@ export default function Home() {
                 <div className="paper-rule" />
                 <div className="identity-grid"><div><span>ФИО / ОРГАНИЗАЦИЯ</span><b>{current.person}</b></div><div><span>МЕСТО СОБЫТИЯ</span><b>{current.place}</b></div></div>
                 <div className="summary"><span>КРАТКОЕ ИЗЛОЖЕНИЕ</span><p>{current.summary}</p></div>
-                <div className="materials-box"><div className="evidence-label"><span>МАТЕРИАЛЫ ДЕЛА</span><small>ИЗУЧЕНО: {reviewedMaterials.length}/{current.materials.length}</small></div><div className="material-tabs">{current.materials.map((material, index) => <button key={material.label} className={reviewedMaterials.includes(index) ? "reviewed" : ""} onClick={() => inspectMaterial(index)}><FileText size={13} /> {material.label}{reviewedMaterials.includes(index) && <Check size={12} />}</button>)}</div>{openMaterial !== null && <div className="material-content"><span>{current.materials[openMaterial].label}</span><p>{current.materials[openMaterial].text}</p></div>}</div>
+                <div className="materials-box"><div className="evidence-label"><span>{location === "inspection" ? "ТОЧКИ ОСМОТРА" : "МАТЕРИАЛЫ ДЕЛА"}</span><small>ИЗУЧЕНО: {reviewedMaterials.length}/{activeMaterials.length}</small></div><div className="material-tabs">{activeMaterials.map((material, index) => <button key={material.label} className={reviewedMaterials.includes(index) ? "reviewed" : ""} onClick={() => inspectMaterial(index)}><FileText size={13} /> {material.label}{reviewedMaterials.includes(index) && <Check size={12} />}</button>)}</div>{openMaterial !== null && <div className="material-content"><span>{activeMaterials[openMaterial].label}</span><p>{activeMaterials[openMaterial].text}</p></div>}</div>
                 <div className="evidence"><div className="evidence-label"><span>СВОДКА ПО МАТЕРИАЛАМ</span><small>ПРОВЕРЕНО</small></div><p>{current.evidence}</p></div>
                 <div className="stage-note"><span>СТАДИЯ</span><b>{current.stage}</b></div>
                 <div className={`paper-footer ${feedback ? (feedback.good ? "success" : "failure") : ""}`}>{feedback ? <><span>{feedback.good ? <Check size={15} /> : <X size={15} />} {feedback.good ? "РЕШЕНИЕ ОБОСНОВАНО" : "РЕШЕНИЕ ОШИБОЧНО"}</span><em>{feedback.text}</em></> : <span><span className="underline">Внимание:</span> решение принимается на основании только этих материалов.</span>}</div>
