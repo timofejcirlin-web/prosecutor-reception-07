@@ -36,6 +36,13 @@ const INSPECTION_POINTS: Record<string, Material[]> = {
   "05": [{ label: "Пост охраны", text: "На объекте есть журнал дежурств: смена длится 24 часа и повторяется по графику «сутки через двое»." }, { label: "Табель", text: "В табеле отмечены полные смены, а в расчётных листках оплачена только половина часов." }, { label: "Работники", text: "Трое работников независимо описывают одинаковый порядок смен и отсутствие расчётных листков." }],
 };
 
+type Complaint = { id: string; title: string; applicant: string; role: string; situation: string; request: string; correct: "accept" | "reject"; outcome: string; background: string; portrait: string };
+const COMPLAINTS: Complaint[] = [
+  { id: "housing", title: "Аварийное жильё", applicant: "Заявительница 01", role: "жительница района N", situation: "Я живу в доме, который признали аварийным ещё несколько лет назад. Дом должны были расселить, но решение постоянно откладывают. Прошу проверить мои жилищные права и помочь добиться безопасного жилья.", request: "Проверить, почему расселение не проводится, и принять меры для восстановления жилищных прав.", correct: "accept", outcome: "Жалоба принята: обстоятельства конкретны, есть указание на аварийный статус дома и длительное бездействие. Материал направляется на проверку.", background: "/manus-storage/complaint-housing-bg_9b956f3f.png", portrait: "/manus-storage/complaint-housing-portrait_88fe0823.png" },
+  { id: "wage", title: "Задержка зарплаты", applicant: "Заявитель 02", role: "работник коммерческой организации", situation: "Мне не выплатили зарплату за несколько месяцев и не начислили компенсацию за задержку. Я обращался к руководству, но ответа не получил. Прошу проверить расчёты и добиться выплаты причитающихся сумм.", request: "Проверить задолженность, расчётные листки и соблюдение трудовых прав.", correct: "accept", outcome: "Жалоба принята: указан период, характер нарушения и требование о выплате. Материал направляется в трудовую проверку.", background: "/manus-storage/complaint-wage-bg_1214be84.png", portrait: "/manus-storage/complaint-wage-portrait_789f9519.png" },
+  { id: "medicine", title: "Лекарственное обеспечение", applicant: "Заявительница 03", role: "законный представитель ребёнка", situation: "Моему ребёнку с редким заболеванием назначили препарат, который должен выдаваться бесплатно. Из-за перебоя с обеспечением лечение прервалось. Прошу проверить причины и помочь восстановить терапию без новых перерывов.", request: "Запросить медицинские документы, проверить закупку и фактическую выдачу препарата.", correct: "accept", outcome: "Жалоба принята: речь идёт о проверяемом праве ребёнка на льготное лекарственное обеспечение. Материал требует срочной проверки.", background: "/manus-storage/complaint-medicine-bg_cdb5a400.png", portrait: "/manus-storage/complaint-medicine-portrait_cc7cff2f.png" },
+];
+
 function Stat({ label, value, tone = "default" }: { label: string; value: string | number; tone?: "default" | "good" | "bad" }) {
   return <div className="stat"><span>{label}</span><strong className={`tone-${tone}`}>{value}</strong></div>;
 }
@@ -46,6 +53,8 @@ export default function Home() {
   const [draftGender, setDraftGender] = useState<"male" | "female">("female");
   const [location, setLocation] = useState<LocationId | null>(null);
   const [caseIndex, setCaseIndex] = useState(0);
+  const [complaintIndex, setComplaintIndex] = useState(0);
+  const [complaintDecision, setComplaintDecision] = useState<"accept" | "reject" | null>(null);
   const [score, setScore] = useState(0);
   const [trust, setTrust] = useState(3);
   const [feedback, setFeedback] = useState<{ good: boolean; text: string; decision: Decision } | null>(null);
@@ -89,6 +98,15 @@ export default function Home() {
     setLocation(nextLocation);
     setOpenMaterial(null);
     setReviewedMaterials([]);
+    setComplaintIndex(0);
+    setComplaintDecision(null);
+  };
+
+  const currentComplaint = COMPLAINTS[complaintIndex];
+  const decideComplaint = (decision: "accept" | "reject") => setComplaintDecision(decision);
+  const nextComplaint = () => {
+    if (complaintIndex >= COMPLAINTS.length - 1) setComplaintDecision("accept");
+    else { setComplaintIndex((value) => value + 1); setComplaintDecision(null); }
   };
 
   useEffect(() => {
@@ -156,7 +174,10 @@ export default function Home() {
           <div className="stamp-note">«Не торопись<br />с формулировкой»</div>
         </aside>
 
-        <section className="case-area">
+        {location === "reception" ? <section className="complaint-area" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.15), rgba(7,18,20,.62)), url(${currentComplaint.background})` }}>
+          <div className="complaint-meta"><span>ПРИЁМНАЯ ГРАЖДАН · ОБРАЩЕНИЕ {String(complaintIndex + 1).padStart(2, "0")} / {COMPLAINTS.length}</span><span>ЛИЧНЫЙ ПРИЁМ</span></div>
+          <div className="complaint-layout"><div className="complaint-portrait"><img src={currentComplaint.portrait} alt="Обезличенный портрет заявителя" /><div><span>{currentComplaint.applicant}</span><b>{currentComplaint.role}</b></div></div><article className="complaint-card"><div className="eyebrow"><MessageSquare size={14} /> РАССКАЗ ЗАЯВИТЕЛЯ</div><h2>{currentComplaint.title}</h2><p className="complaint-speech">«{currentComplaint.situation}»</p><div className="complaint-request"><span>ПРОСЬБА</span><p>{currentComplaint.request}</p></div>{complaintDecision ? <div className={`complaint-result ${complaintDecision === currentComplaint.correct ? "good" : "bad"}`}><strong>{complaintDecision === currentComplaint.correct ? "РЕШЕНИЕ ОБОСНОВАНО" : "ТРЕБУЕТСЯ ВНИМАТЕЛЬНОСТЬ"}</strong><p>{currentComplaint.outcome}</p></div> : <div className="complaint-actions"><button className="complaint-action reject" onClick={() => decideComplaint("reject")}><X size={18} /><span><b>Отказать</b><small>Недостаточно оснований</small></span></button><button className="complaint-action accept" onClick={() => decideComplaint("accept")}><Check size={18} /><span><b>Принять жалобу</b><small>Направить на проверку</small></span></button></div>}{complaintDecision && <button className="next-button" onClick={nextComplaint}>{complaintIndex === COMPLAINTS.length - 1 ? "Завершить приём" : "Следующее обращение"} <ChevronRight size={17} /></button>}</article></div>
+        </section> : <section className="case-area">
           <div className="case-meta"><span>МАТЕРИАЛ № {current?.number ?? "—"}</span><span>ДЕЛО {String(Math.min(caseIndex + 1, CASES.length)).padStart(2, "0")} / {CASES.length}</span></div>
           <div className="progress-track"><div style={{ width: `${(progress / CASES.length) * 100}%` }} /></div>
           {finished ? (
@@ -182,7 +203,7 @@ export default function Home() {
               </div>
             </>
           )}
-        </section>
+        </section>}
       </section>
 
       <footer className="footerbar"><div><b>УКАЗАНИЕ:</b> решение должно быть кратким, точным и проверяемым.</div><div className="footer-stats"><Stat label="ВЕРНЫЕ" value={`${score}/${CASES.length}`} tone={score > 0 ? "good" : "default"} /><Stat label="ДОВЕРИЕ" value={`${trust}/5`} tone={trust < 2 ? "bad" : "default"} /><Stat label="СТАТУС" value={finished ? "ЗАКРЫТО" : feedback ? "ПРОВЕРКА" : "ОЖИДАНИЕ"} /></div></footer>
