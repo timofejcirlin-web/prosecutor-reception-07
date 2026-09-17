@@ -4,6 +4,7 @@ import { Check, ChevronRight, FileText, Gavel, RotateCcw, Scale, Stamp, X } from
 const OFFICE_BG = "/manus-storage/prosecutor-office-reference_7e58c04a.png";
 
 type Decision = "prosecute" | "dismiss";
+type Material = { label: string; text: string };
 type CaseFile = {
   id: string;
   number: string;
@@ -14,18 +15,16 @@ type CaseFile = {
   evidence: string;
   correct: Decision;
   explanation: string;
-  sourceName: string;
-  sourceDate: string;
-  sourceUrl: string;
   stage: string;
+  materials: Material[];
 };
 
 const CASES: CaseFile[] = [
-  { id: "01", number: "КЛГ-07/24", category: "Мошенничество при капремонте", person: "Директор строительной компании (имя не раскрыто)", place: "г. Калуга, ул. Чичерина", summary: "При ремонте кровли в документах указали более дорогие материалы, чем использовали фактически.", evidence: "Прокуратура сообщила о расхождении материалов и ущербе муниципальному бюджету свыше 1,5 млн рублей. По материалам проверки возбуждено дело по ч. 4 ст. 159 УК РФ.", correct: "prosecute", explanation: "Есть акт прокурорской проверки, конкретное расхождение материалов и оценённый ущерб. Материал принимается в работу; виновность устанавливает суд.", sourceName: "Прокуратура Калужской области", sourceDate: "02.07.2024", stage: "Уголовное дело возбуждено, расследование на контроле" , sourceUrl: "https://epp.genproc.gov.ru/ru/proc_40/mass-media/news/?item=96037194" },
-  { id: "02", number: "СМЛ-05/26", category: "Незаконная рубка леса", person: "Двое жителей Смоленской области (имена не раскрыты)", place: "Вяземский район, территория лесничества", summary: "В марте 2024 года были вырублены 300 деревьев: сосна, ель и берёза.", evidence: "В официальном сообщении указан ущерб свыше 29 млн рублей. Судебное рассмотрение завершилось приговором и гражданским иском о взыскании ущерба.", correct: "prosecute", explanation: "В игровом моменте материал принимается в работу по тяжёлому составу; публикация прокуратуры уже сообщает о вынесенном приговоре.", sourceName: "Прокуратура Смоленской области", sourceDate: "19.05.2026", stage: "Есть приговор: 3 года лишения свободы и 2,5 года принудительных работ", sourceUrl: "https://epp.genproc.gov.ru/ru/gprf/mass-media/news/regional/e8502657/" },
-  { id: "03", number: "ЧР-09/23", category: "Мошенничество при получении выплат", person: "Местная жительница (имя не раскрыто)", place: "Ачхой-Мартановский район, Чеченская Республика", summary: "По версии следствия, для получения маткапитала были представлены ложные документы о рождении ребёнка.", evidence: "СК сообщил о сертификате на 453 тыс. рублей, возмещении ущерба и направлении дела в суд после утверждения обвинительного заключения.", correct: "prosecute", explanation: "Есть достаточная доказательственная база по версии следствия и дело направлено в суд. В карточке сохраняется презумпция невиновности.", sourceName: "СУ СК России по Чеченской Республике", sourceDate: "06.09.2023", stage: "Расследование завершено, дело направлено в суд", sourceUrl: "https://chr.sledcom.ru/news/item/1830007" },
-  { id: "04", number: "КОС-02/23", category: "Покушение на дачу взятки", person: "44-летний житель Костромы (имя не раскрыто)", place: "г. Кострома, Костромская область", summary: "После остановки ДПС мужчина пытался передать 60 тыс. рублей за несоставление документов.", evidence: "Прокуратура сообщила о пресечении передачи денег, признании вины в суде и вступившем в силу приговоре.", correct: "prosecute", explanation: "Сумма, обстоятельства передачи и итоговый судебный акт подтверждены официальной публикацией. Материал принимается в работу.", sourceName: "Прокуратура Костромской области", sourceDate: "10.02.2023", stage: "Приговор вступил в законную силу", sourceUrl: "https://epp.genproc.gov.ru/web/proc_44/mass-media/news?item=85238680" },
-  { id: "05", number: "ТЮМ-02/25", category: "Трудовые права и оплата", person: "Трое работников агрокомплекса (имена не раскрыты)", place: "Казанский район, Тюменская область", summary: "Сторожам в течение более трёх лет оплачивали 12 часов из 24-часовой смены.", evidence: "Прокуратура обратилась в суд; работникам присудили выплаты общей суммой 635 тыс. рублей, директор привлечён к административной ответственности.", correct: "dismiss", explanation: "Основания для прокурорского вмешательства есть, но это трудовой и административный материал, а не основание для возбуждения уголовного дела в рамках этой смены.", sourceName: "Прокуратура Тюменской области", sourceDate: "12.02.2025", stage: "Требования прокуратуры удовлетворены, выплаты произведены", sourceUrl: "https://epp.genproc.gov.ru/ru/gprf/mass-media/news/main/e5612955/" },
+  { id: "01", number: "М-07/24", category: "Мошенничество при капремонте", person: "Руководитель подрядной организации", place: "Город N, многоквартирный дом", summary: "При ремонте кровли в документах указали более дорогие материалы, чем использовали фактически.", evidence: "Предварительный ущерб бюджету — свыше 1,5 млн рублей. Материал проверки указывает на возможное хищение в особо крупном размере.", correct: "prosecute", explanation: "Смета, акт осмотра и ведомость закупок дают основания для дальнейшего расследования. Виновность устанавливает суд.", stage: "Проверка завершена, расследование продолжается", materials: [{ label: "Смета", text: "В смете указана кровельная мембрана премиум-класса и усиленный утеплитель. Итоговая стоимость — 3 840 000 рублей." }, { label: "Акт осмотра", text: "На объекте обнаружены материалы другого класса. Представитель заказчика зафиксировал расхождение в журнале работ." }, { label: "Платёжные документы", text: "Оплата перечислена полностью. Разница между заявленной и фактической стоимостью предварительно оценивается более чем в 1,5 млн рублей." }] },
+  { id: "02", number: "Л-05/26", category: "Незаконная рубка леса", person: "Двое местных жителей", place: "Лесной квартал 14, район N", summary: "На территории лесничества были вырублены 300 деревьев: сосна, ель и берёза.", evidence: "Размер экологического ущерба оценён свыше 29 млн рублей. Материал содержит сведения о завершённом судебном рассмотрении.", correct: "prosecute", explanation: "Количество деревьев, место, породы и размер ущерба согласуются между материалами. Основания для обвинительного решения подтверждены.", stage: "Судебное рассмотрение завершено", materials: [{ label: "Схема участка", text: "На схеме отмечены делянка лесничества и 300 пней. Координаты привязаны к кварталу 14." }, { label: "Расчёт ущерба", text: "Таксационная ведомость учитывает сосну, ель и берёзу. Итоговая сумма превышает 29 млн рублей." }, { label: "Показания", text: "Двое подозреваемых сообщили, что находились на участке в период, совпадающий со временем рубки." }] },
+  { id: "03", number: "В-09/23", category: "Мошенничество при получении выплаты", person: "Жительница района N", place: "Район N, отделение выплат", summary: "Для получения государственной выплаты были представлены ложные документы о рождении ребёнка.", evidence: "Сумма сертификата — 453 тыс. рублей. Ущерб возмещён, материалы направлены для судебного рассмотрения.", correct: "prosecute", explanation: "Документ из реестра актов гражданского состояния не подтверждает событие, указанное в заявлении. Материал требует направления в суд.", stage: "Расследование завершено, дело направлено в суд", materials: [{ label: "Заявление", text: "В заявлении указаны дата и место рождения ребёнка, а также реквизиты сертификата на выплату." }, { label: "Проверка реестра", text: "В архивной записи отсутствует акт о рождении с указанными реквизитами. Запрос направлен в районный архив." }, { label: "Финансовая справка", text: "Средства в размере 453 000 рублей перечислены на погашение целевого займа. В ходе расследования сумма возмещена." }] },
+  { id: "04", number: "Д-02/23", category: "Покушение на дачу взятки", person: "Гражданин 44 лет", place: "Город N, служебный автомобиль", summary: "После остановки инспекторами водитель пытался передать 60 тыс. рублей за несоставление документов.", evidence: "Передача денег пресечена. В материалах есть сведения о ранее действовавшем запрете на управление транспортом.", correct: "prosecute", explanation: "Размер суммы, цель передачи и фиксация пресечения согласуются между материалами. Состав покушения подтверждён судебным актом.", stage: "Приговор вступил в законную силу", materials: [{ label: "Рапорт инспектора", text: "Автомобиль остановлен ночью. Водитель находился за рулём, несмотря на действующий запрет управления." }, { label: "Запись разговора", text: "На записи слышно предложение передать 60 000 рублей, чтобы избежать оформления материалов." }, { label: "Протокол изъятия", text: "Денежные средства изъяты в салоне служебного автомобиля до завершения передачи." }] },
+  { id: "05", number: "Т-02/25", category: "Трудовые права и оплата", person: "Трое работников", place: "Агрокомплекс в районе N", summary: "Сторожам более трёх лет оплачивали 12 часов из 24-часовой смены.", evidence: "Работники обращались с жалобами. Вопрос касается взыскания задолженности и административного нарушения, а не возбуждения уголовного дела.", correct: "dismiss", explanation: "Нарушение трудовых прав подтверждено, но выбранное решение не соответствует уголовной квалификации: материал нужно направить по гражданско-административному маршруту.", stage: "Требования работников удовлетворены", materials: [{ label: "График смен", text: "Фактический график — сутки через двое. С графиками сменности работников официально не знакомили." }, { label: "Расчётные листки", text: "В документах отражена оплата 12 часов при фактической 24-часовой смене." }, { label: "Исковое заявление", text: "Требования включают задолженность, компенсацию задержки и моральный вред. Общая выплата — 635 000 рублей." }] },
 ];
 
 function Stat({ label, value, tone = "default" }: { label: string; value: string | number; tone?: "default" | "good" | "bad" }) {
@@ -38,12 +37,15 @@ export default function Home() {
   const [trust, setTrust] = useState(3);
   const [feedback, setFeedback] = useState<{ good: boolean; text: string; decision: Decision } | null>(null);
   const [finished, setFinished] = useState(false);
+  const [openMaterial, setOpenMaterial] = useState<number | null>(null);
+  const [reviewedMaterials, setReviewedMaterials] = useState<number[]>([]);
   const current = CASES[caseIndex];
   const progress = Math.min(caseIndex + (feedback ? 1 : 0), CASES.length);
   const rating = useMemo(() => score >= 4 ? "Смена принята" : score >= 2 ? "Нужна внимательность" : "Разбор полётов", [score]);
+  const canDecide = reviewedMaterials.length === current.materials.length;
 
   const decide = (decision: Decision) => {
-    if (feedback || finished) return;
+    if (feedback || finished || !canDecide) return;
     const good = decision === current.correct;
     setScore((value) => value + (good ? 1 : 0));
     setTrust((value) => Math.max(0, Math.min(5, value + (good ? 0 : -1))));
@@ -53,10 +55,15 @@ export default function Home() {
   const next = () => {
     if (!feedback) return;
     if (caseIndex >= CASES.length - 1) setFinished(true);
-    else { setCaseIndex((value) => value + 1); setFeedback(null); }
+    else { setCaseIndex((value) => value + 1); setFeedback(null); setOpenMaterial(null); setReviewedMaterials([]); }
   };
 
-  const restart = () => { setCaseIndex(0); setScore(0); setTrust(3); setFeedback(null); setFinished(false); };
+  const inspectMaterial = (index: number) => {
+    setOpenMaterial(index);
+    setReviewedMaterials((items) => items.includes(index) ? items : [...items, index]);
+  };
+
+  const restart = () => { setCaseIndex(0); setScore(0); setTrust(3); setFeedback(null); setFinished(false); setOpenMaterial(null); setReviewedMaterials([]); };
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -104,12 +111,13 @@ export default function Home() {
                 <div className="paper-rule" />
                 <div className="identity-grid"><div><span>ФИО / ОРГАНИЗАЦИЯ</span><b>{current.person}</b></div><div><span>МЕСТО СОБЫТИЯ</span><b>{current.place}</b></div></div>
                 <div className="summary"><span>КРАТКОЕ ИЗЛОЖЕНИЕ</span><p>{current.summary}</p></div>
-                <div className="evidence"><div className="evidence-label"><span>КЛЮЧЕВЫЕ МАТЕРИАЛЫ</span><small>ИСТОЧНИК: {current.sourceDate}</small></div><p>{current.evidence}</p><div className="source-line"><span>{current.sourceName}</span><a href={current.sourceUrl} target="_blank" rel="noreferrer">Открыть публикацию ↗</a></div></div>
+                <div className="materials-box"><div className="evidence-label"><span>МАТЕРИАЛЫ ДЕЛА</span><small>ИЗУЧЕНО: {reviewedMaterials.length}/{current.materials.length}</small></div><div className="material-tabs">{current.materials.map((material, index) => <button key={material.label} className={reviewedMaterials.includes(index) ? "reviewed" : ""} onClick={() => inspectMaterial(index)}><FileText size={13} /> {material.label}{reviewedMaterials.includes(index) && <Check size={12} />}</button>)}</div>{openMaterial !== null && <div className="material-content"><span>{current.materials[openMaterial].label}</span><p>{current.materials[openMaterial].text}</p></div>}</div>
+                <div className="evidence"><div className="evidence-label"><span>СВОДКА ПО МАТЕРИАЛАМ</span><small>ПРОВЕРЕНО</small></div><p>{current.evidence}</p></div>
                 <div className="stage-note"><span>СТАДИЯ</span><b>{current.stage}</b></div>
                 <div className={`paper-footer ${feedback ? (feedback.good ? "success" : "failure") : ""}`}>{feedback ? <><span>{feedback.good ? <Check size={15} /> : <X size={15} />} {feedback.good ? "РЕШЕНИЕ ОБОСНОВАНО" : "РЕШЕНИЕ ОШИБОЧНО"}</span><em>{feedback.text}</em></> : <span><span className="underline">Внимание:</span> решение принимается на основании только этих материалов.</span>}</div>
               </article>
               <div className="decision-row">
-                {!feedback ? <><button className="decision dismiss" onClick={() => decide("dismiss")}><X size={19} /><span><b>Отказать</b><small>Недостаточно оснований</small></span><kbd>A</kbd></button><button className="decision prosecute" onClick={() => decide("prosecute")}><Gavel size={19} /><span><b>Возбудить дело</b><small>Основания подтверждены</small></span><kbd>D</kbd></button></> : <button className="next-button" onClick={next}>Следующее дело <ChevronRight size={18} /></button>}
+                {!feedback ? <><button className="decision dismiss" disabled={!canDecide} onClick={() => decide("dismiss")}><X size={19} /><span><b>Отказать</b><small>{canDecide ? "Недостаточно оснований" : "Изучите все материалы"}</small></span><kbd>A</kbd></button><button className="decision prosecute" disabled={!canDecide} onClick={() => decide("prosecute")}><Gavel size={19} /><span><b>Возбудить дело</b><small>{canDecide ? "Основания подтверждены" : "Изучите все материалы"}</small></span><kbd>D</kbd></button></> : <button className="next-button" onClick={next}>Следующее дело <ChevronRight size={18} /></button>}
               </div>
             </>
           )}
