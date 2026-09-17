@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Camera, Check, ChevronRight, FileText, Gavel, MapPin, MessageSquare, RotateCcw, Scale, Stamp, Users, X } from "lucide-react";
+import { BadgeCheck, Camera, Check, ChevronRight, FileText, Gavel, MapPin, MessageSquare, RotateCcw, Scale, Stamp, UserRound, Users, X } from "lucide-react";
 
 const OFFICE_BG = "/manus-storage/prosecutor-office-reference_7e58c04a.png";
 
@@ -41,6 +41,9 @@ function Stat({ label, value, tone = "default" }: { label: string; value: string
 }
 
 export default function Home() {
+  const [character, setCharacter] = useState<{ name: string; gender: "male" | "female" } | null>(null);
+  const [draftName, setDraftName] = useState("");
+  const [draftGender, setDraftGender] = useState<"male" | "female">("female");
   const [location, setLocation] = useState<LocationId | null>(null);
   const [caseIndex, setCaseIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -74,7 +77,13 @@ export default function Home() {
     setReviewedMaterials((items) => items.includes(index) ? items : [...items, index]);
   };
 
-  const restart = () => { setLocation(null); setCaseIndex(0); setScore(0); setTrust(3); setFeedback(null); setFinished(false); setOpenMaterial(null); setReviewedMaterials([]); };
+  const restart = () => { setCharacter(null); setDraftName(""); setLocation(null); setCaseIndex(0); setScore(0); setTrust(3); setFeedback(null); setFinished(false); setOpenMaterial(null); setReviewedMaterials([]); };
+
+  const createCharacter = () => {
+    const name = draftName.trim();
+    if (!name) return;
+    setCharacter({ name, gender: draftGender });
+  };
 
   const chooseLocation = (nextLocation: LocationId) => {
     setLocation(nextLocation);
@@ -91,6 +100,24 @@ export default function Home() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [feedback, finished, current]);
+
+  if (!character) return (
+    <main className="character-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.95), rgba(7,18,20,.44)), url(${OFFICE_BG})` }}>
+      <div className="grain" />
+      <div className="character-inner">
+        <div className="location-kicker"><UserRound size={14} /> ЛИЧНОЕ ДЕЛО · СОЗДАНИЕ ПЕРСОНАЖА</div>
+        <h1>Ваш первый день<br /><em>начинается здесь.</em></h1>
+        <p className="location-intro">Заполните короткую анкету. Вы будете работать с материалами дел, принимать решения и отвечать за качество проверки.</p>
+        <div className="character-card">
+          <label>ИМЯ ИГРОКА<input value={draftName} onChange={(event) => setDraftName(event.target.value)} onKeyDown={(event) => event.key === "Enter" && createCharacter()} placeholder="Например, Анна Орлова" autoFocus /></label>
+          <div className="gender-field"><span>ПОЛ</span><div className="gender-options"><button className={draftGender === "female" ? "selected" : ""} onClick={() => setDraftGender("female")}><UserRound size={15} /> Женщина</button><button className={draftGender === "male" ? "selected" : ""} onClick={() => setDraftGender("male")}><UserRound size={15} /> Мужчина</button></div></div>
+          <div className="rank-field"><BadgeCheck size={18} /><div><span>ЗВАНИЕ</span><b>Юрист 3 класса</b></div><small>НАЗНАЧЕНО</small></div>
+          <button className="primary-button" disabled={!draftName.trim()} onClick={createCharacter}>Открыть личное дело <ChevronRight size={17} /></button>
+        </div>
+        <div className="location-footer"><span>ПРИЁМНАЯ № 07</span><span>КАНДИДАТ · НОВАЯ СМЕНА</span></div>
+      </div>
+    </main>
+  );
 
   if (!location) return (
     <main className="location-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.94), rgba(7,18,20,.42)), url(${OFFICE_BG})` }}>
@@ -113,6 +140,7 @@ export default function Home() {
       <div className="grain" />
       <header className="topbar">
         <div className="brand"><div className="brand-mark"><Scale size={18} /></div><div><p>ПРОКУРАТУРА</p><h1>Приёмная № 07</h1></div></div>
+        <div className="profile-chip"><UserRound size={14} /><span>{character.name}</span><b>юрист 3 класса</b></div>
           <div className="shift"><span className="live-dot" /> {location === "inspection" ? "ГОРОДСКАЯ ПРОВЕРКА" : "ПРИЁМНАЯ ГРАЖДАН"} <b>•</b> 17 сентября 2026</div>
         <div className="seal">ДЕЛО<br /><span>В РАБОТЕ</span></div>
       </header>
