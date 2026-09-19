@@ -1,11 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BadgeCheck, Camera, Check, ChevronRight, FileText, Gavel, MapPin, MessageSquare, RotateCcw, Scale, Stamp, UserRound, Users, X } from "lucide-react";
 
 const OFFICE_BG = "/manus-storage/prosecutor-office-reference_7e58c04a.png";
 const UI_CLICK = "/manus-storage/prosecutor-ui-click_a921f702.mp3";
 const BACKGROUND_MUSIC = "/manus-storage/prosecutor-soviet-ambient_98bcbd3d.mp3";
+const ADMIN_MAP_SVG = "/manus-storage/Ed887Ix3NN14_f7721d82.svg";
 const RF_SUBJECTS = "Адыгея|Алтай|Башкортостан|Бурятия|Дагестан|Донецкая Народная Республика|Ингушетия|Кабардино-Балкария|Калмыкия|Карачаево-Черкесия|Карелия|Коми|Крым|Луганская Народная Республика|Марий Эл|Мордовия|Саха (Якутия)|Северная Осетия — Алания|Татарстан|Тыва|Удмуртия|Хакасия|Чечня|Чувашия|Алтайский край|Забайкальский край|Камчатский край|Краснодарский край|Красноярский край|Пермский край|Приморский край|Ставропольский край|Хабаровский край|Амурская область|Архангельская область|Астраханская область|Белгородская область|Брянская область|Владимирская область|Волгоградская область|Вологодская область|Воронежская область|Запорожская область|Ивановская область|Иркутская область|Калининградская область|Калужская область|Кемеровская область — Кузбасс|Кировская область|Костромская область|Курганская область|Курская область|Ленинградская область|Липецкая область|Магаданская область|Московская область|Мурманская область|Нижегородская область|Новгородская область|Новосибирская область|Омская область|Оренбургская область|Орловская область|Пензенская область|Псковская область|Ростовская область|Рязанская область|Самарская область|Саратовская область|Сахалинская область|Свердловская область|Смоленская область|Тамбовская область|Тверская область|Томская область|Тульская область|Тюменская область|Ульяновская область|Херсонская область|Челябинская область|Ярославская область|Москва|Санкт-Петербург|Севастополь|Еврейская автономная область|Ненецкий автономный округ|Ханты-Мансийский автономный округ — Югра|Чукотский автономный округ|Ямало-Ненецкий автономный округ".split("|");
 const MAP_MARKERS = [{ name: "Калининградская область", left: 8, top: 38 }, { name: "Санкт-Петербург", left: 19, top: 28 }, { name: "Москва", left: 31, top: 45 }, { name: "Свердловская область", left: 59, top: 42 }, { name: "Новосибирская область", left: 70, top: 56 }, { name: "Красноярский край", left: 77, top: 47 }, { name: "Иркутская область", left: 82, top: 61 }, { name: "Республика Саха (Якутия)", left: 82, top: 25 }, { name: "Приморский край", left: 94, top: 60 }, { name: "Хабаровский край", left: 91, top: 48 }, { name: "Камчатский край", left: 99, top: 27 }, { name: "Краснодарский край", left: 29, top: 69 }, { name: "Республика Татарстан", left: 46, top: 53 }, { name: "Мурманская область", left: 24, top: 10 }];
+const REGION_ALIASES: Record<string, string> = { "Алтай": "altajskij_kraj", "Башкортостан": "bashkortostan", "Крым": "respublica_krym", "Саха (Якутия)": "respublika_sakha_(jakutija)", "Чечня": "chechenskaja_respublika", "Татарстан": "tatarstan", "Северная Осетия — Алания": "severnaja_osetija_-_alanija", "Еврейская автономная область": "evrejskaja_avtonomnaja_oblast'", "Ханты-Мансийский автономный округ — Югра": "khanty-mansijskij_avtonomnyj_okrug_-_jugra", "Ямало-Ненецкий автономный округ": "jamalo-neneckij_avtonomnyj_okrug" };
+const translit: Record<string, string> = { а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "e", ж: "zh", з: "z", и: "i", й: "j", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f", х: "kh", ц: "c", ч: "ch", ш: "sh", щ: "shh", ъ: "", ы: "y", ь: "", э: "eh", ю: "ju", я: "ja" };
+const regionSvgId = (name: string) => REGION_ALIASES[name] ?? name.toLowerCase().split("").map((char) => translit[char] ?? char).join("").replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "");
+const normalizeSvgId = (id: string) => id.replace(/'/g, "");
+const regionNameBySvgId = (id: string) => RF_SUBJECTS.find((name) => normalizeSvgId(regionSvgId(name)) === normalizeSvgId(id)) ?? Object.entries(REGION_ALIASES).find(([, alias]) => normalizeSvgId(alias) === normalizeSvgId(id))?.[0] ?? id;
 
 type Decision = "prosecute" | "dismiss";
 type LocationId = "reception" | "inspection";
@@ -55,6 +61,8 @@ export default function Home() {
   const [onboardingStep, setOnboardingStep] = useState<"intro" | "region" | "team" | "character">("intro");
   const [region, setRegion] = useState<string | null>(null);
   const [regionQuery, setRegionQuery] = useState("");
+  const [mapSvg, setMapSvg] = useState("");
+  const mapRef = useRef<HTMLDivElement>(null);
   const [team, setTeam] = useState<string | null>(null);
   const [character, setCharacter] = useState<{ name: string; gender: "male" | "female" } | null>(null);
   const [draftName, setDraftName] = useState("");
@@ -174,6 +182,33 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    if (onboardingStep !== "region" || mapSvg) return;
+    fetch(ADMIN_MAP_SVG).then((response) => response.text()).then((svg) => setMapSvg(svg.replace(/<\?xml[^>]*>/, ""))).catch(() => setMapSvg(""));
+  }, [onboardingStep, mapSvg]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapSvg) return;
+    const onMapClick = (event: MouseEvent) => {
+      const target = (event.target as Element).closest("g[id]");
+      const id = target?.getAttribute("id");
+      if (!id || id === "Boundaries_of_federal_subjects") return;
+      setRegion(regionNameBySvgId(id));
+    };
+    map.addEventListener("click", onMapClick);
+    return () => map.removeEventListener("click", onMapClick);
+  }, [mapSvg]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapSvg) return;
+    map.querySelectorAll("svg > g[id]").forEach((group) => {
+      const id = group.getAttribute("id") ?? "";
+      group.classList.toggle("map-region-selected", Boolean(region && normalizeSvgId(regionSvgId(region)) === normalizeSvgId(id)));
+    });
+  }, [mapSvg, region]);
+
   if (onboardingStep === "intro") return (
     <main className="onboarding-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.95), rgba(7,18,20,.44)), url(${OFFICE_BG})` }}>
       <div className="grain" /><div className="onboarding-inner">
@@ -196,7 +231,7 @@ export default function Home() {
       <div className="grain" /><div className="onboarding-inner compact-onboarding">
         <div className="location-kicker">ПЕРВОЕ НАЗНАЧЕНИЕ · СУБЪЕКТ РФ</div><h1>Куда направит вас<br /><em>приказ?</em></h1>
         <p className="location-intro">Выберите любой субъект Российской Федерации. Регион определит характер обращений, ведомства и первые дела в вашей папке.</p>
-        <div className="region-workspace"><div className="russia-map" aria-label="Интерактивная карта субъектов России"><div className="map-grid" />{MAP_MARKERS.map((marker) => <button key={marker.name} className={`map-marker ${region === marker.name ? "selected" : ""}`} style={{ left: `${marker.left}%`, top: `${marker.top}%` }} title={marker.name} onClick={() => setRegion(marker.name)}><i /><span>{marker.name}</span></button>)}</div><div className="region-panel"><label className="region-search">ПОИСК СУБЪЕКТА<input value={regionQuery} onChange={(event) => setRegionQuery(event.target.value)} placeholder="Например, Татарстан" /></label><div className="region-list">{filteredRegions.slice(0, 18).map((item) => <button key={item} className={region === item ? "selected" : ""} onClick={() => setRegion(item)}><span>{item}</span>{region === item && <Check size={14} />}</button>)}{filteredRegions.length > 18 && <small>Показаны первые 18 результатов · уточните поиск</small>}</div></div></div>
+        <div className="region-workspace"><div ref={mapRef} className="russia-map real-map" aria-label="Интерактивная административная карта субъектов России">{mapSvg ? <div className="admin-map-svg" dangerouslySetInnerHTML={{ __html: mapSvg }} /> : <div className="map-loading">Загрузка административной карты…</div>}</div><div className="region-panel"><label className="region-search">ПОИСК СУБЪЕКТА<input value={regionQuery} onChange={(event) => setRegionQuery(event.target.value)} placeholder="Например, Татарстан" /></label><div className="region-list">{filteredRegions.slice(0, 18).map((item) => <button key={item} className={region === item ? "selected" : ""} onClick={() => setRegion(item)}><span>{item}</span>{region === item && <Check size={14} />}</button>)}{filteredRegions.length > 18 && <small>Показаны первые 18 результатов · уточните поиск</small>}</div></div></div>
         <div className="region-confirm"><span>{region ? `ВЫБРАНО: ${region}` : "Выберите субъект на карте или в списке"}</span><button className="primary-button" disabled={!region} onClick={() => setOnboardingStep("team")}>Подтвердить регион <ChevronRight size={17} /></button></div>
         <div className="location-footer"><span>НАЗНАЧЕНИЕ · ПОМОЩНИК ПРОКУРОРА</span><span>ШАГ 01 / 03</span></div>
       </div>
