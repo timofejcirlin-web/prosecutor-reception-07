@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { BadgeCheck, Camera, Check, ChevronRight, FileText, Gavel, MapPin, MessageSquare, RotateCcw, Scale, Stamp, UserRound, Users, X } from "lucide-react";
 
 const OFFICE_BG = "/manus-storage/prosecutor-office-reference_7e58c04a.png";
+const UI_CLICK = "/manus-storage/prosecutor-ui-click_a921f702.mp3";
+const BACKGROUND_MUSIC = "/manus-storage/prosecutor-soviet-ambient_98bcbd3d.mp3";
 
 type Decision = "prosecute" | "dismiss";
 type LocationId = "reception" | "inspection";
@@ -136,6 +138,35 @@ export default function Home() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [feedback, finished, current]);
+
+  useEffect(() => {
+    const click = () => {
+      const sound = new Audio(UI_CLICK);
+      sound.volume = 0.32;
+      void sound.play().catch(() => undefined);
+    };
+    document.addEventListener("click", click, true);
+    return () => document.removeEventListener("click", click, true);
+  }, []);
+
+  useEffect(() => {
+    const music = new Audio(BACKGROUND_MUSIC);
+    music.loop = true;
+    music.volume = 0.16;
+    const startMusic = () => {
+      void music.play().catch(() => undefined);
+      window.removeEventListener("pointerdown", startMusic);
+      window.removeEventListener("keydown", startMusic);
+    };
+    window.addEventListener("pointerdown", startMusic, { once: true });
+    window.addEventListener("keydown", startMusic, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", startMusic);
+      window.removeEventListener("keydown", startMusic);
+      music.pause();
+      music.currentTime = 0;
+    };
+  }, []);
 
   if (!character) return (
     <main className="character-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.95), rgba(7,18,20,.44)), url(${OFFICE_BG})` }}>
