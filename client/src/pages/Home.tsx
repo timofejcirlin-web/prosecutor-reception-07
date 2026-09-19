@@ -4,6 +4,8 @@ import { BadgeCheck, Camera, Check, ChevronRight, FileText, Gavel, MapPin, Messa
 const OFFICE_BG = "/manus-storage/prosecutor-office-reference_7e58c04a.png";
 const UI_CLICK = "/manus-storage/prosecutor-ui-click_a921f702.mp3";
 const BACKGROUND_MUSIC = "/manus-storage/prosecutor-soviet-ambient_98bcbd3d.mp3";
+const RF_SUBJECTS = "Адыгея|Алтай|Башкортостан|Бурятия|Дагестан|Донецкая Народная Республика|Ингушетия|Кабардино-Балкария|Калмыкия|Карачаево-Черкесия|Карелия|Коми|Крым|Луганская Народная Республика|Марий Эл|Мордовия|Саха (Якутия)|Северная Осетия — Алания|Татарстан|Тыва|Удмуртия|Хакасия|Чечня|Чувашия|Алтайский край|Забайкальский край|Камчатский край|Краснодарский край|Красноярский край|Пермский край|Приморский край|Ставропольский край|Хабаровский край|Амурская область|Архангельская область|Астраханская область|Белгородская область|Брянская область|Владимирская область|Волгоградская область|Вологодская область|Воронежская область|Запорожская область|Ивановская область|Иркутская область|Калининградская область|Калужская область|Кемеровская область — Кузбасс|Кировская область|Костромская область|Курганская область|Курская область|Ленинградская область|Липецкая область|Магаданская область|Московская область|Мурманская область|Нижегородская область|Новгородская область|Новосибирская область|Омская область|Оренбургская область|Орловская область|Пензенская область|Псковская область|Ростовская область|Рязанская область|Самарская область|Саратовская область|Сахалинская область|Свердловская область|Смоленская область|Тамбовская область|Тверская область|Томская область|Тульская область|Тюменская область|Ульяновская область|Херсонская область|Челябинская область|Ярославская область|Москва|Санкт-Петербург|Севастополь|Еврейская автономная область|Ненецкий автономный округ|Ханты-Мансийский автономный округ — Югра|Чукотский автономный округ|Ямало-Ненецкий автономный округ".split("|");
+const MAP_MARKERS = [{ name: "Калининградская область", left: 8, top: 38 }, { name: "Санкт-Петербург", left: 19, top: 28 }, { name: "Москва", left: 31, top: 45 }, { name: "Свердловская область", left: 59, top: 42 }, { name: "Новосибирская область", left: 70, top: 56 }, { name: "Красноярский край", left: 77, top: 47 }, { name: "Иркутская область", left: 82, top: 61 }, { name: "Республика Саха (Якутия)", left: 82, top: 25 }, { name: "Приморский край", left: 94, top: 60 }, { name: "Хабаровский край", left: 91, top: 48 }, { name: "Камчатский край", left: 99, top: 27 }, { name: "Краснодарский край", left: 29, top: 69 }, { name: "Республика Татарстан", left: 46, top: 53 }, { name: "Мурманская область", left: 24, top: 10 }];
 
 type Decision = "prosecute" | "dismiss";
 type LocationId = "reception" | "inspection";
@@ -52,6 +54,7 @@ function Stat({ label, value, tone = "default" }: { label: string; value: string
 export default function Home() {
   const [onboardingStep, setOnboardingStep] = useState<"intro" | "region" | "team" | "character">("intro");
   const [region, setRegion] = useState<string | null>(null);
+  const [regionQuery, setRegionQuery] = useState("");
   const [team, setTeam] = useState<string | null>(null);
   const [character, setCharacter] = useState<{ name: string; gender: "male" | "female" } | null>(null);
   const [draftName, setDraftName] = useState("");
@@ -186,12 +189,15 @@ export default function Home() {
     </main>
   );
 
+  const filteredRegions = RF_SUBJECTS.filter((item) => item.toLowerCase().includes(regionQuery.trim().toLowerCase()));
+
   if (onboardingStep === "region") return (
     <main className="onboarding-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.95), rgba(7,18,20,.44)), url(${OFFICE_BG})` }}>
       <div className="grain" /><div className="onboarding-inner compact-onboarding">
-        <div className="location-kicker">ПЕРВОЕ НАЗНАЧЕНИЕ · РЕГИОН СЛУЖБЫ</div><h1>Выберите<br /><em>регион.</em></h1>
-        <p className="location-intro">Место службы определит характер обращений, ведомства и первые дела в вашей папке.</p>
-        <div className="selection-grid">{["Свердловская область", "Пермский край", "Челябинская область"].map((item, index) => <button className="selection-card" key={item} onClick={() => { setRegion(item); setOnboardingStep("team"); }}><span>РЕГИОН {String(index + 1).padStart(2, "0")}</span><b>{item}</b><ChevronRight size={17} /></button>)}</div>
+        <div className="location-kicker">ПЕРВОЕ НАЗНАЧЕНИЕ · СУБЪЕКТ РФ</div><h1>Куда направит вас<br /><em>приказ?</em></h1>
+        <p className="location-intro">Выберите любой субъект Российской Федерации. Регион определит характер обращений, ведомства и первые дела в вашей папке.</p>
+        <div className="region-workspace"><div className="russia-map" aria-label="Интерактивная карта субъектов России"><div className="map-grid" />{MAP_MARKERS.map((marker) => <button key={marker.name} className={`map-marker ${region === marker.name ? "selected" : ""}`} style={{ left: `${marker.left}%`, top: `${marker.top}%` }} title={marker.name} onClick={() => setRegion(marker.name)}><i /><span>{marker.name}</span></button>)}</div><div className="region-panel"><label className="region-search">ПОИСК СУБЪЕКТА<input value={regionQuery} onChange={(event) => setRegionQuery(event.target.value)} placeholder="Например, Татарстан" /></label><div className="region-list">{filteredRegions.slice(0, 18).map((item) => <button key={item} className={region === item ? "selected" : ""} onClick={() => setRegion(item)}><span>{item}</span>{region === item && <Check size={14} />}</button>)}{filteredRegions.length > 18 && <small>Показаны первые 18 результатов · уточните поиск</small>}</div></div></div>
+        <div className="region-confirm"><span>{region ? `ВЫБРАНО: ${region}` : "Выберите субъект на карте или в списке"}</span><button className="primary-button" disabled={!region} onClick={() => setOnboardingStep("team")}>Подтвердить регион <ChevronRight size={17} /></button></div>
         <div className="location-footer"><span>НАЗНАЧЕНИЕ · ПОМОЩНИК ПРОКУРОРА</span><span>ШАГ 01 / 03</span></div>
       </div>
     </main>
