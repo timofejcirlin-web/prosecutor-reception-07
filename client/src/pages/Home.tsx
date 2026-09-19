@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BadgeCheck, Camera, Check, ChevronRight, FileText, Gavel, MapPin, MessageSquare, RotateCcw, Scale, Stamp, UserRound, Users, X } from "lucide-react";
+import { BadgeCheck, Camera, Check, ChevronRight, FileText, Gavel, MapPin, Maximize2, MessageSquare, Minimize2, RotateCcw, Scale, Stamp, UserRound, Users, X } from "lucide-react";
 
 const OFFICE_BG = "/manus-storage/prosecutor-office-reference_7e58c04a.png";
 const UI_CLICK = "/manus-storage/prosecutor-ui-click_a921f702.mp3";
@@ -79,6 +79,7 @@ export default function Home() {
   const [trust, setTrust] = useState(3);
   const [feedback, setFeedback] = useState<{ good: boolean; text: string; decision: Decision } | null>(null);
   const [finished, setFinished] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const [openMaterial, setOpenMaterial] = useState<number | null>(null);
   const [reviewedMaterials, setReviewedMaterials] = useState<number[]>([]);
   const current = CASES[caseIndex];
@@ -112,6 +113,11 @@ export default function Home() {
     const name = draftName.trim();
     if (!name) return;
     setCharacter({ name, gender: draftGender });
+  };
+
+  const toggleFullscreen = async () => {
+    if (document.fullscreenElement) await document.exitFullscreen?.();
+    else await document.documentElement.requestFullscreen?.();
   };
 
   const chooseLocation = (nextLocation: LocationId) => {
@@ -161,6 +167,13 @@ export default function Home() {
     };
     document.addEventListener("click", click, true);
     return () => document.removeEventListener("click", click, true);
+  }, []);
+
+  useEffect(() => {
+    const syncFullscreen = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener("fullscreenchange", syncFullscreen);
+    syncFullscreen();
+    return () => document.removeEventListener("fullscreenchange", syncFullscreen);
   }, []);
 
   useEffect(() => {
@@ -218,7 +231,7 @@ export default function Home() {
         <p className="onboarding-copy">Вы только что окончили Уральский государственный юридический университет. Приказом прокурора вас направили работать помощником прокурора в один из районов субъекта Российской Федерации.</p>
         <p className="onboarding-copy">Впереди — незнакомая приёмная, первые материалы проверок и решения, за которыми стоят реальные люди. Сегодня теория останется в конспектах: на столе будут только факты, документы и ответственность.</p>
         <div className="assignment-line"><span>НАЗНАЧЕНИЕ</span><b>Помощник прокурора</b><small>ПРИЁМНАЯ № 07</small></div>
-        <button className="primary-button onboarding-button" onClick={() => setOnboardingStep("region")}>Приступить к службе <ChevronRight size={17} /></button>
+        <div className="intro-actions"><button className="primary-button onboarding-button" onClick={() => setOnboardingStep("region")}>Приступить к службе <ChevronRight size={17} /></button><button className="fullscreen-button" onClick={toggleFullscreen}>{isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}<span>{isFullscreen ? "Выйти из полного экрана" : "На весь экран"}</span></button></div>
         <div className="location-footer"><span>ДЕЛО НОВОГО СОТРУДНИКА · 01</span><span>ТОЧНОСТЬ · БЕСПРИСТРАСТНОСТЬ · ОТВЕТСТВЕННОСТЬ</span></div>
       </div>
     </main>
