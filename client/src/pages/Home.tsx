@@ -62,6 +62,7 @@ export default function Home() {
   const [onboardingStep, setOnboardingStep] = useState<"intro" | "region" | "character">("intro");
   const [region, setRegion] = useState<string | null>(null);
   const [regionQuery, setRegionQuery] = useState("");
+  const [prosecutorSubject, setProsecutorSubject] = useState<string | null>(null);
   const [mapSvg, setMapSvg] = useState("");
   const mapRef = useRef<HTMLDivElement>(null);
   const [character, setCharacter] = useState<{ name: string; gender: "male" | "female" } | null>(null);
@@ -114,6 +115,8 @@ export default function Home() {
     if (!name) return;
     setCharacter({ name, gender: draftGender });
   };
+
+  const openProsecutor = (subject: string) => { setRegion(subject); setProsecutorSubject(subject); };
 
   const toggleFullscreen = async () => {
     if (document.fullscreenElement) await document.exitFullscreen?.();
@@ -207,7 +210,7 @@ export default function Home() {
       const target = (event.target as Element).closest("g[id]");
       const id = target?.getAttribute("id");
       if (!id || id === "Boundaries_of_federal_subjects") return;
-      setRegion(regionNameBySvgId(id));
+      openProsecutor(regionNameBySvgId(id));
     };
     map.addEventListener("click", onMapClick);
     return () => map.removeEventListener("click", onMapClick);
@@ -240,11 +243,12 @@ export default function Home() {
   const filteredRegions = RF_SUBJECTS.filter((item) => item.toLowerCase().includes(regionQuery.trim().toLowerCase()));
 
   if (onboardingStep === "region") return (
-    <main className="onboarding-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.95), rgba(7,18,20,.44)), url(${OFFICE_BG})` }}>
+    <main className="onboarding-screen purple-map-mode" style={{ backgroundImage: `linear-gradient(90deg, rgba(18,5,28,.96), rgba(38,12,57,.62)), url(${OFFICE_BG})` }}>
       <div className="grain" /><div className="onboarding-inner compact-onboarding">
         <div className="location-kicker">ПЕРВОЕ НАЗНАЧЕНИЕ · СУБЪЕКТ РФ</div><h1>Куда направит вас<br /><em>приказ?</em></h1>
         <p className="location-intro">Выберите любой субъект Российской Федерации. Регион определит характер обращений, ведомства и первые дела в вашей папке.</p>
-        <div className="region-workspace"><div ref={mapRef} className="russia-map real-map" aria-label="Интерактивная административная карта субъектов России">{mapSvg ? <div className="admin-map-svg" dangerouslySetInnerHTML={{ __html: mapSvg }} /> : <div className="map-loading">Загрузка административной карты…</div>}<div className="special-region-layer">{SPECIAL_MAP_REGIONS.map((item) => <button key={item.name} className={`special-region-chip ${region === item.name ? "selected" : ""}`} style={{ left: `${item.left}%`, top: `${item.top}%` }} onClick={() => setRegion(item.name)}><i />{item.name.replace(" Народная Республика", "")}</button>)}</div>{region && <div className="map-selection-readout"><span>ВЫБРАННЫЙ СУБЪЕКТ</span><b>{region}</b></div>}</div><div className="region-panel"><label className="region-search">ПОИСК СУБЪЕКТА<input value={regionQuery} onChange={(event) => setRegionQuery(event.target.value)} placeholder="Например, Татарстан" /></label><div className="region-list">{filteredRegions.slice(0, 18).map((item) => <button key={item} className={region === item ? "selected" : ""} onClick={() => setRegion(item)}><span>{item}</span>{region === item && <Check size={14} />}</button>)}{filteredRegions.length > 18 && <small>Показаны первые 18 результатов · уточните поиск</small>}</div></div></div>
+        <div className="region-workspace"><div ref={mapRef} className="russia-map real-map" aria-label="Интерактивная административная карта субъектов России">{mapSvg ? <div className="admin-map-svg" dangerouslySetInnerHTML={{ __html: mapSvg }} /> : <div className="map-loading">Загрузка административной карты…</div>}<div className="special-region-layer">{SPECIAL_MAP_REGIONS.map((item) => <button key={item.name} className={`special-region-chip ${region === item.name ? "selected" : ""}`} style={{ left: `${item.left}%`, top: `${item.top}%` }} onClick={() => openProsecutor(item.name)}><i />{item.name}</button>)}</div>{region && <div className="map-selection-readout"><span>ВЫБРАННЫЙ СУБЪЕКТ</span><b>{region}</b></div>}</div><div className="region-panel"><label className="region-search">ПОИСК СУБЪЕКТА<input value={regionQuery} onChange={(event) => setRegionQuery(event.target.value)} placeholder="Например, Татарстан" /></label><div className="region-list">{filteredRegions.slice(0, 18).map((item) => <button key={item} className={region === item ? "selected" : ""} onClick={() => openProsecutor(item)}><span>{item}</span>{region === item && <Check size={14} />}</button>)}{filteredRegions.length > 18 && <small>Показаны первые 18 результатов · уточните поиск</small>}</div></div></div>
+        {prosecutorSubject && <div className="prosecutor-modal-backdrop" onClick={() => setProsecutorSubject(null)}><section className="prosecutor-modal" onClick={(event) => event.stopPropagation()}><button className="modal-close" onClick={() => setProsecutorSubject(null)}><X size={17} /></button><span className="modal-kicker">ПРОКУРАТУРА СУБЪЕКТА РФ</span><h2>{prosecutorSubject}</h2><div className="prosecutor-modal-grid"><div><b>СТРУКТУРА</b><p>Прокуратура субъекта · территориальные прокуратуры · специализированные прокуратуры.</p></div><div><b>КОГДА ПОДАВАТЬ ОБРАЩЕНИЕ</b><p>Если нарушены ваши права, законность действий органов власти или требуется прокурорский надзор. Укажите обстоятельства, даты и приложите документы.</p></div></div><button className="primary-button" onClick={() => setProsecutorSubject(null)}>Выбрать этот субъект <ChevronRight size={17} /></button></section></div>}
         <div className="region-confirm"><span>{region ? `ВЫБРАНО: ${region}` : "Выберите субъект на карте или в списке"}</span><button className="primary-button" disabled={!region} onClick={() => setOnboardingStep("character")}>Подтвердить регион <ChevronRight size={17} /></button></div>
         <div className="location-footer"><span>НАЗНАЧЕНИЕ · ПОМОЩНИК ПРОКУРОРА</span><span>ШАГ 01 / 03</span></div>
       </div>
