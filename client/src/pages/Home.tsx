@@ -50,6 +50,9 @@ function Stat({ label, value, tone = "default" }: { label: string; value: string
 }
 
 export default function Home() {
+  const [onboardingStep, setOnboardingStep] = useState<"intro" | "region" | "team" | "character">("intro");
+  const [region, setRegion] = useState<string | null>(null);
+  const [team, setTeam] = useState<string | null>(null);
   const [character, setCharacter] = useState<{ name: string; gender: "male" | "female" } | null>(null);
   const [draftName, setDraftName] = useState("");
   const [draftGender, setDraftGender] = useState<"male" | "female">("female");
@@ -92,7 +95,7 @@ export default function Home() {
     setReviewedMaterials((items) => items.includes(index) ? items : [...items, index]);
   };
 
-  const restart = () => { setCharacter(null); setDraftName(""); setLocation(null); setCaseIndex(0); setScore(0); setTrust(3); setFeedback(null); setFinished(false); setOpenMaterial(null); setReviewedMaterials([]); setHoursLeft(8); setExtraRequested(false); };
+  const restart = () => { setOnboardingStep("intro"); setRegion(null); setTeam(null); setCharacter(null); setDraftName(""); setLocation(null); setCaseIndex(0); setScore(0); setTrust(3); setFeedback(null); setFinished(false); setOpenMaterial(null); setReviewedMaterials([]); setHoursLeft(8); setExtraRequested(false); };
 
   const createCharacter = () => {
     const name = draftName.trim();
@@ -168,6 +171,43 @@ export default function Home() {
     };
   }, []);
 
+  if (onboardingStep === "intro") return (
+    <main className="onboarding-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.95), rgba(7,18,20,.44)), url(${OFFICE_BG})` }}>
+      <div className="grain" /><div className="onboarding-inner">
+        <div className="location-kicker">ПЕРВОЕ НАЗНАЧЕНИЕ · СЕНТЯБРЬ 2026</div>
+        <p className="academy-line">УРАЛЬСКИЙ ГОСУДАРСТВЕННЫЙ ЮРИДИЧЕСКИЙ УНИВЕРСИТЕТ · ВЫПУСК 2026</p>
+        <h1>После университета —<br /><em>на службу.</em></h1>
+        <p className="onboarding-copy">Вы только что окончили Уральский государственный юридический университет. Приказом прокурора вас направили работать помощником прокурора в один из районов субъекта Российской Федерации.</p>
+        <p className="onboarding-copy">Впереди — незнакомая приёмная, первые материалы проверок и решения, за которыми стоят реальные люди. Сегодня теория останется в конспектах: на столе будут только факты, документы и ответственность.</p>
+        <div className="assignment-line"><span>НАЗНАЧЕНИЕ</span><b>Помощник прокурора</b><small>ПРИЁМНАЯ № 07</small></div>
+        <button className="primary-button onboarding-button" onClick={() => setOnboardingStep("region")}>Приступить к службе <ChevronRight size={17} /></button>
+        <div className="location-footer"><span>ДЕЛО НОВОГО СОТРУДНИКА · 01</span><span>ТОЧНОСТЬ · БЕСПРИСТРАСТНОСТЬ · ОТВЕТСТВЕННОСТЬ</span></div>
+      </div>
+    </main>
+  );
+
+  if (onboardingStep === "region") return (
+    <main className="onboarding-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.95), rgba(7,18,20,.44)), url(${OFFICE_BG})` }}>
+      <div className="grain" /><div className="onboarding-inner compact-onboarding">
+        <div className="location-kicker">ПЕРВОЕ НАЗНАЧЕНИЕ · РЕГИОН СЛУЖБЫ</div><h1>Выберите<br /><em>регион.</em></h1>
+        <p className="location-intro">Место службы определит характер обращений, ведомства и первые дела в вашей папке.</p>
+        <div className="selection-grid">{["Свердловская область", "Пермский край", "Челябинская область"].map((item, index) => <button className="selection-card" key={item} onClick={() => { setRegion(item); setOnboardingStep("team"); }}><span>РЕГИОН {String(index + 1).padStart(2, "0")}</span><b>{item}</b><ChevronRight size={17} /></button>)}</div>
+        <div className="location-footer"><span>НАЗНАЧЕНИЕ · ПОМОЩНИК ПРОКУРОРА</span><span>ШАГ 01 / 03</span></div>
+      </div>
+    </main>
+  );
+
+  if (onboardingStep === "team") return (
+    <main className="onboarding-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.95), rgba(7,18,20,.44)), url(${OFFICE_BG})` }}>
+      <div className="grain" /><div className="onboarding-inner compact-onboarding">
+        <div className="location-kicker">{region?.toUpperCase()} · РАСПРЕДЕЛЕНИЕ</div><h1>В какую<br /><em>команду?</em></h1>
+        <p className="location-intro">Выберите первый участок работы. Коллеги помогут освоиться, но ответственность за решение останется вашей.</p>
+        <div className="selection-grid">{[{ name: "Приёмная граждан", note: "Жалобы, заявления и личные обращения" }, { name: "Группа городских проверок", note: "Выезды, осмотры и акты на месте" }, { name: "Дежурная группа", note: "Срочные материалы и первичная оценка" }].map((item, index) => <button className="selection-card" key={item.name} onClick={() => { setTeam(item.name); setOnboardingStep("character"); }}><span>КОМАНДА {String(index + 1).padStart(2, "0")}</span><b>{item.name}</b><small>{item.note}</small><ChevronRight size={17} /></button>)}</div>
+        <div className="location-footer"><span>{region}</span><span>ШАГ 02 / 03</span></div>
+      </div>
+    </main>
+  );
+
   if (!character) return (
     <main className="character-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.95), rgba(7,18,20,.44)), url(${OFFICE_BG})` }}>
       <div className="grain" />
@@ -176,6 +216,7 @@ export default function Home() {
         <h1>Ваш первый день<br /><em>начинается здесь.</em></h1>
         <p className="location-intro">Заполните короткую анкету. Вы будете работать с материалами дел, принимать решения и отвечать за качество проверки.</p>
         <div className="character-card">
+          <div className="assignment-context"><span>МЕСТО СЛУЖБЫ</span><b>{region}</b><small>{team}</small></div>
           <label>ИМЯ ИГРОКА<input value={draftName} onChange={(event) => setDraftName(event.target.value)} onKeyDown={(event) => event.key === "Enter" && createCharacter()} placeholder="Например, Анна Орлова" autoFocus /></label>
           <div className="gender-field"><span>ПОЛ</span><div className="gender-options"><button className={draftGender === "female" ? "selected" : ""} onClick={() => setDraftGender("female")}><UserRound size={15} /> Женщина</button><button className={draftGender === "male" ? "selected" : ""} onClick={() => setDraftGender("male")}><UserRound size={15} /> Мужчина</button></div></div>
           <div className="rank-field"><BadgeCheck size={18} /><div><span>ЗВАНИЕ</span><b>Юрист 3 класса</b></div><small>НАЗНАЧЕНО</small></div>
