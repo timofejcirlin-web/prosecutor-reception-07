@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BadgeCheck, Camera, Check, ChevronRight, FileText, Gavel, MapPin, Maximize2, MessageSquare, Minimize2, RotateCcw, Scale, Stamp, UserRound, Users, X } from "lucide-react";
+import { BadgeCheck, Camera, Check, ChevronRight, FileText, Gavel, MapPin, Maximize2, MessageSquare, Minimize2, Pause, Play, RotateCcw, Scale, SkipBack, SkipForward, Stamp, UserRound, Users, X, Music2 } from "lucide-react";
 
 const OFFICE_BG = "/manus-storage/prosecutor-office-reference_7e58c04a.png";
 const UI_CLICK = "/manus-storage/prosecutor-ui-click_a921f702.mp3";
 const BACKGROUND_MUSIC = "/manus-storage/prosecutor-soviet-ambient_98bcbd3d.mp3";
+const MUSIC_TRACKS = [{ title: "Смена · Неоновый архив", src: BACKGROUND_MUSIC }, { title: "Вечерняя приёмная", src: BACKGROUND_MUSIC }, { title: "Ретрорадио · 1986", src: BACKGROUND_MUSIC }];
 const ADMIN_MAP_SVG = "/manus-storage/Ed887Ix3NN14_f7721d82.svg";
 const RF_SUBJECTS = "Адыгея|Алтай|Башкортостан|Бурятия|Дагестан|Донецкая Народная Республика|Ингушетия|Кабардино-Балкария|Калмыкия|Карачаево-Черкесия|Карелия|Коми|Крым|Луганская Народная Республика|Марий Эл|Мордовия|Саха (Якутия)|Северная Осетия — Алания|Татарстан|Тыва|Удмуртия|Хакасия|Чечня|Чувашия|Алтайский край|Забайкальский край|Камчатский край|Краснодарский край|Красноярский край|Пермский край|Приморский край|Ставропольский край|Хабаровский край|Амурская область|Архангельская область|Астраханская область|Белгородская область|Брянская область|Владимирская область|Волгоградская область|Вологодская область|Воронежская область|Запорожская область|Ивановская область|Иркутская область|Калининградская область|Калужская область|Кемеровская область — Кузбасс|Кировская область|Костромская область|Курганская область|Курская область|Ленинградская область|Липецкая область|Магаданская область|Московская область|Мурманская область|Нижегородская область|Новгородская область|Новосибирская область|Омская область|Оренбургская область|Орловская область|Пензенская область|Псковская область|Ростовская область|Рязанская область|Самарская область|Саратовская область|Сахалинская область|Свердловская область|Смоленская область|Тамбовская область|Тверская область|Томская область|Тульская область|Тюменская область|Ульяновская область|Херсонская область|Челябинская область|Ярославская область|Москва|Санкт-Петербург|Севастополь|Еврейская автономная область|Ненецкий автономный округ|Ханты-Мансийский автономный округ — Югра|Чукотский автономный округ|Ямало-Ненецкий автономный округ".split("|");
 const MAP_MARKERS = [{ name: "Калининградская область", left: 8, top: 38 }, { name: "Санкт-Петербург", left: 19, top: 28 }, { name: "Москва", left: 31, top: 45 }, { name: "Свердловская область", left: 59, top: 42 }, { name: "Новосибирская область", left: 70, top: 56 }, { name: "Красноярский край", left: 77, top: 47 }, { name: "Иркутская область", left: 82, top: 61 }, { name: "Республика Саха (Якутия)", left: 82, top: 25 }, { name: "Приморский край", left: 94, top: 60 }, { name: "Хабаровский край", left: 91, top: 48 }, { name: "Камчатский край", left: 99, top: 27 }, { name: "Краснодарский край", left: 29, top: 69 }, { name: "Республика Татарстан", left: 46, top: 53 }, { name: "Мурманская область", left: 24, top: 10 }];
@@ -57,6 +58,11 @@ function Stat({ label, value, tone = "default" }: { label: string; value: string
   return <div className="stat"><span>{label}</span><strong className={`tone-${tone}`}>{value}</strong></div>;
 }
 
+function MusicPlayer({ trackIndex, isPlaying, isOpen, onToggleOpen, onTogglePlaying, onPrevious, onNext, onSelectTrack }: { trackIndex: number; isPlaying: boolean; isOpen: boolean; onToggleOpen: () => void; onTogglePlaying: () => void; onPrevious: () => void; onNext: () => void; onSelectTrack: (index: number) => void }) {
+  const track = MUSIC_TRACKS[trackIndex];
+  return <div className={`music-player ${isOpen ? "open" : ""}`}><button className="music-player-trigger" onClick={onToggleOpen} aria-label="Открыть музыкальный плеер"><Music2 size={17} /><span className={isPlaying ? "music-pulse" : ""} /></button>{isOpen && <div className="music-player-panel"><div className="music-player-heading"><span>СОВЕТСКОЕ РЕТРО · FM</span><b>МУЗЫКА</b></div><div className="music-now-playing"><small>СЕЙЧАС ИГРАЕТ</small><strong>{track.title}</strong></div><div className="music-controls"><button onClick={onPrevious} aria-label="Предыдущий трек"><SkipBack size={15} /></button><button className="music-play" onClick={onTogglePlaying} aria-label={isPlaying ? "Пауза" : "Воспроизвести"}>{isPlaying ? <Pause size={15} /> : <Play size={15} />}</button><button onClick={onNext} aria-label="Следующий трек"><SkipForward size={15} /></button></div><div className="music-track-list">{MUSIC_TRACKS.map((item, index) => <button key={item.title} className={index === trackIndex ? "active" : ""} onClick={() => { onSelectTrack(index); onToggleOpen(); }}>{String(index + 1).padStart(2, "0")} · {item.title}</button>)}</div></div>}</div>;
+}
+
 export default function Home() {
   const [onboardingStep, setOnboardingStep] = useState<"intro" | "region" | "character">("intro");
   const [region, setRegion] = useState<string | null>(null);
@@ -79,6 +85,10 @@ export default function Home() {
   const [feedback, setFeedback] = useState<{ good: boolean; text: string; decision: Decision } | null>(null);
   const [finished, setFinished] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [musicTrack, setMusicTrack] = useState(0);
+  const [musicPlaying, setMusicPlaying] = useState(false);
+  const [musicOpen, setMusicOpen] = useState(false);
+  const musicRef = useRef<HTMLAudioElement | null>(null);
   const [openMaterial, setOpenMaterial] = useState<number | null>(null);
   const [reviewedMaterials, setReviewedMaterials] = useState<number[]>([]);
   const current = CASES[caseIndex];
@@ -176,23 +186,23 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const music = new Audio(BACKGROUND_MUSIC);
+    const music = new Audio(MUSIC_TRACKS[musicTrack].src);
     music.loop = true;
     music.volume = 0.16;
-    const startMusic = () => {
-      void music.play().catch(() => undefined);
-      window.removeEventListener("pointerdown", startMusic);
-      window.removeEventListener("keydown", startMusic);
-    };
-    window.addEventListener("pointerdown", startMusic, { once: true });
-    window.addEventListener("keydown", startMusic, { once: true });
-    return () => {
-      window.removeEventListener("pointerdown", startMusic);
-      window.removeEventListener("keydown", startMusic);
-      music.pause();
-      music.currentTime = 0;
-    };
-  }, []);
+    musicRef.current?.pause();
+    musicRef.current = music;
+    if (musicPlaying) void music.play().catch(() => undefined);
+    return () => { music.pause(); music.currentTime = 0; };
+  }, [musicTrack]);
+
+  useEffect(() => {
+    const music = musicRef.current;
+    if (!music) return;
+    if (musicPlaying) void music.play().catch(() => undefined);
+    else music.pause();
+  }, [musicPlaying]);
+
+  const changeMusicTrack = (offset: number) => setMusicTrack((value) => (value + offset + MUSIC_TRACKS.length) % MUSIC_TRACKS.length);
 
   useEffect(() => {
     if (onboardingStep !== "region" || mapSvg) return;
@@ -221,9 +231,11 @@ export default function Home() {
     });
   }, [mapSvg, region]);
 
+  const musicPlayer = <MusicPlayer trackIndex={musicTrack} isPlaying={musicPlaying} isOpen={musicOpen} onToggleOpen={() => setMusicOpen((value) => !value)} onTogglePlaying={() => setMusicPlaying((value) => !value)} onPrevious={() => changeMusicTrack(-1)} onNext={() => changeMusicTrack(1)} onSelectTrack={setMusicTrack} />;
+
   if (onboardingStep === "intro") return (
     <main className="onboarding-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.95), rgba(7,18,20,.44)), url(${OFFICE_BG})` }}>
-      <div className="grain" /><div className="onboarding-inner">
+      {musicPlayer}<div className="grain" /><div className="onboarding-inner">
         <div className="location-kicker">ПЕРВОЕ НАЗНАЧЕНИЕ · СЕНТЯБРЬ 2026</div>
         <p className="academy-line">УРАЛЬСКИЙ ГОСУДАРСТВЕННЫЙ ЮРИДИЧЕСКИЙ УНИВЕРСИТЕТ · ВЫПУСК 2026</p>
         <h1>После университета —<br /><em>на службу.</em></h1>
@@ -240,7 +252,7 @@ export default function Home() {
 
   if (onboardingStep === "region") return (
     <main className="onboarding-screen purple-map-mode" style={{ backgroundImage: `linear-gradient(90deg, rgba(18,5,28,.96), rgba(38,12,57,.62)), url(${OFFICE_BG})` }}>
-      <div className="grain" /><div className="onboarding-inner compact-onboarding">
+      {musicPlayer}<div className="grain" /><div className="onboarding-inner compact-onboarding">
         <div className="location-kicker">ПЕРВОЕ НАЗНАЧЕНИЕ · СУБЪЕКТ РФ</div><h1>Куда направит вас<br /><em>приказ?</em></h1>
         <p className="location-intro">Выберите любой субъект Российской Федерации. Регион определит характер обращений, ведомства и первые дела в вашей папке.</p>
         <div className="region-workspace"><div ref={mapRef} className="russia-map real-map" aria-label="Интерактивная административная карта субъектов России">{mapSvg ? <div className="admin-map-svg" dangerouslySetInnerHTML={{ __html: mapSvg }} /> : <div className="map-loading">Загрузка административной карты…</div>}{region && <div className="map-selection-readout"><span>ВЫБРАННЫЙ СУБЪЕКТ</span><b>{region}</b></div>}</div><div className="region-panel"><label className="region-search">ПОИСК СУБЪЕКТА<input value={regionQuery} onChange={(event) => setRegionQuery(event.target.value)} placeholder="Например, Татарстан" /></label><div className="region-list">{filteredRegions.slice(0, 18).map((item) => <button key={item} className={region === item ? "selected" : ""} onClick={() => setRegion(item)}><span>{item}</span>{region === item && <Check size={14} />}</button>)}{filteredRegions.length > 18 && <small>Показаны первые 18 результатов · уточните поиск</small>}</div></div></div>
@@ -252,7 +264,7 @@ export default function Home() {
 
   if (!character) return (
     <main className="character-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.95), rgba(7,18,20,.44)), url(${OFFICE_BG})` }}>
-      <div className="grain" />
+      {musicPlayer}<div className="grain" />
       <div className="character-inner">
         <div className="location-kicker"><UserRound size={14} /> ЛИЧНОЕ ДЕЛО · СОЗДАНИЕ ПЕРСОНАЖА</div>
         <h1>Ваш первый день<br /><em>начинается здесь.</em></h1>
@@ -271,7 +283,7 @@ export default function Home() {
 
   if (!location) return (
     <main className="location-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.94), rgba(7,18,20,.42)), url(${OFFICE_BG})` }}>
-      <div className="grain" />
+      {musicPlayer}<div className="grain" />
       <div className="location-inner">
         <div className="location-kicker"><span className="live-dot" /> НАЧАЛО РАБОЧЕГО ДНЯ · 09:00</div>
         <h1>Куда направимся<br /><em>сегодня?</em></h1>
@@ -287,7 +299,7 @@ export default function Home() {
 
   return (
     <main className="game-shell" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.94) 0%, rgba(7,18,20,.82) 33%, rgba(7,18,20,.25) 72%, rgba(7,18,20,.66) 100%), url(${OFFICE_BG})` }}>
-      <div className="grain" />
+      {musicPlayer}<div className="grain" />
       <header className="topbar">
         <div className="brand"><div className="brand-mark"><Scale size={18} /></div><div><p>ПРОКУРАТУРА</p><h1>Приёмная № 07</h1></div></div>
         <div className="profile-chip"><UserRound size={14} /><span>{character.name}</span><b>юрист 3 класса</b></div>
