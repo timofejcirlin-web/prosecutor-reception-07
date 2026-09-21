@@ -12,11 +12,11 @@ const ALBUM_ONE_TRACKS = [
   { title: "Протокол · служебный пульс", src: "/manus-storage/prosecutor-track-05-protocol_47fd438f.mp3" },
 ];
 const ALBUM_TWO_TRACKS = [
-  { title: "Парадный ритм · оригинальный синтвейв", src: "/manus-storage/album2-track-01-march_f794af20.mp3" },
-  { title: "Снег на стекле · лирический синтвейв", src: "/manus-storage/album2-track-02-lyric_0656594a.mp3" },
-  { title: "Танцплощадка · диско-синтвейв", src: "/manus-storage/album2-track-03-disco_8451078e.mp3" },
-  { title: "Кадр за кадром · кинематографический синтвейв", src: "/manus-storage/album2-track-04-cinema_8b444791.mp3" },
-  { title: "Ветер над Уралом · народный синтвейв", src: "/manus-storage/album2-track-05-folk_6343a65f.mp3" },
+  { title: "Гимн СССР · синтвейв-версия", src: "/manus-storage/anthem_c157b560.mp3" },
+  { title: "Песня о Щорсе · синтвейв-версия", src: "/manus-storage/shchors_4853eecf.mp3" },
+  { title: "Взвейтесь кострами · синтвейв-версия", src: "/manus-storage/vzveytes_5dad61c1.mp3" },
+  { title: "Полюшко-поле · синтвейв-версия", src: "/manus-storage/polyushko_ed27b57d.mp3" },
+  { title: "По долинам и по взгорьям · синтвейв-версия", src: "/manus-storage/dolinam_1d463260.mp3" },
 ];
 const MUSIC_ALBUMS = [
   { title: "ПРИЁМНАЯ № 07 · АРХИВ", tracks: ALBUM_ONE_TRACKS },
@@ -76,6 +76,7 @@ const INSPECTION_POINTS: Record<string, Material[]> = {
 };
 
 type Complaint = { id: string; title: string; applicant: string; role: string; situation: string; request: string; correct: "accept" | "reject"; outcome: string; background: string; portrait: string; documents: Material[]; extra: Material };
+type ConsequenceEvent = { title: string; text: string; tone: "good" | "warn" };
 const COMPLAINTS: Complaint[] = [
   { id: "housing", title: "Аварийное жильё", applicant: "Заявительница 01", role: "жительница района N", situation: "Я живу в доме, который признали аварийным ещё несколько лет назад. Дом должны были расселить, но решение постоянно откладывают. Прошу проверить мои жилищные права и помочь добиться безопасного жилья.", request: "Проверить, почему расселение не проводится, и принять меры для восстановления жилищных прав.", correct: "accept", outcome: "Жалоба принята: обстоятельства конкретны, есть указание на аварийный статус дома и длительное бездействие. Материал направляется на проверку.", background: "/manus-storage/complaint-housing-bg_9b956f3f.png", portrait: "/manus-storage/complaint-housing-portrait_88fe0823.png", documents: [{ label: "Решение комиссии", text: "Дом признан аварийным и подлежащим сносу. В выписке указана дата решения и состав комиссии." }, { label: "Ответ администрации", text: "В ответе говорится, что переселение запланировано, но конкретный срок предоставления жилья не указан." }, { label: "Сведения о доме", text: "Акт осмотра фиксирует неисправности конструкций, промерзание стен и жалобы жильцов на условия проживания." }], extra: { label: "План переселения", text: "Запрошенный план показывает, что срок переселения переносился дважды из-за отсутствия подготовленного жилого фонда." } },
   { id: "wage", title: "Задержка зарплаты", applicant: "Заявитель 02", role: "работник коммерческой организации", situation: "Мне не выплатили зарплату за несколько месяцев и не начислили компенсацию за задержку. Я обращался к руководству, но ответа не получил. Прошу проверить расчёты и добиться выплаты причитающихся сумм.", request: "Проверить задолженность, расчётные листки и соблюдение трудовых прав.", correct: "accept", outcome: "Жалоба принята: указан период, характер нарушения и требование о выплате. Материал направляется в трудовую проверку.", background: "/manus-storage/complaint-wage-bg_1214be84.png", portrait: "/manus-storage/complaint-wage-portrait_789f9519.png", documents: [{ label: "Расчётный листок", text: "За три расчётных периода начисления отражены, но фактическая выплата отсутствует. Сумма задолженности превышает 80 000 рублей." }, { label: "Табель", text: "В табеле отмечены полные смены. Данные совпадают с графиком, который работник приложил к обращению." }, { label: "Переписка", text: "На обращение к работодателю получен короткий ответ: «Выплата будет после закрытия месяца». Дата выплаты не указана." }], extra: { label: "Банковская выписка", text: "Выписка подтверждает отсутствие перечислений от работодателя за указанные расчётные периоды." } },
@@ -117,6 +118,9 @@ export default function Home() {
   const [dayNumber, setDayNumber] = useState(1);
   const [dayEnded, setDayEnded] = useState(false);
   const [pendingComplaints, setPendingComplaints] = useState(0);
+  const [repeatComplaintIndex, setRepeatComplaintIndex] = useState<number | null>(null);
+  const [consequenceQueue, setConsequenceQueue] = useState<ConsequenceEvent[]>([]);
+  const [dayConsequences, setDayConsequences] = useState<ConsequenceEvent[]>([]);
   const [extraRequested, setExtraRequested] = useState(false);
   const [score, setScore] = useState(0);
   const [correctDecisions, setCorrectDecisions] = useState(0);
@@ -200,18 +204,25 @@ export default function Home() {
     setComplaintDecision(decision);
     setCorrectDecisions((value) => value + (good ? 1 : 0));
     adjustReputation(good, true);
-    if (remaining === 0) endDay(decision);
+    if (!good) setRepeatComplaintIndex(complaintIndex);
+    const event: ConsequenceEvent = good && decision === "accept"
+      ? { title: "Ответ ведомства ожидается завтра", text: `По обращению «${currentComplaint.title}» направлен запрос. В следующий рабочий день в папке появятся дополнительные сведения.`, tone: "good" }
+      : good ? { title: "Маршрут обращения разъяснён", text: `Заявителю по делу «${currentComplaint.title}» указан компетентный порядок дальнейшего обращения.`, tone: "good" }
+      : { title: "Возможное повторное обращение", text: `Решение по делу «${currentComplaint.title}» может привести к повторной жалобе и служебной проверке завтра.`, tone: "warn" };
+    setConsequenceQueue((events) => [...events, event]);
+    if (remaining === 0) endDay(decision, [...consequenceQueue, event], !good);
   };
   const nextComplaint = () => {
     if (complaintIndex >= COMPLAINTS.length - 1) setComplaintDecision("accept");
     else { setComplaintIndex((value) => value + 1); setComplaintDecision(null); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setExtraRequested(false); }
   };
 
-  const endDay = (resolvedDecision?: "accept" | "reject") => {
+  const endDay = (resolvedDecision?: "accept" | "reject", eventsOverride?: ConsequenceEvent[], repeatOverride = false) => {
     const resolved = resolvedDecision ?? complaintDecision;
-    const unresolved = location === "reception" ? Math.max(0, COMPLAINTS.length - complaintIndex - (resolved ? 1 : 0)) : 0;
+    const repeats = location === "reception" && (repeatComplaintIndex !== null || repeatOverride);
+    const unresolved = location === "reception" ? Math.max(0, COMPLAINTS.length - complaintIndex - (resolved && !repeats ? 1 : 0)) : 0;
     setPendingComplaints(unresolved);
-    if (resolved && unresolved > 0) {
+    if (resolved && unresolved > 0 && !repeats) {
       setComplaintIndex((value) => value + 1);
       setComplaintDecision(null);
       setOpenComplaintDoc(null);
@@ -219,6 +230,7 @@ export default function Home() {
       setExtraRequested(false);
     }
     setHoursLeft(0);
+    setDayConsequences(eventsOverride ?? consequenceQueue);
     setDayEnded(true);
   };
 
@@ -227,10 +239,14 @@ export default function Home() {
     setHoursLeft(8);
     setDayEnded(false);
     setLocation(pendingComplaints > 0 ? "reception" : null);
+    if (repeatComplaintIndex !== null) setComplaintIndex(repeatComplaintIndex);
     setComplaintDecision(null);
     setOpenComplaintDoc(null);
     setReviewedComplaintDocs([]);
     setExtraRequested(false);
+    setRepeatComplaintIndex(null);
+    setDayConsequences(consequenceQueue);
+    setConsequenceQueue([]);
   };
 
   const requestExtraMaterial = () => {
@@ -394,7 +410,7 @@ export default function Home() {
 
   if (dayEnded) return (
     <main className="day-summary-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.94), rgba(7,18,20,.56)), url(${OFFICE_BG})` }}>
-      {musicPlayer}<div className="grain" /><div className="day-summary-card"><div className="eyebrow"><Stamp size={14} /> ИТОГИ РАБОЧЕГО ДНЯ · 18:00</div><h1>Смена закрыта.<br /><em>День {dayNumber}</em></h1><p>Канцелярия зафиксировала результаты дня. Не разобранные обращения не исчезают — они переходят в очередь следующего рабочего дня.</p><div className="day-summary-stats"><div><span>ОСТАЛОСЬ ЖАЛОБ</span><b>{pendingComplaints}</b></div><div><span>РАБОЧЕЕ ВРЕМЯ</span><b>10:00 — 18:00</b></div><div><span>РЕШЕНИЯ ПО ЖАЛОБАМ</span><b>{location === "reception" ? COMPLAINTS.length - pendingComplaints : score}</b></div></div><div className="reputation-summary"><div className="reputation-heading"><span>РЕПУТАЦИЯ СОТРУДНИКА</span><b>{reputationLabel}</b></div><div className="reputation-grid"><div><span>КАЧЕСТВО РЕШЕНИЙ</span><strong>{reputation.quality}/5</strong></div><div><span>ДОВЕРИЕ РУКОВОДСТВА</span><strong>{reputation.leadership}/5</strong></div><div><span>ДОВЕРИЕ ГРАЖДАН</span><strong>{reputation.citizens}/5</strong></div><div className="risk"><span>РИСК ПРОВЕРКИ</span><strong>{Math.round(reputation.risk)}/5</strong></div></div></div><button className="primary-button" onClick={startNextDay}>{pendingComplaints > 0 ? "Продолжить жалобы на следующий день" : "Начать следующий рабочий день"} <ChevronRight size={17} /></button></div>
+      {musicPlayer}<div className="grain" /><div className="day-summary-card"><div className="eyebrow"><Stamp size={14} /> ИТОГИ РАБОЧЕГО ДНЯ · 18:00</div><h1>Смена закрыта.<br /><em>День {dayNumber}</em></h1><p>Канцелярия зафиксировала результаты дня. Не разобранные обращения не исчезают — они переходят в очередь следующего рабочего дня.</p><div className="day-summary-stats"><div><span>ОСТАЛОСЬ ЖАЛОБ</span><b>{pendingComplaints}</b></div><div><span>РАБОЧЕЕ ВРЕМЯ</span><b>10:00 — 18:00</b></div><div><span>РЕШЕНИЯ ПО ЖАЛОБАМ</span><b>{location === "reception" ? COMPLAINTS.length - pendingComplaints : score}</b></div></div>{dayConsequences.length > 0 && <div className="consequence-summary"><div className="reputation-heading"><span>ПОСЛЕДСТВИЯ СМЕНЫ</span><b>ПРОЯВЯТСЯ ЗАВТРА</b></div>{dayConsequences.map((event, index) => <div className={`consequence-event ${event.tone}`} key={`${event.title}-${index}`}><strong>{event.title}</strong><p>{event.text}</p></div>)}</div>}<div className="reputation-summary"><div className="reputation-heading"><span>РЕПУТАЦИЯ СОТРУДНИКА</span><b>{reputationLabel}</b></div><div className="reputation-grid"><div><span>КАЧЕСТВО РЕШЕНИЙ</span><strong>{reputation.quality}/5</strong></div><div><span>ДОВЕРИЕ РУКОВОДСТВА</span><strong>{reputation.leadership}/5</strong></div><div><span>ДОВЕРИЕ ГРАЖДАН</span><strong>{reputation.citizens}/5</strong></div><div className="risk"><span>РИСК ПРОВЕРКИ</span><strong>{Math.round(reputation.risk)}/5</strong></div></div></div><button className="primary-button" onClick={startNextDay}>{pendingComplaints > 0 ? "Продолжить жалобы на следующий день" : "Начать следующий рабочий день"} <ChevronRight size={17} /></button></div>
     </main>
   );
 
