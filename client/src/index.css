@@ -345,3 +345,24 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .cabinet-lamp::after { content: ''; position: absolute; left: 50%; bottom: 99px; width: 76px; height: 35px; background: linear-gradient(150deg, #d59b4b, #6a3d25 72%); clip-path: polygon(22% 0, 78% 0, 100% 100%, 0 100%); transform: translateX(-50%); box-shadow: 0 0 16px rgba(243,180,78,.38); }
 .cabinet-shelf { position: absolute; z-index: 0; right: 1.5%; top: 25%; width: 185px; height: 300px; border-left: 9px solid rgba(41,29,24,.76); border-right: 9px solid rgba(41,29,24,.76); background: repeating-linear-gradient(180deg, transparent 0 66px, rgba(70,43,29,.92) 67px 74px, transparent 75px 98px), linear-gradient(90deg, rgba(20,16,16,.72), rgba(117,73,43,.18), rgba(20,16,16,.72)); box-shadow: inset 0 0 30px rgba(0,0,0,.5), 0 18px 35px rgba(0,0,0,.34); opacity: .78; pointer-events: none; }
 @media (max-width: 760px) { .cabinet-shelf { right: -20px; width: 130px; opacity: .48; } .cabinet-lamp { right: 1%; transform: scale(.72); transform-origin: right bottom; } }
+
+/* Final Soviet wall atlas: quiet plaster wall behind a paper map, without cabinet props. */
+.wall-map-mode { background-color: #1b2d2d !important; background-image: none !important; }
+.wall-map-mode::before { background-image: linear-gradient(180deg, rgba(23,42,41,.22), rgba(8,18,19,.78)), repeating-linear-gradient(0deg, rgba(216,196,148,.035) 0 1px, transparent 1px 6px), url('/manus-storage/prosecutor-office-reference_7e58c04a.png'); background-position: center; background-size: cover; }
+.wall-map-mode::after { background: radial-gradient(ellipse at 50% 28%, transparent 0 28%, rgba(0,0,0,.16) 72%, rgba(0,0,0,.58) 100%), linear-gradient(180deg, rgba(17,35,34,.12) 0 68%, rgba(5,12,13,.38) 100%); }
+.wall-map-mode .real-map { background: #d9cca2 !important; border: 12px solid #6c492d !important; outline: 2px solid #c09a5c; box-shadow: 0 6px 0 #39251b, 0 18px 32px rgba(0,0,0,.58), inset 0 0 0 4px rgba(255,245,202,.68) !important; }
+.wall-map-mode .real-map::before { content: none !important; }
+.wall-map-mode .real-map::after { opacity: .42; background: repeating-linear-gradient(0deg, rgba(105,78,42,.14) 0 1px, transparent 1px 5px), repeating-linear-gradient(90deg, rgba(105,78,42,.045) 0 1px, transparent 1px 9px); mix-blend-mode: multiply; }
+.wall-map-mode .admin-map-svg { filter: sepia(.24) saturate(.78) contrast(.94); }
+.wall-map-mode .admin-map-svg svg text,
+.wall-map-mode .admin-map-svg svg tspan { display: none !important; }
+.wall-map-mode .admin-map-svg svg > g[id] path { fill: #639eb4 !important; stroke: #f6edc9 !important; stroke-width: 2.5px !important; }
+.wall-map-mode .admin-map-svg svg > g[id]:hover path,
+.wall-map-mode .admin-map-svg svg > g[id].map-region-hovered path { fill: #b8dce1 !important; stroke: #fff9df !important; stroke-width: 4px !important; }
+.wall-map-mode .admin-map-svg svg > g.map-region-selected path { fill: #aa7040 !important; stroke: #fff0c2 !important; stroke-width: 5px !important; filter: none !important; }
+.wall-map-mode .admin-map-svg svg > g.map-region-selected:hover path,
+.wall-map-mode .admin-map-svg svg > g.map-region-selected.map-region-hovered path { fill: #b8dce1 !important; stroke: #fff9df !important; }
+.wall-map-mode .map-selection-readout { background: #eee3b9; border: 1px solid #a37945; border-left: 4px solid #9b5e32; box-shadow: 0 3px 8px rgba(53,37,21,.28); }
+.wall-map-mode .map-selection-readout span { color: #80643e; }
+.wall-map-mode .map-selection-readout b { color: #874e2b; font-family: 'IBM Plex Mono'; }
+.wall-map-mode .cabinet-lamp, .wall-map-mode .cabinet-shelf { display: none !important; }
