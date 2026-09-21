@@ -412,3 +412,10 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .wall-map-mode .four-region-map .admin-map-svg svg [data-region].map-region-selected { fill: #a92f2c !important; stroke: #fff0c4 !important; }
 .wall-map-mode .four-region-map .admin-map-svg svg [data-region].map-region-selected.map-region-hovered,
 .wall-map-mode .four-region-map .admin-map-svg svg [data-region].map-region-selected:hover { fill: #e6b09a !important; stroke: #fff7e0 !important; }
+
+/* Digital cabinet integration: the paper atlas hangs on the same office wall as the rest of the game. */
+.wall-map-mode::before { background-image: linear-gradient(180deg, rgba(211,207,191,.78), rgba(159,158,145,.86)), url('/manus-storage/prosecutor-office-reference_7e58c04a.png'); background-position: center; background-size: cover; }
+.wall-map-mode::after { background: radial-gradient(ellipse at 52% 27%, rgba(255,253,236,.22) 0 20%, transparent 58%), linear-gradient(180deg, rgba(28,38,35,.06), rgba(13,22,20,.26)); }
+.wall-map-mode .compact-onboarding { text-shadow: 0 1px 0 rgba(255,255,255,.2); }
+.wall-map-mode .real-map { box-shadow: 0 22px 30px rgba(32,28,21,.32) !important; }
+.wall-map-mode .region-panel { box-shadow: 0 16px 24px rgba(32,28,21,.26), inset 0 0 0 2px rgba(255,249,218,.55) !important; }

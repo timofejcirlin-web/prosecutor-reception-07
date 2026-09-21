@@ -7,9 +7,9 @@ const BACKGROUND_MUSIC = "/manus-storage/prosecutor-soviet-ambient_98bcbd3d.mp3"
 const MUSIC_TRACKS = [
   { title: "Смена · Неоновый архив", src: BACKGROUND_MUSIC },
   { title: "Ночной проспект · синтвейв", src: "/manus-storage/prosecutor-track-02_aaff8899.mp3" },
-  { title: "Кабинет · детективный джаз", src: "/manus-storage/prosecutor-track-03_a729478f.mp3" },
-  { title: "Архив · тихий минимализм", src: "/manus-storage/prosecutor-track-04_af2e30c3.mp3" },
-  { title: "Проверка · срочный протокол", src: "/manus-storage/prosecutor-track-05_918c4c8a.mp3" },
+  { title: "Папка № 07 · архивный эмбиент", src: "/manus-storage/prosecutor-track-03-archive_ef14af90.mp3" },
+  { title: "Дежурная лампа · ночной синтвейв", src: "/manus-storage/prosecutor-track-04-night-office_6a18b3bd.mp3" },
+  { title: "Протокол · служебный пульс", src: "/manus-storage/prosecutor-track-05-protocol_47fd438f.mp3" },
 ];
 const ADMIN_MAP_SVG = "/manus-storage/Ed887Ix3NN14_f7721d82.svg";
 const CONSTITUTION_SUBJECT_COUNT = 4;
