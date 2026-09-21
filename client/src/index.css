@@ -495,3 +495,23 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
   .game-shell .complaint-request p, .game-shell .complaint-documents .material-content p, .game-shell .complaint-result p { font-size: 12px; line-height: 1.42; }
   .game-shell .complaint-action b { font-size: 13px; }
 }
+
+/* Work-time cockpit: make the remaining hours visible at a glance. */
+.work-clock { min-width: 164px; padding: 7px 10px 6px; color: #e8e1d4; background: rgba(7,18,20,.78); border: 1px solid rgba(198,155,97,.46); box-shadow: inset 0 0 18px rgba(198,155,97,.07); transition: border-color .18s ease, background .18s ease; }
+.work-clock-top { display: flex; align-items: baseline; gap: 7px; white-space: nowrap; }
+.work-clock-top span, .work-clock small { color: rgba(232,225,212,.58); font: 8px 'IBM Plex Mono'; letter-spacing: .09em; }
+.work-clock-top strong { color: #f0c575; font: 700 22px 'IBM Plex Mono'; letter-spacing: -.04em; line-height: 1; }
+.work-clock-top em { color: rgba(232,225,212,.46); font: 9px 'IBM Plex Mono'; font-style: normal; }
+.work-clock-track { height: 5px; margin: 7px 0 5px; overflow: hidden; background: rgba(232,225,212,.13); border: 1px solid rgba(232,225,212,.12); }
+.work-clock-track i { display: block; height: 100%; background: #c69b61; transition: width .25s ease, background .18s ease; }
+.work-clock small { display: block; letter-spacing: .08em; }
+.work-clock small b { color: #f0c575; font-size: 10px; }
+.work-clock.warning { border-color: rgba(230,168,74,.82); background: rgba(77,47,20,.8); }
+.work-clock.warning .work-clock-top strong, .work-clock.warning small b { color: #f1ad48; }
+.work-clock.warning .work-clock-track i { background: #e0a044; }
+.work-clock.critical { border-color: rgba(193,83,67,.9); background: rgba(78,27,25,.86); animation: clockPulse 1.8s ease-in-out infinite; }
+.work-clock.critical .work-clock-top strong, .work-clock.critical small b { color: #ff9b82; }
+.work-clock.critical .work-clock-track i { background: #c95c4d; }
+@keyframes clockPulse { 50% { box-shadow: inset 0 0 18px rgba(201,92,77,.18), 0 0 13px rgba(201,92,77,.16); } }
+@media (max-width: 900px) { .work-clock { min-width: 140px; padding: 6px 8px; }.work-clock-top strong { font-size: 18px; }.work-clock-top span, .work-clock small { font-size: 7px; }.work-clock-top em { display: none; } }
+@media (max-width: 620px) { .work-clock { min-width: 116px; }.work-clock-top { gap: 4px; }.work-clock-top span { display: none; }.work-clock-top strong { font-size: 17px; } }
