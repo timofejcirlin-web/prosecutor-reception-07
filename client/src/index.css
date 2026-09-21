@@ -331,3 +331,17 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
   .wall-map-mode .region-panel { border-width: 5px !important; }
   .wall-map-mode .four-region-map .four-region-label { font-size: 20px; }
 }
+
+/* Real cabinet backdrop: keep the office image in its own layer below the map. */
+.wall-map-mode { position: relative; isolation: isolate; background: #071214 !important; background-image: none !important; }
+.wall-map-mode::before { content: ''; position: absolute; z-index: -2; inset: 0; background-image: linear-gradient(90deg, rgba(7,18,20,.72) 0%, rgba(7,18,20,.34) 48%, rgba(7,18,20,.64) 100%), url('/manus-storage/prosecutor-office-reference_7e58c04a.png'); background-position: center; background-size: cover; background-repeat: no-repeat; }
+.wall-map-mode::after { content: ''; position: absolute; z-index: -1; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 72% 42%, transparent 0 22%, rgba(0,0,0,.22) 73%, rgba(0,0,0,.58) 100%), linear-gradient(180deg, rgba(0,0,0,.22), transparent 28%, rgba(0,0,0,.28)); }
+.wall-map-mode > .compact-onboarding { position: relative; z-index: 2; }
+.wall-map-mode > .music-player { z-index: 30; }
+.wall-map-mode .real-map { box-shadow: 0 10px 0 #302018, 0 26px 48px rgba(0,0,0,.62), 0 0 0 1px rgba(232,194,119,.36), inset 0 0 0 4px rgba(255,248,217,.52) !important; }
+
+.cabinet-lamp { position: absolute; z-index: 0; right: 4.5%; bottom: 13%; width: 150px; height: 20px; border-radius: 50%; background: radial-gradient(ellipse, rgba(255,218,137,.95) 0 25%, rgba(231,163,68,.52) 42%, transparent 74%); filter: blur(.2px); box-shadow: 0 0 34px 14px rgba(239,178,76,.25); pointer-events: none; }
+.cabinet-lamp::before { content: ''; position: absolute; left: 52%; bottom: 4px; width: 3px; height: 105px; background: linear-gradient(#4a3325, #1b1714); transform: translateX(-50%); box-shadow: 0 0 4px rgba(0,0,0,.4); }
+.cabinet-lamp::after { content: ''; position: absolute; left: 50%; bottom: 99px; width: 76px; height: 35px; background: linear-gradient(150deg, #d59b4b, #6a3d25 72%); clip-path: polygon(22% 0, 78% 0, 100% 100%, 0 100%); transform: translateX(-50%); box-shadow: 0 0 16px rgba(243,180,78,.38); }
+.cabinet-shelf { position: absolute; z-index: 0; right: 1.5%; top: 25%; width: 185px; height: 300px; border-left: 9px solid rgba(41,29,24,.76); border-right: 9px solid rgba(41,29,24,.76); background: repeating-linear-gradient(180deg, transparent 0 66px, rgba(70,43,29,.92) 67px 74px, transparent 75px 98px), linear-gradient(90deg, rgba(20,16,16,.72), rgba(117,73,43,.18), rgba(20,16,16,.72)); box-shadow: inset 0 0 30px rgba(0,0,0,.5), 0 18px 35px rgba(0,0,0,.34); opacity: .78; pointer-events: none; }
+@media (max-width: 760px) { .cabinet-shelf { right: -20px; width: 130px; opacity: .48; } .cabinet-lamp { right: 1%; transform: scale(.72); transform-origin: right bottom; } }
