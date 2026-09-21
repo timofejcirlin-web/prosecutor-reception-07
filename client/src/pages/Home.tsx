@@ -4,12 +4,23 @@ import { BadgeCheck, Camera, Check, ChevronRight, FileText, Gavel, MapPin, Maxim
 const OFFICE_BG = "/manus-storage/prosecutor-office-reference_7e58c04a.png";
 const UI_CLICK = "/manus-storage/prosecutor-ui-click_a921f702.mp3";
 const BACKGROUND_MUSIC = "/manus-storage/prosecutor-soviet-ambient_98bcbd3d.mp3";
-const MUSIC_TRACKS = [
+const ALBUM_ONE_TRACKS = [
   { title: "Смена · Неоновый архив", src: BACKGROUND_MUSIC },
   { title: "Ночной проспект · синтвейв", src: "/manus-storage/prosecutor-track-02_aaff8899.mp3" },
   { title: "Папка № 07 · архивный эмбиент", src: "/manus-storage/prosecutor-track-03-archive_ef14af90.mp3" },
   { title: "Дежурная лампа · ночной синтвейв", src: "/manus-storage/prosecutor-track-04-night-office_6a18b3bd.mp3" },
   { title: "Протокол · служебный пульс", src: "/manus-storage/prosecutor-track-05-protocol_47fd438f.mp3" },
+];
+const ALBUM_TWO_TRACKS = [
+  { title: "Парадный ритм · оригинальный синтвейв", src: "/manus-storage/album2-track-01-march_f794af20.mp3" },
+  { title: "Снег на стекле · лирический синтвейв", src: "/manus-storage/album2-track-02-lyric_0656594a.mp3" },
+  { title: "Танцплощадка · диско-синтвейв", src: "/manus-storage/album2-track-03-disco_8451078e.mp3" },
+  { title: "Кадр за кадром · кинематографический синтвейв", src: "/manus-storage/album2-track-04-cinema_8b444791.mp3" },
+  { title: "Ветер над Уралом · народный синтвейв", src: "/manus-storage/album2-track-05-folk_6343a65f.mp3" },
+];
+const MUSIC_ALBUMS = [
+  { title: "ПРИЁМНАЯ № 07 · АРХИВ", tracks: ALBUM_ONE_TRACKS },
+  { title: "НОВАЯ КАССЕТА · СИНТВЕЙВ", tracks: ALBUM_TWO_TRACKS },
 ];
 const ADMIN_MAP_SVG = "/manus-storage/Ed887Ix3NN14_f7721d82.svg";
 const CONSTITUTION_SUBJECT_COUNT = 4;
@@ -81,9 +92,10 @@ function Stat({ label, value, tone = "default" }: { label: string; value: string
   return <div className="stat"><span>{label}</span><strong className={`tone-${tone}`}>{value}</strong></div>;
 }
 
-function MusicPlayer({ trackIndex, isPlaying, isOpen, onToggleOpen, onTogglePlaying, onPrevious, onNext, onSelectTrack }: { trackIndex: number; isPlaying: boolean; isOpen: boolean; onToggleOpen: () => void; onTogglePlaying: () => void; onPrevious: () => void; onNext: () => void; onSelectTrack: (index: number) => void }) {
-  const track = MUSIC_TRACKS[trackIndex];
-  return <div className={`music-player ${isOpen ? "open" : ""}`}><button className="music-player-trigger" onClick={onToggleOpen} aria-label="Открыть музыкальный плеер"><Music2 size={17} /><span className={isPlaying ? "music-pulse" : ""} /></button>{isOpen && <div className="music-player-panel"><div className="music-player-heading"><span>СОВЕТСКОЕ РЕТРО · FM</span><b>МУЗЫКА</b></div><div className="music-now-playing"><small>СЕЙЧАС ИГРАЕТ</small><strong>{track.title}</strong></div><div className="music-controls"><button onClick={onPrevious} aria-label="Предыдущий трек"><SkipBack size={15} /></button><button className="music-play" onClick={onTogglePlaying} aria-label={isPlaying ? "Пауза" : "Воспроизвести"}>{isPlaying ? <Pause size={15} /> : <Play size={15} />}</button><button onClick={onNext} aria-label="Следующий трек"><SkipForward size={15} /></button></div><div className="music-track-list">{MUSIC_TRACKS.map((item, index) => <button key={item.title} className={index === trackIndex ? "active" : ""} onClick={() => { onSelectTrack(index); onToggleOpen(); }}>{String(index + 1).padStart(2, "0")} · {item.title}</button>)}</div></div>}</div>;
+function MusicPlayer({ albumIndex, trackIndex, isPlaying, isOpen, onToggleOpen, onTogglePlaying, onPrevious, onNext, onSelectTrack, onSelectAlbum }: { albumIndex: number; trackIndex: number; isPlaying: boolean; isOpen: boolean; onToggleOpen: () => void; onTogglePlaying: () => void; onPrevious: () => void; onNext: () => void; onSelectTrack: (index: number) => void; onSelectAlbum: (index: number) => void }) {
+  const album = MUSIC_ALBUMS[albumIndex];
+  const track = album.tracks[trackIndex];
+  return <div className={`music-player ${isOpen ? "open" : ""}`}><button className="music-player-trigger" onClick={onToggleOpen} aria-label="Открыть музыкальный плеер"><Music2 size={17} /><span className={isPlaying ? "music-pulse" : ""} /></button>{isOpen && <div className="music-player-panel"><div className="music-player-heading"><span>СОВЕТСКОЕ РЕТРО · FM</span><b>МУЗЫКА</b></div><div className="music-album-tabs">{MUSIC_ALBUMS.map((item, index) => <button key={item.title} className={index === albumIndex ? "active" : ""} onClick={() => onSelectAlbum(index)}>Альбом {index + 1}</button>)}</div><div className="music-now-playing"><small>{album.title}</small><strong>{track.title}</strong></div><div className="music-controls"><button onClick={onPrevious} aria-label="Предыдущий трек"><SkipBack size={15} /></button><button className="music-play" onClick={onTogglePlaying} aria-label={isPlaying ? "Пауза" : "Воспроизвести"}>{isPlaying ? <Pause size={15} /> : <Play size={15} />}</button><button onClick={onNext} aria-label="Следующий трек"><SkipForward size={15} /></button></div><div className="music-track-list">{album.tracks.map((item, index) => <button key={item.title} className={index === trackIndex ? "active" : ""} onClick={() => { onSelectTrack(index); onToggleOpen(); }}>{String(index + 1).padStart(2, "0")} · {item.title}</button>)}</div></div>}</div>;
 }
 
 export default function Home() {
@@ -113,6 +125,7 @@ export default function Home() {
   const [feedback, setFeedback] = useState<{ good: boolean; text: string; decision: Decision } | null>(null);
   const [finished, setFinished] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [musicAlbum, setMusicAlbum] = useState(0);
   const [musicTrack, setMusicTrack] = useState(0);
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [musicOpen, setMusicOpen] = useState(false);
@@ -260,14 +273,14 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    const music = new Audio(MUSIC_TRACKS[musicTrack].src);
+    const music = new Audio(MUSIC_ALBUMS[musicAlbum].tracks[musicTrack].src);
     music.loop = true;
     music.volume = 0.16;
     musicRef.current?.pause();
     musicRef.current = music;
     if (musicPlaying) void music.play().catch(() => undefined);
     return () => { music.pause(); music.currentTime = 0; };
-  }, [musicTrack]);
+  }, [musicAlbum, musicTrack]);
 
   useEffect(() => {
     const music = musicRef.current;
@@ -276,7 +289,8 @@ export default function Home() {
     else music.pause();
   }, [musicPlaying]);
 
-  const changeMusicTrack = (offset: number) => setMusicTrack((value) => (value + offset + MUSIC_TRACKS.length) % MUSIC_TRACKS.length);
+  const changeMusicTrack = (offset: number) => setMusicTrack((value) => (value + offset + MUSIC_ALBUMS[musicAlbum].tracks.length) % MUSIC_ALBUMS[musicAlbum].tracks.length);
+  const changeMusicAlbum = (index: number) => { setMusicAlbum(index); setMusicTrack(0); };
 
   useEffect(() => {
     if (onboardingStep === "region" && !mapSvg) setMapSvg(FOUR_REGION_SVG);
@@ -328,7 +342,7 @@ export default function Home() {
     });
   }, [mapSvg, region]);
 
-  const musicPlayer = <MusicPlayer trackIndex={musicTrack} isPlaying={musicPlaying} isOpen={musicOpen} onToggleOpen={() => setMusicOpen((value) => !value)} onTogglePlaying={() => setMusicPlaying((value) => !value)} onPrevious={() => changeMusicTrack(-1)} onNext={() => changeMusicTrack(1)} onSelectTrack={setMusicTrack} />;
+  const musicPlayer = <MusicPlayer albumIndex={musicAlbum} trackIndex={musicTrack} isPlaying={musicPlaying} isOpen={musicOpen} onToggleOpen={() => setMusicOpen((value) => !value)} onTogglePlaying={() => setMusicPlaying((value) => !value)} onPrevious={() => changeMusicTrack(-1)} onNext={() => changeMusicTrack(1)} onSelectTrack={setMusicTrack} onSelectAlbum={changeMusicAlbum} />;
 
   if (onboardingStep === "intro") return (
     <main className="onboarding-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.95), rgba(7,18,20,.44)), url(${OFFICE_BG})` }}>
@@ -380,7 +394,7 @@ export default function Home() {
 
   if (dayEnded) return (
     <main className="day-summary-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.94), rgba(7,18,20,.56)), url(${OFFICE_BG})` }}>
-      {musicPlayer}<div className="grain" /><div className="day-summary-card"><div className="eyebrow"><Stamp size={14} /> ИТОГИ РАБОЧЕГО ДНЯ · 18:00</div><h1>Смена закрыта.<br /><em>День {dayNumber}</em></h1><p>Канцелярия зафиксировала результаты дня. Не разобранные обращения не исчезают — они переходят в очередь следующего рабочего дня.</p><div className="day-summary-stats"><div><span>ОСТАЛОСЬ ЖАЛОБ</span><b>{pendingComplaints}</b></div><div><span>РАБОЧЕЕ ВРЕМЯ</span><b>10:00 — 18:00</b></div><div><span>РЕШЕНИЙ ПО ДЕЛАМ</span><b>{score}</b></div></div><div className="reputation-summary"><div className="reputation-heading"><span>РЕПУТАЦИЯ СОТРУДНИКА</span><b>{reputationLabel}</b></div><div className="reputation-grid"><div><span>КАЧЕСТВО РЕШЕНИЙ</span><strong>{reputation.quality}/5</strong></div><div><span>ДОВЕРИЕ РУКОВОДСТВА</span><strong>{reputation.leadership}/5</strong></div><div><span>ДОВЕРИЕ ГРАЖДАН</span><strong>{reputation.citizens}/5</strong></div><div className="risk"><span>РИСК ПРОВЕРКИ</span><strong>{Math.round(reputation.risk)}/5</strong></div></div></div><button className="primary-button" onClick={startNextDay}>{pendingComplaints > 0 ? "Продолжить жалобы на следующий день" : "Начать следующий рабочий день"} <ChevronRight size={17} /></button></div>
+      {musicPlayer}<div className="grain" /><div className="day-summary-card"><div className="eyebrow"><Stamp size={14} /> ИТОГИ РАБОЧЕГО ДНЯ · 18:00</div><h1>Смена закрыта.<br /><em>День {dayNumber}</em></h1><p>Канцелярия зафиксировала результаты дня. Не разобранные обращения не исчезают — они переходят в очередь следующего рабочего дня.</p><div className="day-summary-stats"><div><span>ОСТАЛОСЬ ЖАЛОБ</span><b>{pendingComplaints}</b></div><div><span>РАБОЧЕЕ ВРЕМЯ</span><b>10:00 — 18:00</b></div><div><span>РЕШЕНИЯ ПО ЖАЛОБАМ</span><b>{location === "reception" ? COMPLAINTS.length - pendingComplaints : score}</b></div></div><div className="reputation-summary"><div className="reputation-heading"><span>РЕПУТАЦИЯ СОТРУДНИКА</span><b>{reputationLabel}</b></div><div className="reputation-grid"><div><span>КАЧЕСТВО РЕШЕНИЙ</span><strong>{reputation.quality}/5</strong></div><div><span>ДОВЕРИЕ РУКОВОДСТВА</span><strong>{reputation.leadership}/5</strong></div><div><span>ДОВЕРИЕ ГРАЖДАН</span><strong>{reputation.citizens}/5</strong></div><div className="risk"><span>РИСК ПРОВЕРКИ</span><strong>{Math.round(reputation.risk)}/5</strong></div></div></div><button className="primary-button" onClick={startNextDay}>{pendingComplaints > 0 ? "Продолжить жалобы на следующий день" : "Начать следующий рабочий день"} <ChevronRight size={17} /></button></div>
     </main>
   );
 
