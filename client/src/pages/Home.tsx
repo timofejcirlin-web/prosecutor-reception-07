@@ -15,11 +15,11 @@ const ADMIN_MAP_SVG = "/manus-storage/Ed887Ix3NN14_f7721d82.svg";
 const CONSTITUTION_SUBJECT_COUNT = 89;
 const RF_SUBJECTS = "Адыгея|Алтай|Башкортостан|Бурятия|Дагестан|Донецкая Народная Республика|Ингушетия|Кабардино-Балкария|Калмыкия|Карачаево-Черкесия|Карелия|Коми|Крым|Луганская Народная Республика|Марий Эл|Мордовия|Саха (Якутия)|Северная Осетия — Алания|Татарстан|Тыва|Удмуртия|Хакасия|Чечня|Чувашия|Алтайский край|Забайкальский край|Камчатский край|Краснодарский край|Красноярский край|Пермский край|Приморский край|Ставропольский край|Хабаровский край|Амурская область|Архангельская область|Астраханская область|Белгородская область|Брянская область|Владимирская область|Волгоградская область|Вологодская область|Воронежская область|Запорожская область|Ивановская область|Иркутская область|Калининградская область|Калужская область|Кемеровская область — Кузбасс|Кировская область|Костромская область|Курганская область|Курская область|Ленинградская область|Липецкая область|Магаданская область|Московская область|Мурманская область|Нижегородская область|Новгородская область|Новосибирская область|Омская область|Оренбургская область|Орловская область|Пензенская область|Псковская область|Ростовская область|Рязанская область|Самарская область|Саратовская область|Сахалинская область|Свердловская область|Смоленская область|Тамбовская область|Тверская область|Томская область|Тульская область|Тюменская область|Ульяновская область|Херсонская область|Челябинская область|Ярославская область|Москва|Санкт-Петербург|Севастополь|Еврейская автономная область|Ненецкий автономный округ|Ханты-Мансийский автономный округ — Югра|Чукотский автономный округ|Ямало-Ненецкий автономный округ".split("|");
 const MAP_MARKERS = [{ name: "Калининградская область", left: 8, top: 38 }, { name: "Санкт-Петербург", left: 19, top: 28 }, { name: "Москва", left: 31, top: 45 }, { name: "Свердловская область", left: 59, top: 42 }, { name: "Новосибирская область", left: 70, top: 56 }, { name: "Красноярский край", left: 77, top: 47 }, { name: "Иркутская область", left: 82, top: 61 }, { name: "Республика Саха (Якутия)", left: 82, top: 25 }, { name: "Приморский край", left: 94, top: 60 }, { name: "Хабаровский край", left: 91, top: 48 }, { name: "Камчатский край", left: 99, top: 27 }, { name: "Краснодарский край", left: 29, top: 69 }, { name: "Республика Татарстан", left: 46, top: 53 }, { name: "Мурманская область", left: 24, top: 10 }];
-const NEW_REGION_ZONES = [
-  { name: "Донецкая Народная Республика", left: "28%", top: "67%" },
-  { name: "Луганская Народная Республика", left: "35%", top: "63%" },
-  { name: "Запорожская область", left: "28%", top: "74%" },
-  { name: "Херсонская область", left: "36%", top: "73%" },
+const NEW_REGION_TERRITORIES = [
+  { name: "Донецкая Народная Республика", d: "M5 42 L13 32 L24 35 L29 47 L25 65 L16 74 L7 67 Z", labelX: 17, labelY: 54 },
+  { name: "Луганская Народная Республика", d: "M31 35 L42 30 L52 39 L50 58 L43 73 L34 66 L35 51 Z", labelX: 42, labelY: 53 },
+  { name: "Запорожская область", d: "M57 44 L68 36 L79 43 L76 61 L68 76 L58 68 L54 55 Z", labelX: 67, labelY: 56 },
+  { name: "Херсонская область", d: "M81 39 L91 35 L98 48 L94 67 L86 78 L79 67 L82 54 Z", labelX: 88, labelY: 56 },
 ];
 const REGION_ALIASES: Record<string, string> = { "Алтай": "altajskij_kraj", "Башкортостан": "bashkortostan", "Крым": "respublica_krym", "Саха (Якутия)": "respublika_sakha_(jakutija)", "Чечня": "chechenskaja_respublika", "Татарстан": "tatarstan", "Северная Осетия — Алания": "severnaja_osetija_-_alanija", "Еврейская автономная область": "evrejskaja_avtonomnaja_oblast'", "Ханты-Мансийский автономный округ — Югра": "khanty-mansijskij_avtonomnyj_okrug_-_jugra", "Ямало-Ненецкий автономный округ": "jamalo-neneckij_avtonomnyj_okrug" };
 const translit: Record<string, string> = { а: "a", б: "b", в: "v", г: "g", д: "d", е: "e", ё: "e", ж: "zh", з: "z", и: "i", й: "j", к: "k", л: "l", м: "m", н: "n", о: "o", п: "p", р: "r", с: "s", т: "t", у: "u", ф: "f", х: "kh", ц: "c", ч: "ch", ш: "sh", щ: "shh", ъ: "", ы: "y", ь: "", э: "eh", ю: "ju", я: "ja" };
@@ -225,14 +225,39 @@ export default function Home() {
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapSvg) return;
+    let hoveredGroup: Element | null = null;
     const onMapClick = (event: MouseEvent) => {
       const target = (event.target as Element).closest("g[id]");
       const id = target?.getAttribute("id");
       if (!id || id === "Boundaries_of_federal_subjects") return;
       setRegion(regionNameBySvgId(id));
     };
+    const onPointerOver = (event: PointerEvent) => {
+      const target = event.target as Element;
+      const group = target.closest("svg > g[id]");
+      if (!group || group.closest(".new-region-territories")) return;
+      if (hoveredGroup === group) return;
+      hoveredGroup?.classList.remove("map-region-hovered");
+      hoveredGroup = group;
+      hoveredGroup.classList.add("map-region-hovered");
+    };
+    const onPointerOut = (event: PointerEvent) => {
+      const target = event.target as Element;
+      const group = target.closest("svg > g[id]");
+      const related = event.relatedTarget as Element | null;
+      if (!group || related?.closest?.("svg > g[id]") === group) return;
+      group.classList.remove("map-region-hovered");
+      if (hoveredGroup === group) hoveredGroup = null;
+    };
     map.addEventListener("click", onMapClick);
-    return () => map.removeEventListener("click", onMapClick);
+    map.addEventListener("pointerover", onPointerOver);
+    map.addEventListener("pointerout", onPointerOut);
+    return () => {
+      map.removeEventListener("click", onMapClick);
+      map.removeEventListener("pointerover", onPointerOver);
+      map.removeEventListener("pointerout", onPointerOut);
+      hoveredGroup?.classList.remove("map-region-hovered");
+    };
   }, [mapSvg]);
 
   useEffect(() => {
@@ -268,7 +293,7 @@ export default function Home() {
       {musicPlayer}<div className="grain" /><div className="onboarding-inner compact-onboarding">
         <div className="location-kicker">ПЕРВОЕ НАЗНАЧЕНИЕ · СУБЪЕКТ РФ · СТАТЬЯ 65</div><h1>Куда направит вас<br /><em>приказ?</em></h1>
         <p className="location-intro">Выберите один из {CONSTITUTION_SUBJECT_COUNT} субъектов Российской Федерации. Перед вами административная карта в духе советского настенного атласа; регион определит характер обращений и первые дела в папке.</p>
-        <div className="region-workspace"><div ref={mapRef} className="russia-map real-map" aria-label="Интерактивная административная карта 89 субъектов России">{mapSvg ? <div className="admin-map-svg" dangerouslySetInnerHTML={{ __html: mapSvg }} /> : <div className="map-loading">Загрузка административной карты…</div>}<div className="new-region-zones" aria-label="Новые субъекты Российской Федерации">{NEW_REGION_ZONES.map((item) => <button key={item.name} className={region === item.name ? "selected" : ""} style={{ left: item.left, top: item.top }} onClick={() => setRegion(item.name)} title={item.name}><i />{item.name}</button>)}</div>{region && <div className="map-selection-readout"><span>ВЫБРАННЫЙ СУБЪЕКТ</span><b>{region}</b></div>}</div><div className="region-panel"><label className="region-search">ПОИСК СУБЪЕКТА<input value={regionQuery} onChange={(event) => setRegionQuery(event.target.value)} placeholder="Например, Татарстан" /></label><div className="region-list">{filteredRegions.map((item) => <button key={item} className={region === item ? "selected" : ""} onClick={() => setRegion(item)}><span>{item}</span>{region === item && <Check size={14} />}</button>)}{filteredRegions.length === 0 && <small>Субъект не найден</small>}</div></div></div>
+        <div className="region-workspace"><div className="map-column"><div ref={mapRef} className="russia-map real-map" aria-label="Интерактивная административная карта 89 субъектов России">{mapSvg ? <div className="admin-map-svg" dangerouslySetInnerHTML={{ __html: mapSvg }} /> : <div className="map-loading">Загрузка административной карты…</div>}{region && <div className="map-selection-readout"><span>ВЫБРАННЫЙ СУБЪЕКТ</span><b>{region}</b></div>}</div><section className="new-territories-panel" aria-label="Новые территории"><div className="new-territories-heading"><strong>НОВЫЕ ТЕРРИТОРИИ</strong><span>ОТДЕЛЬНЫЙ ВКЛАДНОЙ ЛИСТ · 4 СУБЪЕКТА</span></div><svg className="new-region-territories" viewBox="0 0 100 100" preserveAspectRatio="none" aria-label="Новые субъекты Российской Федерации">{NEW_REGION_TERRITORIES.map((item) => <g key={item.name} className={region === item.name ? "selected" : ""} role="button" tabIndex={0} aria-label={item.name} onClick={() => setRegion(item.name)} onKeyDown={(event) => event.key === "Enter" && setRegion(item.name)}><path d={item.d} /><text x={item.labelX} y={item.labelY}>{item.name.replace(" Народная Республика", " НР").replace("область", "обл.")}</text></g>)}</svg></section></div><div className="region-panel"><label className="region-search">ПОИСК СУБЪЕКТА<input value={regionQuery} onChange={(event) => setRegionQuery(event.target.value)} placeholder="Например, Татарстан" /></label><div className="region-list">{filteredRegions.map((item) => <button key={item} className={region === item ? "selected" : ""} onClick={() => setRegion(item)}><span>{item}</span>{region === item && <Check size={14} />}</button>)}{filteredRegions.length === 0 && <small>Субъект не найден</small>}</div></div></div>
         <div className="region-confirm"><span>{region ? `ВЫБРАНО: ${region}` : "Выберите субъект на карте или в списке"}</span><button className="primary-button" disabled={!region} onClick={() => setOnboardingStep("character")}>Подтвердить регион <ChevronRight size={17} /></button></div>
         <div className="location-footer"><span>НАЗНАЧЕНИЕ · ПОМОЩНИК ПРОКУРОРА</span><span>ШАГ 01 / 03</span></div>
       </div>

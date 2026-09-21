@@ -165,3 +165,40 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .new-region-zones button:hover i, .new-region-zones button.selected i { background: #fff7d6; }
 .new-region-zones button.selected { color: #fff7d6; background: #a85e2d; border-color: #713a20; }
 @media (max-width: 760px) { .new-region-zones button { max-width: 110px; padding: 3px 4px; font-size: 7px; } }
+
+/* Four additional subjects are real vector territories, not floating labels. */
+.new-region-territories { position: absolute; inset: 0; z-index: 3; width: 100%; height: 100%; pointer-events: none; }
+.new-region-territories g { pointer-events: auto; cursor: pointer; }
+.new-region-territories path { fill: #63add1; stroke: #f8efd0; stroke-width: .62; vector-effect: non-scaling-stroke; transition: fill .12s ease, stroke .12s ease; }
+.new-region-territories text { pointer-events: none; fill: #315a6d; font: 2.05px 'IBM Plex Mono'; font-weight: 700; text-anchor: middle; paint-order: stroke; stroke: #eef0d5; stroke-width: .42px; stroke-linejoin: round; }
+.new-region-territories g:hover path, .new-region-territories g:focus path { fill: #b8e5f3; stroke: #fffdf0; stroke-width: .86; }
+.new-region-territories g.selected path { fill: #a85e2d; stroke: #fff4cf; }
+.new-region-territories g.selected text { fill: #fff5d6; stroke: #7a4529; }
+.wall-map-mode .admin-map-svg svg > g[id] { pointer-events: auto; }
+.wall-map-mode .admin-map-svg svg > g[id] path { fill: #63add1 !important; }
+.wall-map-mode .admin-map-svg svg > g[id]:hover path { fill: #b8e5f3 !important; }
+.wall-map-mode .admin-map-svg svg > g[id].map-region-selected path { fill: #a85e2d !important; }
+@media (max-width: 760px) { .new-region-territories text { font-size: 2.6px; } }
+
+/* Hover is driven by one pointer-managed group; CSS :hover never paints the whole SVG. */
+.wall-map-mode .admin-map-svg svg > g[id]:hover path { fill: #63add1 !important; stroke: #f8efd0 !important; stroke-width: 2.5px !important; }
+.wall-map-mode .admin-map-svg svg > g.map-region-hovered > path { fill: #b8e5f3 !important; stroke: #fffdf0 !important; stroke-width: 3.5px !important; filter: none !important; }
+.wall-map-mode .admin-map-svg svg > g.map-region-selected.map-region-hovered > path { fill: #b8e5f3 !important; stroke: #fffdf0 !important; }
+
+.wall-map-mode .map-column { min-width: 0; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+.wall-map-mode .map-column .real-map { flex: 1 1 auto; min-height: 0; }
+.wall-map-mode .new-territories-panel { position: relative; flex: 0 0 96px; min-height: 96px; overflow: hidden; background: #eee8ca; border: 6px solid #76502d; outline: 1px solid #b28a52; box-shadow: 0 4px 0 #4a321f, inset 0 0 0 2px rgba(255,248,217,.62); }
+.wall-map-mode .new-territories-heading { position: absolute; z-index: 4; top: 7px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: baseline; color: #735532; pointer-events: none; }
+.wall-map-mode .new-territories-heading strong { font: 700 10px 'IBM Plex Mono'; letter-spacing: .13em; }
+.wall-map-mode .new-territories-heading span { color: rgba(88,68,39,.62); font: 8px 'IBM Plex Mono'; letter-spacing: .08em; }
+.wall-map-mode .new-territories-panel .new-region-territories { z-index: 2; inset: 20px 7px 3px; width: calc(100% - 14px); height: calc(100% - 23px); }
+.wall-map-mode .new-territories-panel .new-region-territories path { fill: #63add1; }
+.wall-map-mode .new-territories-panel .new-region-territories text { font-size: 2.1px; }
+@media (min-width: 761px) {
+  .wall-map-mode .region-workspace { grid-template-columns: minmax(0, 1fr) 290px; align-items: stretch; }
+}
+@media (max-width: 760px) {
+  .wall-map-mode .map-column { gap: 10px; }
+  .wall-map-mode .new-territories-panel { flex-basis: 105px; min-height: 105px; }
+  .wall-map-mode .new-territories-heading { flex-direction: column; gap: 2px; }
+}
