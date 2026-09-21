@@ -202,3 +202,23 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
   .wall-map-mode .new-territories-panel { flex-basis: 105px; min-height: 105px; }
   .wall-map-mode .new-territories-heading { flex-direction: column; gap: 2px; }
 }
+
+.wall-map-mode { overflow: hidden; }
+.wall-map-mode .compact-onboarding { height: 100dvh; max-height: 100dvh; overflow: hidden; }
+.wall-map-mode .new-territories-panel { flex-basis: 118px; min-height: 118px; }
+.wall-map-mode .territory-tiles { position: absolute; inset: 26px 7px 4px; z-index: 2; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+.wall-map-mode .territory-tile { width: 100%; height: 100%; min-width: 0; overflow: visible; }
+.wall-map-mode .territory-tile g { cursor: pointer; }
+.wall-map-mode .territory-tile path { fill: #63add1; stroke: #f8efd0; stroke-width: .52; vector-effect: non-scaling-stroke; transition: fill .12s ease, stroke .12s ease; }
+.wall-map-mode .territory-tile text { fill: #315a6d; font: 2.35px 'IBM Plex Mono'; font-weight: 700; text-anchor: middle; paint-order: stroke; stroke: #eef0d5; stroke-width: .42px; pointer-events: none; }
+.wall-map-mode .territory-tile g:hover path, .wall-map-mode .territory-tile g:focus path { fill: #b8e5f3; stroke: #fffdf0; stroke-width: .78; }
+.wall-map-mode .territory-tile g.selected path { fill: #a85e2d; stroke: #fff4cf; }
+.wall-map-mode .territory-tile g.selected text { fill: #fff5d6; stroke: #7a4529; }
+@media (min-width: 761px) {
+  .wall-map-mode .region-workspace { height: min(58vh, 570px); }
+}
+@media (max-width: 760px) {
+  .wall-map-mode .new-territories-panel { flex-basis: 112px; min-height: 112px; }
+  .wall-map-mode .territory-tiles { gap: 2px; }
+  .wall-map-mode .territory-tile text { font-size: 2.6px; }
+}
