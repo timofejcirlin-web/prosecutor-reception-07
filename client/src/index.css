@@ -297,3 +297,37 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
   .game-shell .complaint-request p { font-size: 11px; }
   .game-shell .complaint-action b { font-size: 12px; }
 }
+
+/* Cabinet-wall map variant: the map is a framed service document inside the office. */
+.wall-map-mode { color: #e8e1d4 !important; background-color: #071214 !important; }
+.wall-map-mode .onboarding-inner h1 { color: #f0e8d5; text-shadow: 0 2px 18px rgba(0,0,0,.35); }
+.wall-map-mode .onboarding-inner h1 em { color: #c69b61 !important; }
+.wall-map-mode .location-kicker { color: #d5a863 !important; }
+.wall-map-mode .location-intro { color: rgba(232,225,212,.68); }
+.wall-map-mode .location-footer { color: rgba(232,225,212,.52); border-color: rgba(232,225,212,.18); }
+.wall-map-mode .real-map { border-color: #67462d !important; outline-color: #b18a51; box-shadow: 0 10px 0 #302018, 0 24px 42px rgba(0,0,0,.48), inset 0 0 0 4px rgba(255,248,217,.52) !important; }
+.wall-map-mode .four-region-map { background: radial-gradient(circle at 50% 42%, rgba(85,139,157,.25), transparent 46%), linear-gradient(145deg, #18323a, #0c2028 70%) !important; }
+.wall-map-mode .four-region-map:before { content: 'ПРОКУРАТУРА · КАРТА РЕГИОНА НАЗНАЧЕНИЯ'; color: rgba(247,232,193,.8); font-size: 10px; letter-spacing: .14em; }
+.wall-map-mode .four-region-map:after { opacity: .34; background: repeating-linear-gradient(0deg, rgba(225,239,218,.12) 0 1px, transparent 1px 8px), linear-gradient(90deg, transparent 49.8%, rgba(223,240,224,.14) 50%, transparent 50.2%), radial-gradient(circle at 50% 50%, transparent 0 52%, rgba(0,0,0,.45) 100%); mix-blend-mode: screen; }
+.wall-map-mode .four-region-map .admin-map-svg { filter: drop-shadow(0 10px 8px rgba(0,0,0,.42)); }
+.wall-map-mode .four-region-map .admin-map-svg svg [data-region] { fill: #5da8c8; stroke: #f6ebc9; stroke-width: 3.5; }
+.wall-map-mode .four-region-map .admin-map-svg svg [data-region]:hover,
+.wall-map-mode .four-region-map .admin-map-svg svg [data-region].map-region-hovered { fill: #b9e4f1; stroke: #fff9e6; stroke-width: 5; filter: drop-shadow(0 0 4px rgba(185,228,241,.62)); }
+.wall-map-mode .four-region-map .admin-map-svg svg [data-region].map-region-selected { fill: #bd783b; stroke: #ffe6a8; stroke-width: 5; filter: drop-shadow(0 0 3px rgba(189,120,59,.52)); }
+.wall-map-mode .four-region-map .admin-map-svg svg [data-region].map-region-selected:hover,
+.wall-map-mode .four-region-map .admin-map-svg svg [data-region].map-region-selected.map-region-hovered { fill: #b9e4f1; stroke: #fff9e6; }
+.wall-map-mode .four-region-map .four-region-label { fill: #fff2d0; stroke: #173943; stroke-width: 7px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.5)); }
+.wall-map-mode .region-panel { background: rgba(239,231,198,.96) !important; border: 7px solid #67462d !important; outline: 1px solid #b18a51; box-shadow: 0 8px 0 #302018, 0 20px 30px rgba(0,0,0,.3), inset 0 0 0 2px rgba(255,249,218,.55); }
+.wall-map-mode .region-panel:before { content: 'СЛУЖЕБНАЯ ПАНЕЛЬ · ВЫБОР РЕГИОНА'; color: #805c36; letter-spacing: .12em; }
+.wall-map-mode .region-search input { background: rgba(255,252,231,.9); color: #413a2d; font-size: 12px; }
+.wall-map-mode .region-list button { padding: 11px 10px; color: #514637; font-size: 11px; }
+.wall-map-mode .region-list button:hover { color: #2e5060; background: rgba(185,228,241,.45); border-color: #6ea8bd; }
+.wall-map-mode .region-list button.selected { color: #fff6dc; background: #9b6335; border-color: #704221; box-shadow: inset 3px 0 0 #edc276; }
+.wall-map-mode .region-list button.selected svg { color: #ffe5a9; }
+.wall-map-mode .region-confirm { color: rgba(232,225,212,.72); border-color: rgba(232,225,212,.22); }
+.wall-map-mode .region-confirm .primary-button { background: #b47a40; color: #fff1cf; box-shadow: 0 4px 0 #684421, 0 8px 20px rgba(0,0,0,.24); }
+.wall-map-mode .region-confirm .primary-button:hover { background: #d09550; }
+@media (max-width: 760px) {
+  .wall-map-mode .region-panel { border-width: 5px !important; }
+  .wall-map-mode .four-region-map .four-region-label { font-size: 20px; }
+}

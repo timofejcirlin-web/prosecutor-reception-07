@@ -333,7 +333,7 @@ export default function Home() {
   const filteredRegions = RF_SUBJECTS.filter((item) => item.toLowerCase().includes(regionQuery.trim().toLowerCase()));
 
   if (onboardingStep === "region") return (
-    <main className="onboarding-screen wall-map-mode" style={{ backgroundImage: `linear-gradient(90deg, rgba(242,235,207,.98), rgba(224,211,174,.82)), url(${OFFICE_BG})` }}>
+    <main className="onboarding-screen wall-map-mode" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.94), rgba(7,18,20,.56)), url(${OFFICE_BG})` }}>
       {musicPlayer}<div className="grain" /><div className="onboarding-inner compact-onboarding">
         <div className="location-kicker">ПЕРВОЕ НАЗНАЧЕНИЕ · СУБЪЕКТ РФ · СТАТЬЯ 65</div><h1>Куда направит вас<br /><em>приказ?</em></h1>
         <p className="location-intro">Выберите один из четырёх субъектов Урала. На карте показаны реальные административные границы регионов, которые определят характер обращений и первые дела в папке.</p>
