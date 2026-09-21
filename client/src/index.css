@@ -256,3 +256,44 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .wall-map-mode .four-region-map .four-region-label { fill: #fff4d2; font: 700 25px 'IBM Plex Mono'; text-anchor: middle; paint-order: stroke; stroke: #274b56; stroke-width: 7px; pointer-events: none; opacity: .92; }
 .wall-map-mode .four-region-map .map-selection-readout { z-index: 4; }
 .wall-map-mode .region-panel { min-width: 0; }
+
+/* Readability pass for reception: larger type and controls, same viewport-safe shell. */
+@media (min-width: 901px) {
+  .game-shell .workspace { grid-template-columns: 235px minmax(0, 1fr); gap: 26px; padding-left: 20px; padding-right: 20px; }
+  .game-shell .complaint-area { padding: 21px; }
+  .game-shell .complaint-meta { font-size: 11px; letter-spacing: .08em; }
+  .game-shell .complaint-layout { grid-template-columns: 145px minmax(0, 1fr); gap: 20px; }
+  .game-shell .complaint-portrait img { width: 130px; height: 176px; }
+  .game-shell .complaint-portrait span { font-size: 11px; }
+  .game-shell .complaint-portrait b { font-size: 11px; }
+  .game-shell .complaint-card { max-width: none; padding: 22px 24px 19px; }
+  .game-shell .complaint-card h2 { margin: 8px 0 10px; font-size: 25px; }
+  .game-shell .complaint-speech { font-size: 13px; line-height: 1.38; }
+  .game-shell .complaint-request { margin: 12px 0; padding: 10px 12px; }
+  .game-shell .complaint-request p { font-size: 11px; line-height: 1.38; }
+  .game-shell .complaint-documents { margin-top: 12px; }
+  .game-shell .complaint-documents .material-tabs { gap: 6px; }
+  .game-shell .complaint-documents .material-tabs button { padding: 8px 10px; font-size: 10px; }
+  .game-shell .complaint-documents .material-content { margin-top: 8px; padding: 10px 12px; }
+  .game-shell .complaint-documents .material-content p { font-size: 11px; line-height: 1.38; }
+  .game-shell .extra-request { margin-top: 10px; padding: 9px 11px; font-size: 11px; }
+  .game-shell .complaint-actions { margin-top: 11px; gap: 9px; }
+  .game-shell .complaint-action { min-height: 48px; padding: 9px 11px; }
+  .game-shell .complaint-action b { font-size: 13px; }
+  .game-shell .complaint-action small { font-size: 10px; }
+  .game-shell .complaint-result { margin-top: 11px; padding: 10px 12px; }
+  .game-shell .complaint-result p { font-size: 11px; }
+  .game-shell .next-button { padding: 11px; font-size: 12px; }
+}
+@media (max-width: 900px) and (min-width: 561px) {
+  .game-shell .complaint-card h2 { font-size: 24px; }
+  .game-shell .complaint-speech { font-size: 13px; }
+  .game-shell .complaint-request p { font-size: 11px; }
+  .game-shell .complaint-action b { font-size: 12px; }
+}
+@media (max-width: 560px) {
+  .game-shell .complaint-card h2 { font-size: 23px; }
+  .game-shell .complaint-speech { font-size: 13px; }
+  .game-shell .complaint-request p { font-size: 11px; }
+  .game-shell .complaint-action b { font-size: 12px; }
+}
