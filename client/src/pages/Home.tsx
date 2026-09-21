@@ -108,6 +108,7 @@ export default function Home() {
   const [extraRequested, setExtraRequested] = useState(false);
   const [score, setScore] = useState(0);
   const [trust, setTrust] = useState(3);
+  const [reputation, setReputation] = useState({ quality: 3, leadership: 3, citizens: 3, risk: 1 });
   const [feedback, setFeedback] = useState<{ good: boolean; text: string; decision: Decision } | null>(null);
   const [finished, setFinished] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -122,12 +123,21 @@ export default function Home() {
   const progress = Math.min(caseIndex + (feedback ? 1 : 0), CASES.length);
   const rating = useMemo(() => score >= 4 ? "Смена принята" : score >= 2 ? "Нужна внимательность" : "Разбор полётов", [score]);
   const canDecide = reviewedMaterials.length === activeMaterials.length;
+  const clampRep = (value: number) => Math.max(0, Math.min(5, value));
+  const reputationLabel = useMemo(() => reputation.risk >= 4 ? "На контроле" : reputation.quality >= 4 && reputation.leadership >= 4 ? "Укрепляется" : "Формируется", [reputation]);
+  const adjustReputation = (good: boolean, citizenFacing: boolean) => setReputation((value) => ({
+    quality: clampRep(value.quality + (good ? 1 : -1)),
+    leadership: clampRep(value.leadership + (good ? 1 : -1)),
+    citizens: clampRep(value.citizens + (citizenFacing ? (good ? 1 : -1) : 0)),
+    risk: clampRep(value.risk + (good ? -0.25 : 1)),
+  }));
 
   const decide = (decision: Decision) => {
     if (feedback || finished || !canDecide) return;
     const good = decision === current.correct;
     setScore((value) => value + (good ? 1 : 0));
     setTrust((value) => Math.max(0, Math.min(5, value + (good ? 0 : -1))));
+    adjustReputation(good, false);
     setFeedback({ good, text: current.explanation, decision });
   };
 
@@ -142,7 +152,7 @@ export default function Home() {
     setReviewedMaterials((items) => items.includes(index) ? items : [...items, index]);
   };
 
-  const restart = () => { setDayNumber(1); setDayEnded(false); setPendingComplaints(0); setOnboardingStep("intro"); setRegion(null); setCharacter(null); setDraftName(""); setLocation(null); setCaseIndex(0); setScore(0); setTrust(3); setFeedback(null); setFinished(false); setOpenMaterial(null); setReviewedMaterials([]); setHoursLeft(8); setExtraRequested(false); };
+  const restart = () => { setDayNumber(1); setDayEnded(false); setPendingComplaints(0); setOnboardingStep("intro"); setRegion(null); setCharacter(null); setDraftName(""); setLocation(null); setCaseIndex(0); setScore(0); setTrust(3); setReputation({ quality: 3, leadership: 3, citizens: 3, risk: 1 }); setFeedback(null); setFinished(false); setOpenMaterial(null); setReviewedMaterials([]); setHoursLeft(8); setExtraRequested(false); };
 
   const createCharacter = () => {
     const name = draftName.trim();
@@ -170,8 +180,10 @@ export default function Home() {
   const decideComplaint = (decision: "accept" | "reject") => {
     if (complaintDecision || hoursLeft < 1) return;
     const remaining = Math.max(0, hoursLeft - 1);
+    const good = decision === currentComplaint.correct;
     setHoursLeft(remaining);
     setComplaintDecision(decision);
+    adjustReputation(good, true);
     if (remaining === 0) endDay(decision);
   };
   const nextComplaint = () => {
@@ -365,7 +377,7 @@ export default function Home() {
 
   if (dayEnded) return (
     <main className="day-summary-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.94), rgba(7,18,20,.56)), url(${OFFICE_BG})` }}>
-      {musicPlayer}<div className="grain" /><div className="day-summary-card"><div className="eyebrow"><Stamp size={14} /> ИТОГИ РАБОЧЕГО ДНЯ · 18:00</div><h1>Смена закрыта.<br /><em>День {dayNumber}</em></h1><p>Канцелярия зафиксировала результаты дня. Не разобранные обращения не исчезают — они переходят в очередь следующего рабочего дня.</p><div className="day-summary-stats"><div><span>ОСТАЛОСЬ ЖАЛОБ</span><b>{pendingComplaints}</b></div><div><span>РАБОЧЕЕ ВРЕМЯ</span><b>10:00 — 18:00</b></div><div><span>РЕШЕНИЙ ПО ДЕЛАМ</span><b>{score}</b></div></div><button className="primary-button" onClick={startNextDay}>{pendingComplaints > 0 ? "Продолжить жалобы на следующий день" : "Начать следующий рабочий день"} <ChevronRight size={17} /></button></div>
+      {musicPlayer}<div className="grain" /><div className="day-summary-card"><div className="eyebrow"><Stamp size={14} /> ИТОГИ РАБОЧЕГО ДНЯ · 18:00</div><h1>Смена закрыта.<br /><em>День {dayNumber}</em></h1><p>Канцелярия зафиксировала результаты дня. Не разобранные обращения не исчезают — они переходят в очередь следующего рабочего дня.</p><div className="day-summary-stats"><div><span>ОСТАЛОСЬ ЖАЛОБ</span><b>{pendingComplaints}</b></div><div><span>РАБОЧЕЕ ВРЕМЯ</span><b>10:00 — 18:00</b></div><div><span>РЕШЕНИЙ ПО ДЕЛАМ</span><b>{score}</b></div></div><div className="reputation-summary"><div className="reputation-heading"><span>РЕПУТАЦИЯ СОТРУДНИКА</span><b>{reputationLabel}</b></div><div className="reputation-grid"><div><span>КАЧЕСТВО РЕШЕНИЙ</span><strong>{reputation.quality}/5</strong></div><div><span>ДОВЕРИЕ РУКОВОДСТВА</span><strong>{reputation.leadership}/5</strong></div><div><span>ДОВЕРИЕ ГРАЖДАН</span><strong>{reputation.citizens}/5</strong></div><div className="risk"><span>РИСК ПРОВЕРКИ</span><strong>{Math.round(reputation.risk)}/5</strong></div></div></div><button className="primary-button" onClick={startNextDay}>{pendingComplaints > 0 ? "Продолжить жалобы на следующий день" : "Начать следующий рабочий день"} <ChevronRight size={17} /></button></div>
     </main>
   );
 
@@ -402,7 +414,8 @@ export default function Home() {
           <p>Проверьте материалы перед тем, как поставить печать. Решение нельзя отменить после отправки.</p>
           <div className="rule" />
           <div className="rule-row"><span>Дел в очереди</span><b>{CASES.length - Math.min(caseIndex, CASES.length - 1)}</b></div>
-          <div className="rule-row"><span>Порог доверия</span><b>{trust} / 5</b></div>
+          <div className="rule-row"><span>Доверие канцелярии</span><b>{trust} / 5</b></div>
+          <div className="reputation-mini"><div><span>РЕПУТАЦИЯ</span><b>{reputationLabel}</b></div><div><span>КАЧЕСТВО</span><strong>{reputation.quality}/5</strong></div><div><span>РИСК ПРОВЕРКИ</span><strong className={reputation.risk >= 4 ? "risk-high" : ""}>{Math.round(reputation.risk)}/5</strong></div></div>
           <div className="stamp-note">«Не торопись<br />с формулировкой»</div>
         </aside>
 
@@ -438,7 +451,7 @@ export default function Home() {
         </section>}
       </section>
 
-      <footer className="footerbar"><div><b>УКАЗАНИЕ:</b> решение должно быть кратким, точным и проверяемым.</div><div className="footer-stats"><Stat label="ВЕРНЫЕ" value={`${score}/${CASES.length}`} tone={score > 0 ? "good" : "default"} /><Stat label="ДОВЕРИЕ" value={`${trust}/5`} tone={trust < 2 ? "bad" : "default"} /><Stat label="СТАТУС" value={finished ? "ЗАКРЫТО" : feedback ? "ПРОВЕРКА" : "ОЖИДАНИЕ"} /></div></footer>
+      <footer className="footerbar"><div><b>УКАЗАНИЕ:</b> решение должно быть кратким, точным и проверяемым.</div><div className="footer-stats"><Stat label="ВЕРНЫЕ" value={`${score}/${CASES.length}`} tone={score > 0 ? "good" : "default"} /><Stat label="ДОВЕРИЕ" value={`${trust}/5`} tone={trust < 2 ? "bad" : "default"} /><Stat label="РЕПУТАЦИЯ" value={`${reputation.quality}/5`} tone={reputation.quality < 2 ? "bad" : reputation.quality >= 4 ? "good" : "default"} /><Stat label="СТАТУС" value={finished ? "ЗАКРЫТО" : feedback ? "ПРОВЕРКА" : "ОЖИДАНИЕ"} /></div></footer>
     </main>
   );
 }

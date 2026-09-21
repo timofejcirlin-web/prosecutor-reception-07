@@ -248,6 +248,18 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .day-summary-stats span { color: #c69b61; font: 9px 'IBM Plex Mono'; letter-spacing: .1em; }
 .day-summary-stats b { color: #f1e6cf; font-size: 20px; }
 .day-summary-card .primary-button { max-width: 420px; }
+.reputation-summary { margin: 24px 0 28px; padding: 16px 0 15px; border-top: 1px solid rgba(232,225,212,.16); border-bottom: 1px solid rgba(232,225,212,.16); }
+.reputation-heading { display: flex; justify-content: space-between; gap: 18px; align-items: baseline; margin-bottom: 14px; color: #c69b61; font: 9px 'IBM Plex Mono'; letter-spacing: .1em; }
+.reputation-heading b { color: #8dbd94; font-weight: 500; }
+.reputation-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.reputation-grid div { display: flex; flex-direction: column; gap: 6px; }
+.reputation-grid span, .reputation-mini span { color: rgba(232,225,212,.48); font: 8px 'IBM Plex Mono'; letter-spacing: .08em; }
+.reputation-grid strong { color: #f1e6cf; font: 500 17px 'DM Mono'; }
+.reputation-grid .risk strong, .risk-high { color: #d88373; }
+.reputation-mini { margin-top: 22px; padding: 13px 0 4px; border-top: 1px solid rgba(226,215,191,.14); display: grid; grid-template-columns: 1.25fr 1fr 1fr; gap: 9px; }
+.reputation-mini div { display: flex; flex-direction: column; gap: 5px; }
+.reputation-mini b, .reputation-mini strong { color: #ded5c5; font: 500 10px 'DM Mono'; }
+.reputation-mini b { color: #8dbd94; }
 @media (max-width: 760px) { .end-day-button { display: none; } .day-summary-card { padding: 28px 22px; } .day-summary-stats { grid-template-columns: 1fr; gap: 14px; } }
 
 .wall-map-mode .four-region-map { background: radial-gradient(circle at 55% 42%, rgba(68,116,137,.28), transparent 45%), linear-gradient(135deg, #172f37 0%, #1f4652 52%, #10262f 100%) !important; }
