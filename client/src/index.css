@@ -532,3 +532,9 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .consequence-event.warn { border-color: #b68b50; background: rgba(182,139,80,.12); }
 .consequence-event strong { color: #f1e6cf; font: 10px 'IBM Plex Mono'; letter-spacing: .04em; }
 .consequence-event p { margin: 5px 0 0; color: rgba(232,225,212,.68); font-size: 11px; line-height: 1.45; }
+
+/* Fullscreen reception fix: the action stays inside the visible paper card instead of falling below the viewport. */
+@media (min-width: 901px) {
+  .game-shell .complaint-card { position: relative; padding-bottom: 76px; }
+  .game-shell .complaint-card > .next-button { position: absolute; left: 24px; right: 24px; bottom: 16px; width: auto; margin: 0; z-index: 4; }
+}

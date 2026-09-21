@@ -10,8 +10,6 @@ const ALBUM_ONE_TRACKS = [
   { title: "Папка № 07 · архивный эмбиент", src: "/manus-storage/prosecutor-track-03-archive_ef14af90.mp3" },
   { title: "Дежурная лампа · ночной синтвейв", src: "/manus-storage/prosecutor-track-04-night-office_6a18b3bd.mp3" },
   { title: "Протокол · служебный пульс", src: "/manus-storage/prosecutor-track-05-protocol_47fd438f.mp3" },
-];
-const ALBUM_TWO_TRACKS = [
   { title: "Гимн СССР · синтвейв-версия", src: "/manus-storage/anthem_c157b560.mp3" },
   { title: "Песня о Щорсе · синтвейв-версия", src: "/manus-storage/shchors_4853eecf.mp3" },
   { title: "Взвейтесь кострами · синтвейв-версия", src: "/manus-storage/vzveytes_5dad61c1.mp3" },
@@ -20,7 +18,6 @@ const ALBUM_TWO_TRACKS = [
 ];
 const MUSIC_ALBUMS = [
   { title: "ПРИЁМНАЯ № 07 · АРХИВ", tracks: ALBUM_ONE_TRACKS },
-  { title: "НОВАЯ КАССЕТА · СИНТВЕЙВ", tracks: ALBUM_TWO_TRACKS },
 ];
 const ADMIN_MAP_SVG = "/manus-storage/Ed887Ix3NN14_f7721d82.svg";
 const CONSTITUTION_SUBJECT_COUNT = 4;
@@ -96,7 +93,7 @@ function Stat({ label, value, tone = "default" }: { label: string; value: string
 function MusicPlayer({ albumIndex, trackIndex, isPlaying, isOpen, onToggleOpen, onTogglePlaying, onPrevious, onNext, onSelectTrack, onSelectAlbum }: { albumIndex: number; trackIndex: number; isPlaying: boolean; isOpen: boolean; onToggleOpen: () => void; onTogglePlaying: () => void; onPrevious: () => void; onNext: () => void; onSelectTrack: (index: number) => void; onSelectAlbum: (index: number) => void }) {
   const album = MUSIC_ALBUMS[albumIndex];
   const track = album.tracks[trackIndex];
-  return <div className={`music-player ${isOpen ? "open" : ""}`}><button className="music-player-trigger" onClick={onToggleOpen} aria-label="Открыть музыкальный плеер"><Music2 size={17} /><span className={isPlaying ? "music-pulse" : ""} /></button>{isOpen && <div className="music-player-panel"><div className="music-player-heading"><span>СОВЕТСКОЕ РЕТРО · FM</span><b>МУЗЫКА</b></div><div className="music-album-tabs">{MUSIC_ALBUMS.map((item, index) => <button key={item.title} className={index === albumIndex ? "active" : ""} onClick={() => onSelectAlbum(index)}>Альбом {index + 1}</button>)}</div><div className="music-now-playing"><small>{album.title}</small><strong>{track.title}</strong></div><div className="music-controls"><button onClick={onPrevious} aria-label="Предыдущий трек"><SkipBack size={15} /></button><button className="music-play" onClick={onTogglePlaying} aria-label={isPlaying ? "Пауза" : "Воспроизвести"}>{isPlaying ? <Pause size={15} /> : <Play size={15} />}</button><button onClick={onNext} aria-label="Следующий трек"><SkipForward size={15} /></button></div><div className="music-track-list">{album.tracks.map((item, index) => <button key={item.title} className={index === trackIndex ? "active" : ""} onClick={() => { onSelectTrack(index); onToggleOpen(); }}>{String(index + 1).padStart(2, "0")} · {item.title}</button>)}</div></div>}</div>;
+  return <div className={`music-player ${isOpen ? "open" : ""}`}><button className="music-player-trigger" onClick={onToggleOpen} aria-label="Открыть музыкальный плеер"><Music2 size={17} /><span className={isPlaying ? "music-pulse" : ""} /></button>{isOpen && <div className="music-player-panel"><div className="music-player-heading"><span>СОВЕТСКОЕ РЕТРО · FM</span><b>МУЗЫКА</b></div>{MUSIC_ALBUMS.length > 1 && <div className="music-album-tabs">{MUSIC_ALBUMS.map((item, index) => <button key={item.title} className={index === albumIndex ? "active" : ""} onClick={() => onSelectAlbum(index)}>Альбом {index + 1}</button>)}</div>}<div className="music-now-playing"><small>{album.title}</small><strong>{track.title}</strong></div><div className="music-controls"><button onClick={onPrevious} aria-label="Предыдущий трек"><SkipBack size={15} /></button><button className="music-play" onClick={onTogglePlaying} aria-label={isPlaying ? "Пауза" : "Воспроизвести"}>{isPlaying ? <Pause size={15} /> : <Play size={15} />}</button><button onClick={onNext} aria-label="Следующий трек"><SkipForward size={15} /></button></div><div className="music-track-list">{album.tracks.map((item, index) => <button key={item.title} className={index === trackIndex ? "active" : ""} onClick={() => { onSelectTrack(index); onToggleOpen(); }}>{String(index + 1).padStart(2, "0")} · {item.title}</button>)}</div></div>}</div>;
 }
 
 export default function Home() {
