@@ -366,3 +366,49 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .wall-map-mode .map-selection-readout span { color: #80643e; }
 .wall-map-mode .map-selection-readout b { color: #874e2b; font-family: 'IBM Plex Mono'; }
 .wall-map-mode .cabinet-lamp, .wall-map-mode .cabinet-shelf { display: none !important; }
+
+/* Hanging Soviet wall map: paper sheet, metal rods and wall shadow. */
+.wall-map-mode { color: #3d3a31 !important; background: #c9c6b8 !important; }
+.wall-map-mode::before { z-index: -2; background-color: #cbc9be; background-image: linear-gradient(180deg, rgba(255,255,255,.45), rgba(155,151,136,.18)), repeating-linear-gradient(0deg, rgba(84,79,66,.045) 0 1px, transparent 1px 7px), repeating-linear-gradient(90deg, rgba(255,255,255,.12) 0 1px, transparent 1px 13px); background-size: auto; }
+.wall-map-mode::after { z-index: -1; background: radial-gradient(ellipse at 50% 34%, transparent 0 34%, rgba(50,46,38,.08) 80%, rgba(38,35,29,.22) 100%); }
+.wall-map-mode .onboarding-inner h1 { color: #35352f; text-shadow: 1px 1px 0 rgba(255,255,255,.4); }
+.wall-map-mode .onboarding-inner h1 em { color: #8f4f2b !important; }
+.wall-map-mode .location-intro { color: rgba(54,51,43,.72); }
+.wall-map-mode .location-footer { color: rgba(58,54,44,.6); border-color: rgba(71,65,51,.3); }
+.wall-map-mode .real-map { overflow: visible; background: transparent !important; border: 0 !important; outline: 0 !important; box-shadow: 0 24px 28px rgba(48,43,33,.24) !important; }
+.wall-map-mode .real-map::after { content: ''; z-index: 1; inset: 17px 11px 13px; opacity: 1; background: radial-gradient(circle at 38% 30%, rgba(255,255,255,.56), transparent 42%), repeating-linear-gradient(0deg, rgba(116,87,46,.08) 0 1px, transparent 1px 6px), #eee5c4; mix-blend-mode: normal; box-shadow: 0 2px 7px rgba(52,43,30,.3), inset 0 0 0 1px rgba(121,91,54,.24); }
+.wall-map-mode .four-region-map .admin-map-svg { z-index: 2; inset: 23px 18px 18px; padding: 8px 6px 5px; filter: sepia(.2) saturate(.78) contrast(.96); }
+.wall-map-mode .four-region-map .admin-map-svg svg { position: relative; z-index: 2; }
+.wall-map-mode .four-region-map .admin-map-svg svg > g[id] path { fill: #6e9eab !important; stroke: #f8f0d3 !important; stroke-width: 3px !important; }
+.wall-map-mode .four-region-map .admin-map-svg svg > g[id]:hover path,
+.wall-map-mode .four-region-map .admin-map-svg svg > g[id].map-region-hovered path { fill: #b5dbe0 !important; stroke: #fff8df !important; stroke-width: 4px !important; }
+.wall-map-mode .four-region-map .admin-map-svg svg > g.map-region-selected path { fill: #b94f35 !important; stroke: #fff0c4 !important; stroke-width: 4.5px !important; filter: none !important; }
+.wall-map-mode .four-region-map .admin-map-svg svg > g.map-region-selected:hover path,
+.wall-map-mode .four-region-map .admin-map-svg svg > g.map-region-selected.map-region-hovered path { fill: #b5dbe0 !important; stroke: #fff8df !important; }
+.wall-map-mode .map-hanging-rail { position: absolute; z-index: 5; left: 8px; right: 8px; height: 8px; border: 1px solid #74736c; border-radius: 5px; background: linear-gradient(180deg, #f2f0e8, #9b9a92 48%, #5f5e58); box-shadow: 0 2px 4px rgba(36,31,25,.35); pointer-events: none; }
+.wall-map-mode .map-hanging-rail::before, .wall-map-mode .map-hanging-rail::after { content: ''; position: absolute; top: -3px; width: 12px; height: 12px; border: 1px solid #77756d; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, #888 60%, #4e4d48); box-shadow: 0 2px 3px rgba(0,0,0,.3); }
+.wall-map-mode .map-hanging-rail::before { left: -4px; }
+.wall-map-mode .map-hanging-rail::after { right: -4px; }
+.wall-map-mode .map-hanging-rail-top { top: 12px; }
+.wall-map-mode .map-hanging-rail-bottom { bottom: 8px; }
+.wall-map-mode .map-selection-readout { z-index: 7; background: #efe4bd; border: 1px solid #aa7752; border-left: 4px solid #a53f2c; box-shadow: 0 3px 7px rgba(50,36,26,.28); }
+.wall-map-mode .map-selection-readout b { color: #923723; }
+.wall-map-mode .cabinet-lamp, .wall-map-mode .cabinet-shelf { display: none !important; }
+
+/* Override the older digital map background so the sheet reads as real hanging paper. */
+.wall-map-mode .four-region-map { background: transparent !important; }
+.wall-map-mode .four-region-map::after { background: radial-gradient(circle at 38% 30%, rgba(255,255,255,.62), transparent 42%), repeating-linear-gradient(0deg, rgba(116,87,46,.08) 0 1px, transparent 1px 6px), #eee5c4 !important; }
+.wall-map-mode .four-region-map .admin-map-svg svg > g[id] path { fill: #c94e3d !important; stroke: #f8efcf !important; }
+.wall-map-mode .four-region-map .admin-map-svg svg > g[id]:hover path,
+.wall-map-mode .four-region-map .admin-map-svg svg > g[id].map-region-hovered path { fill: #e6b09a !important; stroke: #fff7e0 !important; }
+.wall-map-mode .four-region-map .admin-map-svg svg > g.map-region-selected path { fill: #a92f2c !important; stroke: #fff0c4 !important; }
+.wall-map-mode .four-region-map .admin-map-svg svg > g.map-region-selected:hover path,
+.wall-map-mode .four-region-map .admin-map-svg svg > g.map-region-selected.map-region-hovered path { fill: #e6b09a !important; stroke: #fff7e0 !important; }
+
+.wall-map-mode .four-region-map::before { content: none !important; }
+.wall-map-mode .four-region-map .admin-map-svg svg [data-region] { fill: #c94e3d !important; stroke: #f8efcf !important; }
+.wall-map-mode .four-region-map .admin-map-svg svg [data-region].map-region-hovered,
+.wall-map-mode .four-region-map .admin-map-svg svg [data-region]:hover { fill: #e6b09a !important; stroke: #fff7e0 !important; }
+.wall-map-mode .four-region-map .admin-map-svg svg [data-region].map-region-selected { fill: #a92f2c !important; stroke: #fff0c4 !important; }
+.wall-map-mode .four-region-map .admin-map-svg svg [data-region].map-region-selected.map-region-hovered,
+.wall-map-mode .four-region-map .admin-map-svg svg [data-region].map-region-selected:hover { fill: #e6b09a !important; stroke: #fff7e0 !important; }
