@@ -222,3 +222,30 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
   .wall-map-mode .territory-tiles { gap: 2px; }
   .wall-map-mode .territory-tile text { font-size: 2.6px; }
 }
+
+.wall-map-mode .four-region-map:before { content: 'УРАЛ · АДМИНИСТРАТИВНАЯ КАРТА ЧЕТЫРЁХ СУБЪЕКТОВ'; }
+.wall-map-mode .four-region-map .admin-map-svg { position: absolute; inset: 0; padding: 26px 8px 8px; display: grid; place-items: center; }
+.wall-map-mode .four-region-map .admin-map-svg svg { width: 100%; height: 100%; overflow: visible; }
+.wall-map-mode .four-region-map .admin-map-svg svg [data-region] { fill: #63add1; stroke: #f8efd0; stroke-width: 3.5; vector-effect: non-scaling-stroke; cursor: pointer; transition: fill .12s ease, stroke .12s ease; }
+.wall-map-mode .four-region-map .admin-map-svg svg [data-region]:hover,
+.wall-map-mode .four-region-map .admin-map-svg svg [data-region].map-region-hovered { fill: #b8e5f3; stroke: #fffdf0; stroke-width: 5; }
+.wall-map-mode .four-region-map .admin-map-svg svg [data-region].map-region-selected { fill: #c17a3b; stroke: #fff4cf; stroke-width: 5; }
+.wall-map-mode .four-region-map .admin-map-svg svg [data-region].map-region-selected:hover,
+.wall-map-mode .four-region-map .admin-map-svg svg [data-region].map-region-selected.map-region-hovered { fill: #b8e5f3; stroke: #fffdf0; }
+.wall-map-mode .region-panel:before { content: 'ЧЕТЫРЕ СУБЪЕКТА · УРАЛ'; }
+.wall-map-mode .region-workspace { grid-template-columns: minmax(0, 1fr) 250px; }
+@media (min-width: 761px) { .wall-map-mode .region-workspace { height: min(55vh, 520px); } }
+
+.end-day-button { color: #e8d5b0; background: rgba(106,58,37,.72); border: 1px solid rgba(217,164,99,.6); padding: 9px 12px; cursor: pointer; font: 10px 'IBM Plex Mono'; letter-spacing: .04em; }
+.end-day-button:hover { background: #a85e2d; color: #fff3d5; }
+.day-summary-screen { min-height: 100vh; background-position: center; background-size: cover; position: relative; overflow: hidden; display: grid; place-items: center; color: #e8e1d4; }
+.day-summary-card { position: relative; width: min(720px, calc(100% - 48px)); padding: 44px; background: rgba(7,18,20,.86); border: 1px solid rgba(232,225,212,.24); box-shadow: 0 25px 70px rgba(0,0,0,.38); }
+.day-summary-card h1 { margin: 20px 0 16px; font-size: clamp(42px, 6vw, 72px); line-height: .98; letter-spacing: -.07em; }
+.day-summary-card h1 em { color: #c69b61; font-style: normal; }
+.day-summary-card p { max-width: 570px; color: rgba(232,225,212,.68); line-height: 1.7; font-size: 14px; }
+.day-summary-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 30px 0; border-top: 1px solid rgba(232,225,212,.16); border-bottom: 1px solid rgba(232,225,212,.16); padding: 18px 0; }
+.day-summary-stats div { display: flex; flex-direction: column; gap: 7px; }
+.day-summary-stats span { color: #c69b61; font: 9px 'IBM Plex Mono'; letter-spacing: .1em; }
+.day-summary-stats b { color: #f1e6cf; font-size: 20px; }
+.day-summary-card .primary-button { max-width: 420px; }
+@media (max-width: 760px) { .end-day-button { display: none; } .day-summary-card { padding: 28px 22px; } .day-summary-stats { grid-template-columns: 1fr; gap: 14px; } }
