@@ -107,6 +107,7 @@ export default function Home() {
   const [pendingComplaints, setPendingComplaints] = useState(0);
   const [extraRequested, setExtraRequested] = useState(false);
   const [score, setScore] = useState(0);
+  const [correctDecisions, setCorrectDecisions] = useState(0);
   const [trust, setTrust] = useState(3);
   const [reputation, setReputation] = useState({ quality: 3, leadership: 3, citizens: 3, risk: 1 });
   const [feedback, setFeedback] = useState<{ good: boolean; text: string; decision: Decision } | null>(null);
@@ -136,6 +137,7 @@ export default function Home() {
     if (feedback || finished || !canDecide) return;
     const good = decision === current.correct;
     setScore((value) => value + (good ? 1 : 0));
+    setCorrectDecisions((value) => value + (good ? 1 : 0));
     setTrust((value) => Math.max(0, Math.min(5, value + (good ? 0 : -1))));
     adjustReputation(good, false);
     setFeedback({ good, text: current.explanation, decision });
@@ -152,7 +154,7 @@ export default function Home() {
     setReviewedMaterials((items) => items.includes(index) ? items : [...items, index]);
   };
 
-  const restart = () => { setDayNumber(1); setDayEnded(false); setPendingComplaints(0); setOnboardingStep("intro"); setRegion(null); setCharacter(null); setDraftName(""); setLocation(null); setCaseIndex(0); setScore(0); setTrust(3); setReputation({ quality: 3, leadership: 3, citizens: 3, risk: 1 }); setFeedback(null); setFinished(false); setOpenMaterial(null); setReviewedMaterials([]); setHoursLeft(8); setExtraRequested(false); };
+  const restart = () => { setDayNumber(1); setDayEnded(false); setPendingComplaints(0); setOnboardingStep("intro"); setRegion(null); setCharacter(null); setDraftName(""); setLocation(null); setCaseIndex(0); setScore(0); setCorrectDecisions(0); setTrust(3); setReputation({ quality: 3, leadership: 3, citizens: 3, risk: 1 }); setFeedback(null); setFinished(false); setOpenMaterial(null); setReviewedMaterials([]); setHoursLeft(8); setExtraRequested(false); };
 
   const createCharacter = () => {
     const name = draftName.trim();
@@ -183,6 +185,7 @@ export default function Home() {
     const good = decision === currentComplaint.correct;
     setHoursLeft(remaining);
     setComplaintDecision(decision);
+    setCorrectDecisions((value) => value + (good ? 1 : 0));
     adjustReputation(good, true);
     if (remaining === 0) endDay(decision);
   };
@@ -451,7 +454,7 @@ export default function Home() {
         </section>}
       </section>
 
-      <footer className="footerbar"><div><b>УКАЗАНИЕ:</b> решение должно быть кратким, точным и проверяемым.</div><div className="footer-stats"><Stat label="ВЕРНЫЕ" value={`${score}/${CASES.length}`} tone={score > 0 ? "good" : "default"} /><Stat label="ДОВЕРИЕ" value={`${trust}/5`} tone={trust < 2 ? "bad" : "default"} /><Stat label="РЕПУТАЦИЯ" value={`${reputation.quality}/5`} tone={reputation.quality < 2 ? "bad" : reputation.quality >= 4 ? "good" : "default"} /><Stat label="СТАТУС" value={finished ? "ЗАКРЫТО" : feedback ? "ПРОВЕРКА" : "ОЖИДАНИЕ"} /></div></footer>
+      <footer className="footerbar"><div><b>УКАЗАНИЕ:</b> решение должно быть кратким, точным и проверяемым.</div><div className="footer-stats"><Stat label="ВЕРНЫЕ РЕШЕНИЯ" value={`${correctDecisions}/${location === "reception" ? COMPLAINTS.length : CASES.length}`} tone={correctDecisions > 0 ? "good" : "default"} /><Stat label="ДОВЕРИЕ" value={`${trust}/5`} tone={trust < 2 ? "bad" : "default"} /><Stat label="РЕПУТАЦИЯ" value={`${reputation.quality}/5`} tone={reputation.quality < 2 ? "bad" : reputation.quality >= 4 ? "good" : "default"} /><Stat label="СТАТУС" value={finished ? "ЗАКРЫТО" : feedback ? "ПРОВЕРКА" : "ОЖИДАНИЕ"} /></div></footer>
     </main>
   );
 }
