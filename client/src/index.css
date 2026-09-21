@@ -249,3 +249,10 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .day-summary-stats b { color: #f1e6cf; font-size: 20px; }
 .day-summary-card .primary-button { max-width: 420px; }
 @media (max-width: 760px) { .end-day-button { display: none; } .day-summary-card { padding: 28px 22px; } .day-summary-stats { grid-template-columns: 1fr; gap: 14px; } }
+
+.wall-map-mode .four-region-map { background: radial-gradient(circle at 55% 42%, rgba(68,116,137,.28), transparent 45%), linear-gradient(135deg, #172f37 0%, #1f4652 52%, #10262f 100%) !important; }
+.wall-map-mode .four-region-map:after { opacity: .24; background: repeating-linear-gradient(0deg, rgba(218,239,220,.13) 0 1px, transparent 1px 7px), repeating-linear-gradient(90deg, rgba(218,239,220,.06) 0 1px, transparent 1px 13px), radial-gradient(circle at 50% 50%, transparent 0 42%, rgba(5,15,20,.35) 100%); mix-blend-mode: screen; }
+.wall-map-mode .four-region-map .admin-map-svg { filter: drop-shadow(0 9px 7px rgba(0,0,0,.3)); }
+.wall-map-mode .four-region-map .four-region-label { fill: #fff4d2; font: 700 25px 'IBM Plex Mono'; text-anchor: middle; paint-order: stroke; stroke: #274b56; stroke-width: 7px; pointer-events: none; opacity: .92; }
+.wall-map-mode .four-region-map .map-selection-readout { z-index: 4; }
+.wall-map-mode .region-panel { min-width: 0; }
