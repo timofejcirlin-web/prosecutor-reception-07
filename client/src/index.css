@@ -105,3 +105,49 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
   .game-shell .paper-card { padding-top: 13px; }
   .game-shell .summary p { font-size: 12px; }
 }
+
+/* Soviet wall-map treatment for the subject selection screen. */
+.wall-map-mode {
+  color: #403d32 !important;
+  background: #d8c89f !important;
+  background-image: radial-gradient(circle at 20% 10%, rgba(255,255,235,.5), transparent 35%), repeating-linear-gradient(0deg, rgba(102,78,42,.035) 0 1px, transparent 1px 5px) !important;
+}
+.wall-map-mode .grain { opacity: .13; mix-blend-mode: multiply; }
+.wall-map-mode .compact-onboarding { position: relative; }
+.wall-map-mode .location-kicker, .wall-map-mode .region-search { color: #74603b !important; }
+.wall-map-mode .onboarding-inner h1 { color: #39382f; text-shadow: 1px 1px 0 rgba(255,248,218,.7); }
+.wall-map-mode .onboarding-inner h1 em { color: #8c6330 !important; }
+.wall-map-mode .location-intro { color: rgba(61,55,42,.72); max-width: 850px; }
+.wall-map-mode .region-workspace { gap: 22px; }
+.wall-map-mode .real-map {
+  position: relative;
+  background: #eee8ca !important;
+  border: 13px solid #76502d !important;
+  outline: 2px solid #b28a52;
+  box-shadow: 0 7px 0 #4a321f, 0 16px 30px rgba(54,38,20,.28), inset 0 0 0 4px rgba(255,248,217,.62) !important;
+  overflow: hidden;
+}
+.wall-map-mode .real-map:before { content: 'РОССИЙСКАЯ ФЕДЕРАЦИЯ · АДМИНИСТРАТИВНАЯ КАРТА'; position: absolute; z-index: 2; top: 7px; left: 15px; color: rgba(66,57,40,.66); font: 700 9px 'IBM Plex Mono'; letter-spacing: .08em; pointer-events: none; }
+.wall-map-mode .real-map:after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .3; background: repeating-linear-gradient(0deg, rgba(116,87,46,.11) 0 1px, transparent 1px 5px), repeating-linear-gradient(90deg, rgba(116,87,46,.035) 0 1px, transparent 1px 8px); mix-blend-mode: multiply; }
+.wall-map-mode .admin-map-svg { z-index: 1; padding: 22px 6px 5px; filter: sepia(.2) saturate(.86) contrast(.96); }
+.wall-map-mode .admin-map-svg svg > g[id] path { fill: #63add1 !important; stroke: #f8efd0 !important; stroke-width: 2.5px !important; }
+.wall-map-mode .admin-map-svg svg > g[id]:hover path { fill: #3f89b0 !important; stroke: #fff8dc !important; stroke-width: 4px !important; }
+.wall-map-mode .admin-map-svg svg > g.map-region-selected path { fill: #c17a3b !important; stroke: #fff4cf !important; stroke-width: 5px !important; filter: none !important; }
+.wall-map-mode .region-panel { background: rgba(239,231,198,.92) !important; border: 1px solid rgba(112,80,42,.5) !important; box-shadow: 0 7px 18px rgba(64,44,24,.14), inset 0 0 0 3px rgba(255,249,218,.48); }
+.wall-map-mode .region-panel:before { content: 'СПИСОК СУБЪЕКТОВ · СТАТЬЯ 65'; display: block; margin-bottom: 10px; color: #80633b; font: 700 9px 'IBM Plex Mono'; letter-spacing: .12em; }
+.wall-map-mode .region-search input { color: #413a2d; background: rgba(255,252,231,.72); border-color: rgba(116,84,43,.42); }
+.wall-map-mode .region-list button { color: #5a503f; border-color: transparent; }
+.wall-map-mode .region-list button:hover, .wall-map-mode .region-list button.selected { color: #342b20; background: rgba(95,166,204,.2); border-color: rgba(59,119,151,.62); }
+.wall-map-mode .region-list button svg { color: #a75e2d; }
+.wall-map-mode .region-list small { color: rgba(80,65,42,.62); }
+.wall-map-mode .map-selection-readout { background: rgba(245,238,207,.94); border-left-color: #a95f2d; box-shadow: 0 4px 10px rgba(53,37,21,.2); }
+.wall-map-mode .map-selection-readout span { color: #7b633c; }
+.wall-map-mode .map-selection-readout b { color: #8f4f27; }
+.wall-map-mode .region-confirm { color: rgba(66,54,36,.7); border-color: rgba(110,79,41,.3); }
+.wall-map-mode .region-confirm .primary-button { background: #9d6935; color: #fff4d1; box-shadow: 0 3px 0 #684421; }
+.wall-map-mode .region-confirm .primary-button:hover { background: #b77d42; }
+.wall-map-mode .location-footer { color: rgba(74,58,35,.56); border-color: rgba(110,79,41,.3); }
+@media (max-width: 760px) {
+  .wall-map-mode .real-map { border-width: 8px !important; }
+  .wall-map-mode .real-map:before { font-size: 7px; }
+}
