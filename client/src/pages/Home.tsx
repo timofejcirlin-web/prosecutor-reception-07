@@ -22,6 +22,12 @@ const MUSIC_ALBUMS = [
 const ADMIN_MAP_SVG = "/manus-storage/Ed887Ix3NN14_f7721d82.svg";
 const CONSTITUTION_SUBJECT_COUNT = 4;
 const RF_SUBJECTS = ["Свердловская область", "Пермский край", "Республика Башкортостан", "Челябинская область"];
+const PROSECUTOR_OFFICES = [
+  { id: "territorial", title: "Территориальная прокуратура", description: "Прокуратура города или района", icon: "01" },
+  { id: "executive", title: "Прокуратура по надзору за исполнением законов в исполнительных учреждениях", description: "Надзор за соблюдением закона в учреждениях исполнения наказаний", icon: "02" },
+  { id: "environmental", title: "Природоохранная прокуратура", description: "Природоохранная прокуратура города", icon: "03" },
+  { id: "military", title: "Военная прокуратура", description: "Гарнизонная прокуратура", icon: "04" },
+] as const;
 const MAP_MARKERS = [{ name: "Калининградская область", left: 8, top: 38 }, { name: "Санкт-Петербург", left: 19, top: 28 }, { name: "Москва", left: 31, top: 45 }, { name: "Свердловская область", left: 59, top: 42 }, { name: "Новосибирская область", left: 70, top: 56 }, { name: "Красноярский край", left: 77, top: 47 }, { name: "Иркутская область", left: 82, top: 61 }, { name: "Республика Саха (Якутия)", left: 82, top: 25 }, { name: "Приморский край", left: 94, top: 60 }, { name: "Хабаровский край", left: 91, top: 48 }, { name: "Камчатский край", left: 99, top: 27 }, { name: "Краснодарский край", left: 29, top: 69 }, { name: "Республика Татарстан", left: 46, top: 53 }, { name: "Мурманская область", left: 24, top: 10 }];
 
 const FOUR_REGION_PATHS = [
@@ -99,6 +105,8 @@ function MusicPlayer({ albumIndex, trackIndex, isPlaying, isOpen, onToggleOpen, 
 export default function Home() {
   const [onboardingStep, setOnboardingStep] = useState<"intro" | "region" | "character">("intro");
   const [region, setRegion] = useState<string | null>(null);
+  const [prosecutorOffice, setProsecutorOffice] = useState<(typeof PROSECUTOR_OFFICES)[number]["id"] | null>(null);
+  const [prosecutorModalOpen, setProsecutorModalOpen] = useState(false);
   const [regionQuery, setRegionQuery] = useState("");
   const [mapSvg, setMapSvg] = useState("");
   const mapRef = useRef<HTMLDivElement>(null);
@@ -168,7 +176,15 @@ export default function Home() {
     setReviewedMaterials((items) => items.includes(index) ? items : [...items, index]);
   };
 
-  const restart = () => { setDayNumber(1); setDayEnded(false); setPendingComplaints(0); setOnboardingStep("intro"); setRegion(null); setCharacter(null); setDraftName(""); setLocation(null); setCaseIndex(0); setScore(0); setCorrectDecisions(0); setTrust(3); setReputation({ quality: 3, leadership: 3, citizens: 3, risk: 1 }); setFeedback(null); setFinished(false); setOpenMaterial(null); setReviewedMaterials([]); setHoursLeft(8); setExtraRequested(false); };
+  const restart = () => { setDayNumber(1); setDayEnded(false); setPendingComplaints(0); setOnboardingStep("intro"); setRegion(null); setProsecutorOffice(null); setProsecutorModalOpen(false); setCharacter(null); setDraftName(""); setLocation(null); setCaseIndex(0); setScore(0); setCorrectDecisions(0); setTrust(3); setReputation({ quality: 3, leadership: 3, citizens: 3, risk: 1 }); setFeedback(null); setFinished(false); setOpenMaterial(null); setReviewedMaterials([]); setHoursLeft(8); setExtraRequested(false); };
+
+  const chooseRegion = (nextRegion: string) => {
+    setRegion(nextRegion);
+    setProsecutorOffice(null);
+    setProsecutorModalOpen(true);
+  };
+
+  const selectedOffice = PROSECUTOR_OFFICES.find((office) => office.id === prosecutorOffice);
 
   const createCharacter = () => {
     const name = draftName.trim();
@@ -316,7 +332,7 @@ export default function Home() {
     const onMapClick = (event: MouseEvent) => {
       const target = (event.target as Element).closest("[data-region]");
       const name = target?.getAttribute("data-region");
-      if (name) setRegion(name);
+      if (name) chooseRegion(name);
     };
     const onPointerOver = (event: PointerEvent) => {
       const target = event.target as Element;
@@ -379,8 +395,9 @@ export default function Home() {
       {musicPlayer}<div className="grain" /><div className="onboarding-inner compact-onboarding">
         <div className="location-kicker">ПЕРВОЕ НАЗНАЧЕНИЕ · СУБЪЕКТ РФ · СТАТЬЯ 65</div><h1>Куда направит вас<br /><em>приказ?</em></h1>
         <p className="location-intro">Выберите один из четырёх субъектов Урала. На карте показаны реальные административные границы регионов, которые определят характер обращений и первые дела в папке.</p>
-        <div className="region-workspace"><div className="map-column"><div ref={mapRef} className="russia-map four-region-map" aria-label="Интерактивная карта четырёх субъектов Урала"><span className="map-hanging-rail map-hanging-rail-top" aria-hidden="true" /><span className="map-hanging-rail map-hanging-rail-bottom" aria-hidden="true" />{mapSvg ? <div className="admin-map-svg" dangerouslySetInnerHTML={{ __html: mapSvg }} /> : <div className="map-loading">Загрузка карты субъектов…</div>}{region && <div className="map-selection-readout"><span>ВЫБРАННЫЙ СУБЪЕКТ</span><b>{region}</b></div>}</div></div><div className="region-panel"><label className="region-search">ПОИСК СУБЪЕКТА<input value={regionQuery} onChange={(event) => setRegionQuery(event.target.value)} placeholder="Например, Татарстан" /></label><div className="region-list">{filteredRegions.map((item) => <button key={item} className={region === item ? "selected" : ""} onClick={() => setRegion(item)}><span>{item}</span>{region === item && <Check size={14} />}</button>)}{filteredRegions.length === 0 && <small>Субъект не найден</small>}</div></div></div>
-        <div className="region-confirm"><span>{region ? `ВЫБРАНО: ${region}` : "Выберите субъект на карте или в списке"}</span><button className="primary-button" disabled={!region} onClick={() => setOnboardingStep("character")}>Подтвердить регион <ChevronRight size={17} /></button></div>
+        <div className="region-workspace"><div className="map-column"><div ref={mapRef} className="russia-map four-region-map" aria-label="Интерактивная карта четырёх субъектов Урала"><span className="map-hanging-rail map-hanging-rail-top" aria-hidden="true" /><span className="map-hanging-rail map-hanging-rail-bottom" aria-hidden="true" />{mapSvg ? <div className="admin-map-svg" dangerouslySetInnerHTML={{ __html: mapSvg }} /> : <div className="map-loading">Загрузка карты субъектов…</div>}{region && <div className="map-selection-readout"><span>ВЫБРАННЫЙ СУБЪЕКТ</span><b>{region}</b></div>}</div></div><div className="region-panel"><label className="region-search">ПОИСК СУБЪЕКТА<input value={regionQuery} onChange={(event) => setRegionQuery(event.target.value)} placeholder="Например, Татарстан" /></label><div className="region-list">{filteredRegions.map((item) => <button key={item} className={region === item ? "selected" : ""} onClick={() => chooseRegion(item)}><span>{item}</span>{region === item && <Check size={14} />}</button>)}{filteredRegions.length === 0 && <small>Субъект не найден</small>}</div></div></div>
+        <div className="region-confirm"><span>{region ? `ВЫБРАНО: ${region}${selectedOffice ? ` · ${selectedOffice.title}` : ""}` : "Выберите субъект на карте или в списке"}</span><button className="primary-button" disabled={!region || !prosecutorOffice} onClick={() => setOnboardingStep("character")}>Подтвердить назначение <ChevronRight size={17} /></button></div>
+        {prosecutorModalOpen && <div className="prosecutor-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setProsecutorModalOpen(false)}><section className="prosecutor-modal" role="dialog" aria-modal="true" aria-labelledby="prosecutor-modal-title"><div className="prosecutor-modal-kicker">ПРИКАЗ О НАЗНАЧЕНИИ · ШАГ 02</div><button className="prosecutor-modal-close" onClick={() => setProsecutorModalOpen(false)} aria-label="Закрыть окно">×</button><h2 id="prosecutor-modal-title">Куда направить вас<br /><em>в {region}?</em></h2><p>Выберите профиль прокуратуры. От него будут зависеть характер обращений, материалы проверок и ваши первые поручения.</p><div className="prosecutor-office-options">{PROSECUTOR_OFFICES.map((office) => <button key={office.id} className={prosecutorOffice === office.id ? "selected" : ""} onClick={() => { setProsecutorOffice(office.id); setProsecutorModalOpen(false); }}><b>{office.icon}</b><span><strong>{office.title}</strong><small>{office.description}</small></span>{prosecutorOffice === office.id && <Check size={17} />}</button>)}</div></section></div>}
         <div className="location-footer"><span>НАЗНАЧЕНИЕ · ПОМОЩНИК ПРОКУРОРА</span><span>ШАГ 01 / 03</span></div>
       </div>
     </main>
@@ -394,7 +411,7 @@ export default function Home() {
         <h1>Ваш первый день<br /><em>начинается здесь.</em></h1>
         <p className="location-intro">Заполните короткую анкету. Вы будете работать с материалами дел, принимать решения и отвечать за качество проверки.</p>
         <div className="character-card">
-          <div className="assignment-context"><span>МЕСТО СЛУЖБЫ</span><b>{region}</b><small>ПОМOЩНИК ПРОКУРОРА · ЮРИСТ 3 КЛАССА</small></div>
+          <div className="assignment-context"><span>МЕСТО СЛУЖБЫ</span><b>{region}</b><small>{selectedOffice?.title ?? "ПРОФИЛЬ ПРОКУРАТУРЫ НЕ ВЫБРАН"} · ПОМОЩНИК ПРОКУРОРА · ЮРИСТ 3 КЛАССА</small></div>
           <label>ИМЯ ИГРОКА<input value={draftName} onChange={(event) => setDraftName(event.target.value)} onKeyDown={(event) => event.key === "Enter" && createCharacter()} placeholder="Например, Анна Орлова" autoFocus /></label>
           <div className="gender-field"><span>ПОЛ</span><div className="gender-options"><button className={draftGender === "female" ? "selected" : ""} onClick={() => setDraftGender("female")}><UserRound size={15} /> Женщина</button><button className={draftGender === "male" ? "selected" : ""} onClick={() => setDraftGender("male")}><UserRound size={15} /> Мужчина</button></div></div>
           <div className="rank-field"><BadgeCheck size={18} /><div><span>ЗВАНИЕ</span><b>Юрист 3 класса</b></div><small>НАЗНАЧЕНО</small></div>

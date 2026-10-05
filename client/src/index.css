@@ -538,3 +538,23 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
   .game-shell .complaint-card { position: relative; padding-bottom: 76px; }
   .game-shell .complaint-card > .next-button { position: absolute; left: 24px; right: 24px; bottom: 16px; width: auto; margin: 0; z-index: 4; }
 }
+
+.prosecutor-modal-backdrop { position: fixed; inset: 0; z-index: 30; display: grid; place-items: center; padding: 24px; background: rgba(11,17,17,.72); backdrop-filter: blur(4px); }
+.prosecutor-modal { position: relative; width: min(720px, 100%); max-height: min(720px, calc(100dvh - 40px)); overflow: auto; padding: 34px 38px 30px; color: #332b20; background: linear-gradient(135deg, #f3ead0, #ded0b0); border: 7px solid #67462d; outline: 1px solid #c0975d; box-shadow: 0 15px 0 #302018, 0 30px 60px rgba(0,0,0,.45), inset 0 0 0 2px rgba(255,249,218,.72); }
+.prosecutor-modal-kicker { color: #805c36; font: 700 10px 'IBM Plex Mono'; letter-spacing: .14em; }
+.prosecutor-modal h2 { margin: 18px 0 10px; color: #39352d; font-size: clamp(28px, 4vw, 46px); line-height: .98; letter-spacing: -.06em; }
+.prosecutor-modal h2 em { color: #9b6335; font-style: normal; }
+.prosecutor-modal > p { max-width: 590px; margin: 0 0 20px; color: #625744; font-size: 13px; line-height: 1.5; }
+.prosecutor-modal-close { position: absolute; top: 10px; right: 13px; width: 32px; height: 32px; color: #67462d; background: transparent; border: 1px solid rgba(103,70,45,.35); cursor: pointer; font-size: 24px; line-height: 1; }
+.prosecutor-modal-close:hover { color: #fff4d1; background: #9b6335; }
+.prosecutor-office-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.prosecutor-office-options button { min-height: 96px; display: flex; align-items: flex-start; gap: 12px; padding: 14px; color: #514637; text-align: left; background: rgba(255,249,218,.48); border: 1px solid rgba(112,80,42,.35); cursor: pointer; transition: .16s ease; }
+.prosecutor-office-options button:hover, .prosecutor-office-options button.selected { color: #fff4d1; background: #9b6335; border-color: #704221; transform: translateY(-1px); }
+.prosecutor-office-options button > b { flex: 0 0 28px; color: #9b6335; font: 700 11px 'IBM Plex Mono'; }
+.prosecutor-office-options button:hover > b, .prosecutor-office-options button.selected > b { color: #f7d994; }
+.prosecutor-office-options button span { display: flex; flex-direction: column; gap: 7px; flex: 1; }
+.prosecutor-office-options strong { font-size: 12px; line-height: 1.25; }
+.prosecutor-office-options small { color: #806c4f; font-size: 10px; line-height: 1.35; }
+.prosecutor-office-options button:hover small, .prosecutor-office-options button.selected small { color: rgba(255,244,209,.78); }
+.prosecutor-office-options button > svg { flex: 0 0 auto; color: #ffe5a9; }
+@media (max-width: 640px) { .prosecutor-modal-backdrop { padding: 12px; }.prosecutor-modal { padding: 28px 18px 18px; border-width: 5px; }.prosecutor-office-options { grid-template-columns: 1fr; gap: 8px; }.prosecutor-office-options button { min-height: 72px; }.prosecutor-modal > p { font-size: 12px; } }
