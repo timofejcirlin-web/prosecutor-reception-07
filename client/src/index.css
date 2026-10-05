@@ -558,3 +558,10 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .prosecutor-office-options button:hover small, .prosecutor-office-options button.selected small { color: rgba(255,244,209,.78); }
 .prosecutor-office-options button > svg { flex: 0 0 auto; color: #ffe5a9; }
 @media (max-width: 640px) { .prosecutor-modal-backdrop { padding: 12px; }.prosecutor-modal { padding: 28px 18px 18px; border-width: 5px; }.prosecutor-office-options { grid-template-columns: 1fr; gap: 8px; }.prosecutor-office-options button { min-height: 72px; }.prosecutor-modal > p { font-size: 12px; } }
+
+.written-complaints-mode .complaint-layout { grid-template-columns: 145px minmax(0, 1fr); }
+.written-complaint-stamp { align-self: center; min-height: 190px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 18px 10px; color: #c69b61; border: 1px solid rgba(198,155,97,.5); background: rgba(7,18,20,.48); text-align: center; }
+.written-complaint-stamp span { font: 700 12px 'IBM Plex Mono'; line-height: 1.45; letter-spacing: .08em; }
+.written-complaint-stamp small { color: rgba(232,225,212,.62); font: 8px 'IBM Plex Mono'; line-height: 1.4; }
+.written-complaints-mode .complaint-card { max-width: none; }
+@media (max-width: 760px) { .written-complaints-mode .complaint-layout { grid-template-columns: 1fr; }.written-complaint-stamp { min-height: 78px; flex-direction: row; justify-content: flex-start; text-align: left; }.written-complaint-stamp span { font-size: 10px; }.written-complaint-stamp small { margin-left: auto; } }
