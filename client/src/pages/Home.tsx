@@ -176,12 +176,15 @@ function MusicPlayer({ albumIndex, trackIndex, isPlaying, isOpen, onToggleOpen, 
 const PRELOAD_IMAGES = [OFFICE_BG, ...Object.values(PROFILE_BACKGROUNDS), ...Object.values(PROFILE_PORTRAITS), ADMIN_MAP_SVG];
 
 export default function Home() {
+  const [assetsReady, setAssetsReady] = useState(false);
   useEffect(() => {
-    PRELOAD_IMAGES.forEach((src) => {
+    Promise.all(PRELOAD_IMAGES.map((src) => new Promise<void>((resolve) => {
       const image = new Image();
       image.decoding = "async";
+      image.onload = () => resolve();
+      image.onerror = () => resolve();
       image.src = src;
-    });
+    }))).then(() => setAssetsReady(true));
   }, []);
 
   const [onboardingStep, setOnboardingStep] = useState<"intro" | "region" | "character">("intro");
@@ -459,6 +462,8 @@ export default function Home() {
       group.classList.toggle("map-region-selected", name === region);
     });
   }, [mapSvg, region]);
+
+  if (!assetsReady) return <main className="asset-loading-screen"><div className="asset-loading-card"><span className="live-dot" /><p>ПОДГОТОВКА ПРИЁМНОЙ</p><strong>Загрузка архивных материалов…</strong></div></main>;
 
   const musicPlayer = <MusicPlayer albumIndex={musicAlbum} trackIndex={musicTrack} isPlaying={musicPlaying} isOpen={musicOpen} onToggleOpen={() => setMusicOpen((value) => !value)} onTogglePlaying={() => setMusicPlaying((value) => !value)} onPrevious={() => changeMusicTrack(-1)} onNext={() => changeMusicTrack(1)} onSelectTrack={setMusicTrack} onSelectAlbum={changeMusicAlbum} />;
 
