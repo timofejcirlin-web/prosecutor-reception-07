@@ -173,7 +173,17 @@ function MusicPlayer({ albumIndex, trackIndex, isPlaying, isOpen, onToggleOpen, 
   return <div className={`music-player ${isOpen ? "open" : ""}`} onMouseEnter={() => { if (!isOpen) onToggleOpen(); }}><button className="music-player-trigger" onClick={onToggleOpen} aria-label="Открыть музыкальный плеер"><Music2 size={17} /><span className={isPlaying ? "music-pulse" : ""} /></button>{isOpen && <div className="music-player-panel"><div className="music-player-heading"><span>СОВЕТСКОЕ РЕТРО · FM</span><b>МУЗЫКА</b></div>{MUSIC_ALBUMS.length > 1 && <div className="music-album-tabs">{MUSIC_ALBUMS.map((item, index) => <button key={item.title} className={index === albumIndex ? "active" : ""} onClick={() => onSelectAlbum(index)}>Альбом {index + 1}</button>)}</div>}<div className="music-now-playing"><small>{album.title}</small><strong>{track.title}</strong></div><div className="music-controls"><button onClick={onPrevious} aria-label="Предыдущий трек"><SkipBack size={15} /></button><button className="music-play" onClick={onTogglePlaying} aria-label={isPlaying ? "Пауза" : "Воспроизвести"}>{isPlaying ? <Pause size={15} /> : <Play size={15} />}</button><button onClick={onNext} aria-label="Следующий трек"><SkipForward size={15} /></button></div><div className="music-track-list">{album.tracks.map((item, index) => <button key={item.title} className={index === trackIndex ? "active" : ""} onClick={() => { onSelectTrack(index); onToggleOpen(); }}>{String(index + 1).padStart(2, "0")} · {item.title}</button>)}</div></div>}</div>;
 }
 
+const PRELOAD_IMAGES = [OFFICE_BG, ...Object.values(PROFILE_BACKGROUNDS), ...Object.values(PROFILE_PORTRAITS), ADMIN_MAP_SVG];
+
 export default function Home() {
+  useEffect(() => {
+    PRELOAD_IMAGES.forEach((src) => {
+      const image = new Image();
+      image.decoding = "async";
+      image.src = src;
+    });
+  }, []);
+
   const [onboardingStep, setOnboardingStep] = useState<"intro" | "region" | "character">("intro");
   const [region, setRegion] = useState<string | null>(null);
   const [prosecutorOffice, setProsecutorOffice] = useState<(typeof PROSECUTOR_OFFICES)[number]["id"] | null>(null);
