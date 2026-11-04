@@ -325,7 +325,7 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .wall-map-mode .four-region-map .admin-map-svg svg [data-region].map-region-selected.map-region-hovered { fill: #b9e4f1; stroke: #fff9e6; }
 .wall-map-mode .four-region-map .four-region-label { fill: #fff2d0; stroke: #173943; stroke-width: 7px; filter: drop-shadow(0 1px 1px rgba(0,0,0,.5)); }
 .wall-map-mode .region-panel { background: rgba(239,231,198,.96) !important; border: 7px solid #67462d !important; outline: 1px solid #b18a51; box-shadow: 0 8px 0 #302018, 0 20px 30px rgba(0,0,0,.3), inset 0 0 0 2px rgba(255,249,218,.55); }
-.wall-map-mode .region-panel:before { content: 'СЛУЖЕБНАЯ ПАНЕЛЬ · ВЫБОР РЕГИОНА'; color: #805c36; letter-spacing: .12em; }
+.wall-map-mode .region-panel:before { content: 'ВЫБОР РЕГИОНА'; color: #805c36; letter-spacing: .12em; }
 .wall-map-mode .region-search input { background: rgba(255,252,231,.9); color: #413a2d; font-size: 12px; }
 .wall-map-mode .region-list button { padding: 11px 10px; color: #514637; font-size: 11px; }
 .wall-map-mode .region-list button:hover { color: #2e5060; background: rgba(185,228,241,.45); border-color: #6ea8bd; }

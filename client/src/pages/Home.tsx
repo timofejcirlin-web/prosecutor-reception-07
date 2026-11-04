@@ -26,7 +26,7 @@ const CONSTITUTION_SUBJECT_COUNT = 4;
 const RF_SUBJECTS = ["Свердловская область", "Пермский край", "Республика Башкортостан", "Челябинская область"];
 const PROSECUTOR_OFFICES = [
   { id: "territorial", title: "Территориальная прокуратура", description: "Прокуратура города или района", icon: "01" },
-  { id: "executive", title: "Прокуратура по надзору за исполнением законов в исполнительных учреждениях", description: "Надзор за соблюдением закона в учреждениях исполнения наказаний", icon: "02" },
+  { id: "executive", title: "Прокуратура по надзору за исполнением законов в исполнительных учреждениях", description: "Специализированная прокуратура первичного звена", icon: "02" },
   { id: "environmental", title: "Природоохранная прокуратура", description: "Природоохранная прокуратура города", icon: "03" },
   { id: "military", title: "Военная прокуратура", description: "Гарнизонная прокуратура", icon: "04" },
 ] as const;
@@ -298,6 +298,21 @@ export default function Home() {
   const activeComplaints = prosecutorOffice === "executive" && rightsAdvocateMode ? [...(PROFILE_COMPLAINTS.executive ?? []), ...advocateComplaints] : prosecutorOffice && PROFILE_COMPLAINTS[prosecutorOffice] ? PROFILE_COMPLAINTS[prosecutorOffice] : COMPLAINTS;
   const currentComplaint = activeComplaints[complaintIndex] ?? activeComplaints[0];
   const isWrittenReception = prosecutorOffice === "executive";
+  const complaintAssetKey = location === "reception" && currentComplaint ? `${complaintIndex}|${currentComplaint.background}|${isWrittenReception ? "written" : currentComplaint.portrait}` : null;
+  const [loadedComplaintAssetKey, setLoadedComplaintAssetKey] = useState<string | null>(null);
+  useEffect(() => {
+    if (!complaintAssetKey || !currentComplaint) return;
+    let cancelled = false;
+    const sources = [currentComplaint.background, ...(isWrittenReception ? [] : [currentComplaint.portrait])].filter(Boolean);
+    Promise.all(sources.map((src) => new Promise<void>((resolve) => {
+      const image = new Image();
+      image.decoding = "async";
+      image.onload = () => resolve();
+      image.onerror = () => resolve();
+      image.src = src;
+    }))).then(() => { if (!cancelled) setLoadedComplaintAssetKey(complaintAssetKey); });
+    return () => { cancelled = true; };
+  }, [complaintAssetKey, currentComplaint, isWrittenReception]);
   const specializationLabel = selectedOffice?.title ?? "Территориальная прокуратура";
   const complaintDocuments = extraRequested ? [...currentComplaint.documents, currentComplaint.extra] : currentComplaint.documents;
   const decideComplaint = (decision: "accept" | "reject") => {
@@ -463,7 +478,7 @@ export default function Home() {
     });
   }, [mapSvg, region]);
 
-  if (!assetsReady) return <main className="asset-loading-screen"><div className="asset-loading-card"><span className="live-dot" /><p>ПОДГОТОВКА ПРИЁМНОЙ</p><strong>Загрузка архивных материалов…</strong></div></main>;
+  if (!assetsReady || (complaintAssetKey && loadedComplaintAssetKey !== complaintAssetKey)) return <main className="asset-loading-screen"><div className="asset-loading-card"><span className="live-dot" /><p>{complaintAssetKey ? "ПОДГОТОВКА ПРИЁМНОЙ" : "ПОДГОТОВКА АРХИВА"}</p><strong>{complaintAssetKey ? "Загрузка портрета посетителя и заднего фона…" : "Загрузка архивных материалов…"}</strong></div></main>;
 
   const musicPlayer = <MusicPlayer albumIndex={musicAlbum} trackIndex={musicTrack} isPlaying={musicPlaying} isOpen={musicOpen} onToggleOpen={() => setMusicOpen((value) => !value)} onTogglePlaying={() => setMusicPlaying((value) => !value)} onPrevious={() => changeMusicTrack(-1)} onNext={() => changeMusicTrack(1)} onSelectTrack={setMusicTrack} onSelectAlbum={changeMusicAlbum} />;
 
@@ -487,7 +502,7 @@ export default function Home() {
   if (onboardingStep === "region") return (
     <main className="onboarding-screen wall-map-mode" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.94), rgba(7,18,20,.56)), url(${OFFICE_BG})` }}>
       {musicPlayer}<div className="grain" /><div className="onboarding-inner compact-onboarding">
-        <div className="location-kicker">ПЕРВОЕ НАЗНАЧЕНИЕ · СУБЪЕКТ РФ · СТАТЬЯ 65</div><h1>Выберите регион<br /><em>для прохождения службы</em></h1>
+        <div className="location-kicker">ПЕРВОЕ НАЗНАЧЕНИЕ · СУБЪЕКТ РФ · СТАТЬИ 40, 40.5 ФЗ "О ПРОКУРАТУРЕ РОССИЙСКОЙ ФЕДЕРАЦИИ"</div><h1>Выберите регион<br /><em>для прохождения службы</em></h1>
         <p className="location-intro">Выберите один из четырёх субъектов Урала. На карте показаны реальные административные границы регионов, которые определят характер обращений и первые дела в папке.</p>
         <div className="region-workspace"><div className="map-column"><div ref={mapRef} className="russia-map four-region-map" aria-label="Интерактивная карта четырёх субъектов Урала"><span className="map-hanging-rail map-hanging-rail-top" aria-hidden="true" /><span className="map-hanging-rail map-hanging-rail-bottom" aria-hidden="true" />{mapSvg ? <div className="admin-map-svg" dangerouslySetInnerHTML={{ __html: mapSvg }} /> : <div className="map-loading">Загрузка карты субъектов…</div>}{region && <div className="map-selection-readout"><span>ВЫБРАННЫЙ СУБЪЕКТ</span><b>{region}</b></div>}</div></div><div className="region-panel"><label className="region-search">ПОИСК СУБЪЕКТА<input value={regionQuery} onChange={(event) => setRegionQuery(event.target.value)} placeholder="Например, Татарстан" /></label><div className="region-list">{filteredRegions.map((item) => <button key={item} className={region === item ? "selected" : ""} onClick={() => chooseRegion(item)}><span>{item}</span>{region === item && <Check size={14} />}</button>)}{filteredRegions.length === 0 && <small>Субъект не найден</small>}</div></div></div>
         <div className="region-confirm"><span>{region ? `ВЫБРАНО: ${region}${selectedOffice ? ` · ${selectedOffice.title}` : ""}` : "Выберите субъект на карте или в списке"}</span><button className="primary-button" disabled={!region || !prosecutorOffice} onClick={() => setOnboardingStep("character")}>Подтвердить назначение <ChevronRight size={17} /></button></div>
@@ -503,12 +518,12 @@ export default function Home() {
       <div className="character-inner">
         <div className="location-kicker"><UserRound size={14} /> ЛИЧНОЕ ДЕЛО · СОЗДАНИЕ ПЕРСОНАЖА</div>
         <h1>Ваш первый день<br /><em>начинается здесь.</em></h1>
-        <p className="location-intro">Заполните короткую анкету. Вы будете работать с материалами дел, принимать решения и отвечать за качество проверки.</p>
+        <p className="location-intro">Заполните анкету для поступления на службу. Вы должны соответствовать требованиям, предусмотренным ст. 40.1 ФЗ "О прокуратуре Российской Федерации"</p>
         <div className="character-card">
-          <div className="assignment-context"><span>МЕСТО СЛУЖБЫ</span><b>{region}</b><small>{selectedOffice?.title ?? "ПРОФИЛЬ ПРОКУРАТУРЫ НЕ ВЫБРАН"} · ПОМОЩНИК ПРОКУРОРА · ЮРИСТ 3 КЛАССА</small></div>
+          <div className="assignment-context"><span>МЕСТО СЛУЖБЫ</span><b>{region}</b><small>{selectedOffice?.title ?? "ПРОФИЛЬ ПРОКУРАТУРЫ НЕ ВЫБРАН"} · ПОМОЩНИК ПРОКУРОРА · {prosecutorOffice === "military" ? "ЛЕЙТЕНАНТ" : "ЮРИСТ 3 КЛАССА"}</small></div>
           <label>ИМЯ ИГРОКА<input value={draftName} onChange={(event) => setDraftName(event.target.value)} onKeyDown={(event) => event.key === "Enter" && createCharacter()} placeholder="Например, Анна Орлова" autoFocus /></label>
           <div className="gender-field"><span>ПОЛ</span><div className="gender-options"><button className={draftGender === "female" ? "selected" : ""} onClick={() => setDraftGender("female")}><UserRound size={15} /> Женщина</button><button className={draftGender === "male" ? "selected" : ""} onClick={() => setDraftGender("male")}><UserRound size={15} /> Мужчина</button></div></div>
-          <div className="rank-field"><BadgeCheck size={18} /><div><span>ЗВАНИЕ</span><b>Юрист 3 класса</b></div><small>НАЗНАЧЕНО</small></div>
+          <div className="rank-field"><BadgeCheck size={18} /><div><span>ЗВАНИЕ</span><b>{prosecutorOffice === "military" ? "Лейтенант" : "Юрист 3 класса"}</b></div><small>ПРИСВОЕНО</small></div>
           <button className="primary-button" disabled={!draftName.trim()} onClick={createCharacter}>Открыть личное дело <ChevronRight size={17} /></button>
         </div>
         <div className="location-footer"><span>ПРИЁМНАЯ № 07</span><span>КАНДИДАТ · НОВАЯ СМЕНА</span></div>
