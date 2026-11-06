@@ -32,6 +32,8 @@ const PROSECUTOR_OFFICES = [
 ] as const;
 const REWARDS_GUIDANCE = ["объявление благодарности", "награждение Почетной грамотой", "занесение на Доску почета, в Книгу почета", "выдача денежной премии", "награждение подарком", "награждение ценным подарком", "награждение именным оружием", "досрочное присвоение классного чина или присвоение классного чина на ступень выше очередного", "награждение нагрудным знаком «За безупречную службу в прокуратуре Российской Федерации»", "награждение нагрудным знаком «Почетный работник прокуратуры Российской Федерации» с одновременным вручением грамоты Генерального прокурора Российской Федерации", "награждение иными нагрудными знаками и медалями в соответствии с Приказом Генеральной прокуратуры России от 14.08.2023 № 544"];
 const DISCIPLINE_GUIDANCE = ["замечание", "выговор", "строгий выговор", "понижение в классном чине", "лишение нагрудного знака «За безупречную службу в прокуратуре Российской Федерации»", "лишение нагрудного знака «Почетный работник прокуратуры Российской Федерации»", "предупреждение о неполном служебном соответствии", "увольнение из органов прокуратуры"];
+type CountMap = Record<string, number>;
+const emptyCounts = (items: string[]): CountMap => Object.fromEntries(items.map((item) => [item, 0]));
 const MAP_MARKERS = [{ name: "Калининградская область", left: 8, top: 38 }, { name: "Санкт-Петербург", left: 19, top: 28 }, { name: "Москва", left: 31, top: 45 }, { name: "Свердловская область", left: 59, top: 42 }, { name: "Новосибирская область", left: 70, top: 56 }, { name: "Красноярский край", left: 77, top: 47 }, { name: "Иркутская область", left: 82, top: 61 }, { name: "Республика Саха (Якутия)", left: 82, top: 25 }, { name: "Приморский край", left: 94, top: 60 }, { name: "Хабаровский край", left: 91, top: 48 }, { name: "Камчатский край", left: 99, top: 27 }, { name: "Краснодарский край", left: 29, top: 69 }, { name: "Республика Татарстан", left: 46, top: 53 }, { name: "Мурманская область", left: 24, top: 10 }];
 
 const FOUR_REGION_PATHS = [
@@ -192,8 +194,9 @@ function MusicPlayer({ albumIndex, trackIndex, isPlaying, isOpen, onToggleOpen, 
   return <div className={`music-player ${isOpen ? "open" : ""}`} onMouseEnter={() => { if (!isOpen) onToggleOpen(); }}><button className="music-player-trigger" onClick={onToggleOpen} aria-label="Открыть музыкальный плеер"><Music2 size={17} /><span className={isPlaying ? "music-pulse" : ""} /></button>{isOpen && <div className="music-player-panel"><div className="music-player-heading"><span>СОВЕТСКОЕ РЕТРО · FM</span><b>МУЗЫКА</b></div>{MUSIC_ALBUMS.length > 1 && <div className="music-album-tabs">{MUSIC_ALBUMS.map((item, index) => <button key={item.title} className={index === albumIndex ? "active" : ""} onClick={() => onSelectAlbum(index)}>Альбом {index + 1}</button>)}</div>}<div className="music-now-playing"><small>{album.title}</small><strong>{track.title}</strong></div><div className="music-controls"><button onClick={onPrevious} aria-label="Предыдущий трек"><SkipBack size={15} /></button><button className="music-play" onClick={onTogglePlaying} aria-label={isPlaying ? "Пауза" : "Воспроизвести"}>{isPlaying ? <Pause size={15} /> : <Play size={15} />}</button><button onClick={onNext} aria-label="Следующий трек"><SkipForward size={15} /></button></div><div className="music-track-list">{album.tracks.map((item, index) => <button key={item.title} className={index === trackIndex ? "active" : ""} onClick={() => { onSelectTrack(index); onToggleOpen(); }}>{String(index + 1).padStart(2, "0")} · {item.title}</button>)}</div></div>}</div>;
 }
 
-function GuidanceItem({ label, items }: { label: string; items: string[] }) {
-  return <div className="guidance-item"><span>{label}</span><button className="guidance-help" aria-label={`Подробнее: ${label}`}>?</button><div className="guidance-tooltip" role="tooltip"><strong>{label}</strong><ul>{items.map((item) => <li key={item}>{item};</li>)}</ul></div></div>;
+function GuidanceItem({ label, items, counts }: { label: string; items: string[]; counts: CountMap }) {
+  const total = items.reduce((sum, item) => sum + (counts[item] ?? 0), 0);
+  return <div className="guidance-item"><span>{label}</span><button className="guidance-help" aria-label={`Подробнее: ${label}`}>?</button><div className="guidance-tooltip" role="tooltip"><strong>{label}</strong><ul>{items.map((item) => <li key={item}><span>{item}</span><b>{counts[item] ?? 0}</b></li>)}</ul><footer>ВСЕГО: <b>{total}</b></footer></div></div>;
 }
 
 const PRELOAD_IMAGES = [OFFICE_BG, ...Object.values(PROFILE_BACKGROUNDS), ...Object.values(PROFILE_PORTRAITS), ADMIN_MAP_SVG];
@@ -242,6 +245,10 @@ export default function Home() {
   const [reputation, setReputation] = useState({ quality: 3, leadership: 3, citizens: 3, risk: 1 });
   const [feedback, setFeedback] = useState<{ good: boolean; text: string; decision: Decision } | null>(null);
   const [finished, setFinished] = useState(false);
+  const [gameOver, setGameOver] = useState(false);
+  const [wrongDecisions, setWrongDecisions] = useState(0);
+  const [rewardCounts, setRewardCounts] = useState<CountMap>(() => emptyCounts(REWARDS_GUIDANCE));
+  const [disciplineCounts, setDisciplineCounts] = useState<CountMap>(() => emptyCounts(DISCIPLINE_GUIDANCE));
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [musicAlbum, setMusicAlbum] = useState(0);
   const [musicTrack, setMusicTrack] = useState(0);
@@ -265,18 +272,30 @@ export default function Home() {
     risk: clampRep(value.risk + (good ? -0.25 : 1)),
   }));
 
+  const registerDecisionConsequence = (good: boolean) => {
+    if (good) {
+      setRewardCounts((counts) => ({ ...counts, [REWARDS_GUIDANCE[0]]: (counts[REWARDS_GUIDANCE[0]] ?? 0) + 1 }));
+      return;
+    }
+    const errorNumber = wrongDecisions + 1;
+    setWrongDecisions(errorNumber);
+    const penalty = errorNumber === 1 ? DISCIPLINE_GUIDANCE[0] : errorNumber === 2 ? [DISCIPLINE_GUIDANCE[0], DISCIPLINE_GUIDANCE[1], DISCIPLINE_GUIDANCE[2]][Math.floor(Math.random() * 3)] : errorNumber === 3 ? DISCIPLINE_GUIDANCE[6] : DISCIPLINE_GUIDANCE[7];
+    setDisciplineCounts((counts) => ({ ...counts, [penalty]: (counts[penalty] ?? 0) + 1 }));
+    if (errorNumber >= 4) setGameOver(true);
+  };
   const decide = (decision: Decision) => {
-    if (feedback || finished || !canDecide) return;
+    if (feedback || finished || gameOver || !canDecide) return;
     const good = decision === current.correct;
     setScore((value) => value + (good ? 1 : 0));
     setCorrectDecisions((value) => value + (good ? 1 : 0));
     setTrust((value) => Math.max(0, Math.min(5, value + (good ? 0 : -1))));
     adjustReputation(good, false);
+    registerDecisionConsequence(good);
     setFeedback({ good, text: current.explanation, decision });
   };
 
   const next = () => {
-    if (!feedback) return;
+    if (!feedback || gameOver) return;
     if (caseIndex >= activeCases.length - 1) setFinished(true);
     else { setCaseIndex((value) => value + 1); setFeedback(null); setOpenMaterial(null); setReviewedMaterials([]); }
   };
@@ -286,7 +305,7 @@ export default function Home() {
     setReviewedMaterials((items) => items.includes(index) ? items : [...items, index]);
   };
 
-  const restart = () => { setDayNumber(1); setDayEnded(false); setPendingComplaints(0); setRepeatComplaintIndex(null); setConsequenceQueue([]); setDayConsequences([]); setRightsAdvocateMode(false); setOnboardingStep("intro"); setRegion(null); setProsecutorOffice(null); setProsecutorModalOpen(false); setMilitaryNoticeOpen(false); setCharacter(null); setDraftName(""); setLocation(null); setCaseIndex(0); setComplaintIndex(0); setComplaintDecision(null); setScore(0); setCorrectDecisions(0); setTrust(3); setReputation({ quality: 3, leadership: 3, citizens: 3, risk: 1 }); setFeedback(null); setFinished(false); setOpenMaterial(null); setReviewedMaterials([]); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setHoursLeft(8); setExtraRequested(false); };
+  const restart = () => { setDayNumber(1); setDayEnded(false); setPendingComplaints(0); setRepeatComplaintIndex(null); setConsequenceQueue([]); setDayConsequences([]); setRightsAdvocateMode(false); setOnboardingStep("intro"); setRegion(null); setProsecutorOffice(null); setProsecutorModalOpen(false); setMilitaryNoticeOpen(false); setCharacter(null); setDraftName(""); setLocation(null); setCaseIndex(0); setComplaintIndex(0); setComplaintDecision(null); setScore(0); setCorrectDecisions(0); setTrust(3); setReputation({ quality: 3, leadership: 3, citizens: 3, risk: 1 }); setFeedback(null); setFinished(false); setGameOver(false); setWrongDecisions(0); setRewardCounts(emptyCounts(REWARDS_GUIDANCE)); setDisciplineCounts(emptyCounts(DISCIPLINE_GUIDANCE)); setOpenMaterial(null); setReviewedMaterials([]); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setHoursLeft(8); setExtraRequested(false); };
   const returnToMainMenu = () => { restart(); setMusicOpen(false); };
 
   const chooseRegion = (nextRegion: string) => {
@@ -349,13 +368,14 @@ export default function Home() {
   const specializationLabel = selectedOffice?.title ?? "Территориальная прокуратура";
   const complaintDocuments = extraRequested ? [...currentComplaint.documents, currentComplaint.extra] : currentComplaint.documents;
   const decideComplaint = (decision: "accept" | "reject") => {
-    if (complaintDecision || hoursLeft < 1) return;
+    if (complaintDecision || hoursLeft < 1 || gameOver) return;
     const remaining = Math.max(0, hoursLeft - 1);
     const good = decision === currentComplaint.correct;
     setHoursLeft(remaining);
     setComplaintDecision(decision);
     setCorrectDecisions((value) => value + (good ? 1 : 0));
     adjustReputation(good, true);
+    registerDecisionConsequence(good);
     if (!good) setRepeatComplaintIndex(complaintIndex);
     const event: ConsequenceEvent = good && decision === "accept"
       ? { title: "Ответ ведомства ожидается завтра", text: `По обращению «${currentComplaint.title}» направлен запрос. В следующий рабочий день в папке появятся дополнительные сведения.`, tone: "good" }
@@ -590,6 +610,7 @@ export default function Home() {
   return (
     <main className={`game-shell office-theme-${prosecutorOffice ?? "territorial"}`} style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.88) 0%, rgba(7,18,20,.72) 33%, rgba(7,18,20,.18) 72%, rgba(7,18,20,.56) 100%), url(${PROFILE_BACKGROUNDS[prosecutorOffice ?? ""] ?? OFFICE_BG})` }}>
       {musicPlayer}<div className="grain" />
+      {gameOver && <div className="game-over-backdrop" role="dialog" aria-modal="true" aria-labelledby="game-over-title"><section className="game-over-card"><span className="eyebrow">СЛУЖЕБНОЕ РЕШЕНИЕ · ДИСЦИПЛИНА</span><h2 id="game-over-title">Игра окончена</h2><p>Четвёртое неверное решение привело к увольнению из органов прокуратуры. Дальнейшее прохождение смены невозможно.</p><div className="game-over-status">Взыскание: <strong>увольнение из органов прокуратуры</strong></div><button className="primary-button" onClick={returnToMainMenu}><RotateCcw size={16} /> Вернуться в главное меню</button></section></div>}
       <header className="topbar">
         <div className="brand"><div className="brand-mark"><Scale size={18} /></div><div><p>ПРОКУРАТУРА</p><h1>Приёмная № 07</h1></div></div>
         <div className="profile-chip"><UserRound size={14} /><span>{character.name}</span><b>{prosecutorOffice === "military" ? "лейтенант" : "юрист 3 класса"}</b></div>
@@ -605,7 +626,7 @@ export default function Home() {
           <div className="rule" />
           <div className="rule-row"><span>Дел в очереди</span><b>{activeCases.length - Math.min(caseIndex, activeCases.length - 1)}</b></div>
           <div className="rule-row"><span>Доверие канцелярии</span><b>{trust} / 5</b></div>
-          <div className="reputation-mini"><div><span>РЕПУТАЦИЯ</span><b>{reputationLabel}</b></div><div><span>КАЧЕСТВО</span><strong>{reputation.quality}/5</strong></div><div><span>РИСК ПРОВЕРКИ</span><strong className={reputation.risk >= 4 ? "risk-high" : ""}>{Math.round(reputation.risk)}/5</strong></div><GuidanceItem label="Поощрения" items={REWARDS_GUIDANCE} /><GuidanceItem label="Дисциплинарные взыскания" items={DISCIPLINE_GUIDANCE} /></div>
+          <div className="reputation-mini"><div><span>РЕПУТАЦИЯ</span><b>{reputationLabel}</b></div><div><span>КАЧЕСТВО</span><strong>{reputation.quality}/5</strong></div><div><span>РИСК ПРОВЕРКИ</span><strong className={reputation.risk >= 4 ? "risk-high" : ""}>{Math.round(reputation.risk)}/5</strong></div><GuidanceItem label="Поощрения" items={REWARDS_GUIDANCE} counts={rewardCounts} /><GuidanceItem label="Дисциплинарные взыскания" items={DISCIPLINE_GUIDANCE} counts={disciplineCounts} /></div>
           <div className="stamp-note">«Не торопись<br />с формулировкой»</div>
         </aside>
 

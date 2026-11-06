@@ -686,3 +686,17 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .military-notice-actions .secondary-button { color: #6d5137; background: transparent; border: 1px solid rgba(109,81,55,.55); }
 .military-notice-actions .secondary-button:hover { color: #33291f; background: rgba(109,81,55,.12); }
 @media (max-width: 760px) { .guidance-tooltip { left: auto; right: 0; bottom: calc(100% + 8px); width: min(330px, 84vw); } .military-notice-text { font-size: 13px; } .military-notice-actions { justify-content: stretch; } .military-notice-actions button { flex: 1 1 100%; } }
+
+.guidance-tooltip li { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.guidance-tooltip li span { flex: 1; }
+.guidance-tooltip li b, .guidance-tooltip footer b { color: #714b2b; font: 700 11px 'IBM Plex Mono'; white-space: nowrap; }
+.guidance-tooltip footer { margin-top: 12px; padding-top: 9px; color: #714b2b; border-top: 1px solid rgba(113,75,43,.3); font: 700 10px 'IBM Plex Mono'; letter-spacing: .08em; text-align: right; }
+.game-over-backdrop { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center; padding: 24px; background: rgba(5,12,13,.82); backdrop-filter: blur(5px); }
+.game-over-card { width: min(560px, 100%); padding: 34px 38px; color: #302b23; background: linear-gradient(145deg, #f1e6cf, #d9c9aa); border: 2px solid #a77a46; box-shadow: 0 22px 70px rgba(0,0,0,.58); }
+.game-over-card .eyebrow { color: #765333; }
+.game-over-card h2 { margin: 14px 0 13px; color: #8e443c; font-size: clamp(40px, 7vw, 68px); line-height: .94; letter-spacing: -.06em; }
+.game-over-card p { max-width: 480px; color: #51483a; font: 15px/1.55 'Manrope'; }
+.game-over-status { margin: 20px 0 24px; padding: 12px 14px; color: #614637; background: rgba(255,250,238,.42); border-left: 3px solid #a45b51; font: 12px/1.45 'IBM Plex Mono'; }
+.game-over-status strong { display: block; margin-top: 5px; color: #8e443c; }
+.game-over-card .primary-button { max-width: 300px; }
+@media (max-width: 760px) { .game-over-card { padding: 26px 22px; } .game-over-card p { font-size: 13px; } }
