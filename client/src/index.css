@@ -666,3 +666,16 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .music-track-list button:hover, .music-track-list button.active, .music-album-tabs button:hover, .music-album-tabs button.active { color: #f0e6d2 !important; background: rgba(182,139,80,.16) !important; border-color: rgba(198,155,97,.45) !important; }
 .music-track-list button.active { color: #d5b477 !important; }
 .music-pulse { background: #baffed !important; box-shadow: 0 0 8px #baffed !important; }
+
+/* Служебные подсказки и возврат из анкеты */
+.back-button { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 18px; padding: 8px 11px; color: rgba(232,225,212,.7); background: rgba(7,18,20,.5); border: 1px solid rgba(198,155,97,.42); cursor: pointer; font: 10px 'IBM Plex Mono'; letter-spacing: .04em; }
+.back-button:hover { color: #f1e6cf; background: rgba(64,58,40,.8); border-color: #c69b61; }
+.guidance-item { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; color: rgba(232,225,212,.72); font: 10px 'IBM Plex Mono'; border-top: 1px solid rgba(232,225,212,.1); }
+.guidance-help { width: 17px; height: 17px; flex: 0 0 auto; border: 1px solid rgba(198,155,97,.72); border-radius: 50%; color: #e5bd78; background: rgba(7,18,20,.54); cursor: help; font: 700 11px 'Manrope'; line-height: 15px; }
+.guidance-help:hover, .guidance-help:focus { color: #172522; background: #c69b61; outline: none; }
+.guidance-tooltip { position: absolute; z-index: 20; left: calc(100% + 12px); bottom: 0; display: none; width: min(390px, 42vw); padding: 13px 15px; color: #4a4030; background: linear-gradient(145deg, #f1e6cf, #ded0b1); border: 1px solid #a77a46; box-shadow: 0 15px 35px rgba(0,0,0,.42); }
+.guidance-item:hover .guidance-tooltip, .guidance-item:focus-within .guidance-tooltip { display: block; }
+.guidance-tooltip strong { color: #714b2b; font: 700 10px 'IBM Plex Mono'; letter-spacing: .1em; text-transform: uppercase; }
+.guidance-tooltip ul { margin: 9px 0 0; padding-left: 18px; }
+.guidance-tooltip li { margin: 4px 0; font: 10px/1.35 'Manrope'; }
+@media (max-width: 760px) { .guidance-tooltip { left: auto; right: 0; bottom: calc(100% + 8px); width: min(330px, 84vw); } }
