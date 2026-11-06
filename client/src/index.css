@@ -674,7 +674,7 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .guidance-help { width: 17px; height: 17px; flex: 0 0 auto; border: 1px solid rgba(198,155,97,.72); border-radius: 50%; color: #e5bd78; background: rgba(7,18,20,.54); cursor: help; font: 700 11px 'Manrope'; line-height: 15px; }
 .guidance-help:hover, .guidance-help:focus { color: #172522; background: #c69b61; outline: none; }
 .guidance-tooltip { position: absolute; z-index: 20; left: calc(100% + 12px); bottom: 0; display: none; width: min(390px, 42vw); padding: 13px 15px; color: #4a4030; background: linear-gradient(145deg, #f1e6cf, #ded0b1); border: 1px solid #a77a46; box-shadow: 0 15px 35px rgba(0,0,0,.42); }
-.guidance-item:hover .guidance-tooltip, .guidance-item:focus-within .guidance-tooltip { display: block; }
+.guidance-tooltip-open { display: block; }
 .guidance-tooltip strong { color: #714b2b; font: 700 10px 'IBM Plex Mono'; letter-spacing: .1em; text-transform: uppercase; }
 .guidance-tooltip ul { margin: 9px 0 0; padding-left: 18px; }
 .guidance-tooltip li { margin: 4px 0; font: 10px/1.35 'Manrope'; }
@@ -685,6 +685,8 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .military-notice-actions { display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
 .military-notice-actions .secondary-button { color: #6d5137; background: transparent; border: 1px solid rgba(109,81,55,.55); }
 .military-notice-actions .secondary-button:hover { color: #33291f; background: rgba(109,81,55,.12); }
+.military-notice-actions .primary-button { color: #211c15; background: #b68b50; border: 1px solid #d3a762; box-shadow: none; }
+.military-notice-actions .primary-button:hover { color: #211c15; background: #d3a762; }
 @media (max-width: 760px) { .guidance-tooltip { left: auto; right: 0; bottom: calc(100% + 8px); width: min(330px, 84vw); } .military-notice-text { font-size: 13px; } .military-notice-actions { justify-content: stretch; } .military-notice-actions button { flex: 1 1 100%; } }
 
 .guidance-tooltip li { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
