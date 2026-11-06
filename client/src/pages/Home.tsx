@@ -215,6 +215,7 @@ export default function Home() {
   const [prosecutorOffice, setProsecutorOffice] = useState<(typeof PROSECUTOR_OFFICES)[number]["id"] | null>(null);
   const [rightsAdvocateMode, setRightsAdvocateMode] = useState(false);
   const [prosecutorModalOpen, setProsecutorModalOpen] = useState(false);
+  const [militaryNoticeOpen, setMilitaryNoticeOpen] = useState(false);
   const [regionQuery, setRegionQuery] = useState("");
   const [mapSvg, setMapSvg] = useState("");
   const mapRef = useRef<HTMLDivElement>(null);
@@ -285,13 +286,22 @@ export default function Home() {
     setReviewedMaterials((items) => items.includes(index) ? items : [...items, index]);
   };
 
-  const restart = () => { setDayNumber(1); setDayEnded(false); setPendingComplaints(0); setRepeatComplaintIndex(null); setConsequenceQueue([]); setDayConsequences([]); setRightsAdvocateMode(false); setOnboardingStep("intro"); setRegion(null); setProsecutorOffice(null); setProsecutorModalOpen(false); setCharacter(null); setDraftName(""); setLocation(null); setCaseIndex(0); setComplaintIndex(0); setComplaintDecision(null); setScore(0); setCorrectDecisions(0); setTrust(3); setReputation({ quality: 3, leadership: 3, citizens: 3, risk: 1 }); setFeedback(null); setFinished(false); setOpenMaterial(null); setReviewedMaterials([]); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setHoursLeft(8); setExtraRequested(false); };
+  const restart = () => { setDayNumber(1); setDayEnded(false); setPendingComplaints(0); setRepeatComplaintIndex(null); setConsequenceQueue([]); setDayConsequences([]); setRightsAdvocateMode(false); setOnboardingStep("intro"); setRegion(null); setProsecutorOffice(null); setProsecutorModalOpen(false); setMilitaryNoticeOpen(false); setCharacter(null); setDraftName(""); setLocation(null); setCaseIndex(0); setComplaintIndex(0); setComplaintDecision(null); setScore(0); setCorrectDecisions(0); setTrust(3); setReputation({ quality: 3, leadership: 3, citizens: 3, risk: 1 }); setFeedback(null); setFinished(false); setOpenMaterial(null); setReviewedMaterials([]); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setHoursLeft(8); setExtraRequested(false); };
   const returnToMainMenu = () => { restart(); setMusicOpen(false); };
 
   const chooseRegion = (nextRegion: string) => {
     setRegion(nextRegion);
     setProsecutorOffice(null);
+    setMilitaryNoticeOpen(false);
     setProsecutorModalOpen(true);
+  };
+  const returnToRegionSelection = () => {
+    setOnboardingStep("region");
+    setRegion(null);
+    setProsecutorOffice(null);
+    setProsecutorModalOpen(false);
+    setMilitaryNoticeOpen(false);
+    setDraftName("");
   };
 
   const selectedOffice = PROSECUTOR_OFFICES.find((office) => office.id === prosecutorOffice);
@@ -525,10 +535,11 @@ export default function Home() {
     <main className="onboarding-screen wall-map-mode" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.94), rgba(7,18,20,.56)), url(${OFFICE_BG})` }}>
       {musicPlayer}<div className="grain" /><div className="onboarding-inner compact-onboarding">
         <div className="location-kicker">ПЕРВОЕ НАЗНАЧЕНИЕ · СУБЪЕКТ РФ · СТАТЬИ 40, 40.5 ФЗ "О ПРОКУРАТУРЕ РОССИЙСКОЙ ФЕДЕРАЦИИ"</div><h1>Выберите регион<br /><em>для прохождения службы</em></h1>
-        <p className="location-intro">Выберите один из четырёх субъектов Урала. На карте показаны реальные административные границы регионов, которые определят характер обращений и первые дела в папке.</p>
+        <p className="location-intro">От выбранного региона будет зависеть рабочая нагрузка и специфика разрешаемых дел</p>
         <div className="region-workspace"><div className="map-column"><div ref={mapRef} className="russia-map four-region-map" aria-label="Интерактивная карта четырёх субъектов Урала"><span className="map-hanging-rail map-hanging-rail-top" aria-hidden="true" /><span className="map-hanging-rail map-hanging-rail-bottom" aria-hidden="true" />{mapSvg ? <div className="admin-map-svg" dangerouslySetInnerHTML={{ __html: mapSvg }} /> : <div className="map-loading">Загрузка карты субъектов…</div>}{region && <div className="map-selection-readout"><span>ВЫБРАННЫЙ СУБЪЕКТ</span><b>{region}</b></div>}</div></div><div className="region-panel"><label className="region-search">ПОИСК СУБЪЕКТА<input value={regionQuery} onChange={(event) => setRegionQuery(event.target.value)} placeholder="Например, Татарстан" /></label><div className="region-list">{filteredRegions.map((item) => <button key={item} className={region === item ? "selected" : ""} onClick={() => chooseRegion(item)}><span>{item}</span>{region === item && <Check size={14} />}</button>)}{filteredRegions.length === 0 && <small>Субъект не найден</small>}</div></div></div>
-        <div className="region-confirm"><span>{region ? `ВЫБРАНО: ${region}${selectedOffice ? ` · ${selectedOffice.title}` : ""}` : "Выберите субъект на карте или в списке"}</span><button className="primary-button" disabled={!region || !prosecutorOffice} onClick={() => setOnboardingStep("character")}>Подтвердить назначение <ChevronRight size={17} /></button></div>
+        <div className="region-confirm"><span>{region ? `ВЫБРАНО: ${region}${selectedOffice ? ` · ${selectedOffice.title}` : ""}` : "Выберите субъект на карте или в списке"}</span><button className="primary-button" disabled={!region || !prosecutorOffice} onClick={() => prosecutorOffice === "military" ? setMilitaryNoticeOpen(true) : setOnboardingStep("character")}>Подтвердить назначение <ChevronRight size={17} /></button></div>
         {prosecutorModalOpen && <div className="prosecutor-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setProsecutorModalOpen(false)}><section className="prosecutor-modal" role="dialog" aria-modal="true" aria-labelledby="prosecutor-modal-title"><div className="prosecutor-modal-kicker">ПРИКАЗ О НАЗНАЧЕНИИ · ШАГ 02</div><button className="prosecutor-modal-close" onClick={() => setProsecutorModalOpen(false)} aria-label="Закрыть окно">×</button><h2 id="prosecutor-modal-title">Выберите прокуратуру<br /><em>Выбран регион: {region}</em></h2><p>От него будут зависеть: характер обращений, поднадзорные объекты и лица, а также организация надзора</p><div className="prosecutor-office-options">{PROSECUTOR_OFFICES.map((office) => <button key={office.id} className={prosecutorOffice === office.id ? "selected" : ""} onClick={() => { setProsecutorOffice(office.id); setProsecutorModalOpen(false); }}><b>{office.icon}</b><span><strong>{office.title}</strong><small>{office.description}</small></span>{prosecutorOffice === office.id && <Check size={17} />}</button>)}</div></section></div>}
+        {militaryNoticeOpen && <div className="prosecutor-modal-backdrop" role="presentation"><section className="prosecutor-modal military-notice-modal" role="dialog" aria-modal="true" aria-labelledby="military-notice-title"><div className="prosecutor-modal-kicker">ПРЕДУПРЕЖДЕНИЕ · ВАЖНОЕ УСЛОВИЕ СЛУЖБЫ</div><h2 id="military-notice-title">ПРИНЯТЬ<br /><em>ВО ВНИМАНИЕ !</em></h2><p className="military-notice-text">Поступая на службу в органы военной прокуратуры, Вы подписываете военный контракт с прокуратурой Российской Федерации и тем самым приобретаете статус военнослужащего. В соответствии с п. 4 Указа Президента РФ от 21.09.2022 № 647 «Об объявлении частичной мобилизации в Российской Федерации» военнослужащие не могут расторгнуть контракт до выхода Указа Президента РФ «Об окончании частичной мобилизации в Российской Федерации».</p><div className="military-notice-actions"><button className="secondary-button" onClick={() => setMilitaryNoticeOpen(false)}>Вернуться к выбору прокуратуры</button><button className="primary-button" onClick={() => { setMilitaryNoticeOpen(false); setOnboardingStep("character"); }}>Принять во внимание <ChevronRight size={17} /></button></div></section></div>}
         <div className="location-footer"><span>НАЗНАЧЕНИЕ · ПОМОЩНИК ПРОКУРОРА</span><span>ШАГ 01 / 03</span></div>
       </div>
     </main>
@@ -538,7 +549,7 @@ export default function Home() {
     <main className="character-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.95), rgba(7,18,20,.44)), url(${OFFICE_BG})` }}>
       {musicPlayer}<div className="grain" />
       <div className="character-inner">
-        <button className="back-button" onClick={() => { setOnboardingStep("region"); setDraftName(""); }}><RotateCcw size={14} /> Назад к выбору региона и прокуратуры</button>
+        <button className="back-button" onClick={returnToRegionSelection}><RotateCcw size={14} /> Назад к выбору региона и прокуратуры</button>
         <div className="location-kicker"><UserRound size={14} /> ЛИЧНОЕ ДЕЛО · СОЗДАНИЕ ПЕРСОНАЖА</div>
         <h1>Ваш первый день<br /><em>начинается здесь.</em></h1>
         <p className="location-intro">Заполните анкету для поступления на службу. Вы должны соответствовать требованиям, предусмотренным ст. 40.1 ФЗ "О прокуратуре Российской Федерации"</p>

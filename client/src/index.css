@@ -667,7 +667,7 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .music-track-list button.active { color: #d5b477 !important; }
 .music-pulse { background: #baffed !important; box-shadow: 0 0 8px #baffed !important; }
 
-/* Служебные подсказки и возврат из анкеты */
+/* Служебные подсказки, возврат из анкеты и предупреждение военной службы */
 .back-button { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 18px; padding: 8px 11px; color: rgba(232,225,212,.7); background: rgba(7,18,20,.5); border: 1px solid rgba(198,155,97,.42); cursor: pointer; font: 10px 'IBM Plex Mono'; letter-spacing: .04em; }
 .back-button:hover { color: #f1e6cf; background: rgba(64,58,40,.8); border-color: #c69b61; }
 .guidance-item { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; color: rgba(232,225,212,.72); font: 10px 'IBM Plex Mono'; border-top: 1px solid rgba(232,225,212,.1); }
@@ -678,4 +678,11 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .guidance-tooltip strong { color: #714b2b; font: 700 10px 'IBM Plex Mono'; letter-spacing: .1em; text-transform: uppercase; }
 .guidance-tooltip ul { margin: 9px 0 0; padding-left: 18px; }
 .guidance-tooltip li { margin: 4px 0; font: 10px/1.35 'Manrope'; }
-@media (max-width: 760px) { .guidance-tooltip { left: auto; right: 0; bottom: calc(100% + 8px); width: min(330px, 84vw); } }
+.military-notice-modal { max-width: 760px; }
+.military-notice-modal h2 { font-size: clamp(30px, 4.4vw, 58px); line-height: .94; letter-spacing: .03em; }
+.military-notice-modal h2 em { color: #a86e3e; font-size: .72em; }
+.military-notice-text { max-width: 690px; margin: 22px 0 0; color: #4d4334; font: 15px/1.55 'Manrope'; }
+.military-notice-actions { display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap; margin-top: 26px; }
+.military-notice-actions .secondary-button { color: #6d5137; background: transparent; border: 1px solid rgba(109,81,55,.55); }
+.military-notice-actions .secondary-button:hover { color: #33291f; background: rgba(109,81,55,.12); }
+@media (max-width: 760px) { .guidance-tooltip { left: auto; right: 0; bottom: calc(100% + 8px); width: min(330px, 84vw); } .military-notice-text { font-size: 13px; } .military-notice-actions { justify-content: stretch; } .military-notice-actions button { flex: 1 1 100%; } }
