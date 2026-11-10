@@ -3,6 +3,14 @@ import { BadgeCheck, Camera, Check, ChevronRight, FileText, Gavel, MapPin, Maxim
 
 const OFFICE_BG = "/manus-storage/prosecutor-office-reference_7e58c04a.png";
 const PROFILE_BACKGROUNDS: Record<string, string> = { territorial: OFFICE_BG, executive: "/manus-storage/executive-office-bg_aa1818c9.png", environmental: "/manus-storage/environmental-office-bg_a009f425.png", military: "/manus-storage/military-office-bg-bright_f71bdfab.png", transport: OFFICE_BG };
+const PROFILE_LOADING_BACKGROUNDS: Record<string, string> = { territorial: "/manus-storage/loading-territorial-blue_98a4219b.png", executive: "/manus-storage/loading-corrections-red_aadd26a9.png", environmental: "/manus-storage/loading-environment-green_619dd58d.png", military: "/manus-storage/loading-military-darkgreen_b5a432ca.png", transport: "/manus-storage/loading-transport-orange_a567cded.png" };
+const PROFILE_LOADING_TIPS: Record<string, string> = {
+  territorial: "В территориальной прокуратуре сначала установите, затрагивает ли обращение публичный интерес и полномочия органов власти.",
+  executive: "В надзорном профиле фиксируйте даты, состояние заявителя и каждое действие администрации учреждения.",
+  environmental: "В природоохранной проверке сопоставляйте место нарушения, пробу, разрешительные документы и реальный размер вреда.",
+  military: "В военном профиле отделяйте вопросы военного законодательства от региональных выплат и проверяйте первичные приказы.",
+  transport: "В транспортной проверке начинайте с безопасности людей, журналов эксплуатации и документов перевозчика.",
+};
 const PROFILE_PORTRAITS = { soldier: "/manus-storage/military-soldier-portrait_01ce969c.png", soldierTwo: "/manus-storage/russian-soldier-portrait-1_880d2d26.png", soldierThree: "/manus-storage/russian-soldier-portrait-2_31b49369.png", elderlyParent: "/manus-storage/military-elderly-parent-portrait_594adf13.png", advocate: "/manus-storage/human-rights-advocate-portrait_87e49d41.png", citizenWoman: "/manus-storage/citizen-woman-portrait_d76969e3.png", citizenMan: "/manus-storage/citizen-man-portrait_027a1fba.png", environmentalWoman: "/manus-storage/environmental-woman-portrait_d82a1e59.png" };
 const PROFILE_CARD_PORTRAITS = { territorial: "/manus-storage/prosecutor-territorial-blue_00e133c6.png", executive: "/manus-storage/prosecutor-corrections-red_50856370.png", environmental: "/manus-storage/prosecutor-environment-green_d4e516ab.png", military: "/manus-storage/prosecutor-military-darkgreen_a75adba0.png", transport: "/manus-storage/prosecutor-transport-orange_f3587ad3.png" };
 const UI_CLICK = "/manus-storage/prosecutor-ui-click_a921f702.mp3";
@@ -214,7 +222,7 @@ function GuidanceItem({ label, items, counts }: { label: string; items: string[]
   return <div className="guidance-item"><span>{label}</span><button className="guidance-help" aria-label={`Подробнее: ${label}`} aria-expanded={open} onClick={() => setOpen((value) => !value)}>?</button>{open && <div className="guidance-tooltip guidance-tooltip-open" role="tooltip"><strong>{label}</strong><ul>{items.map((item) => <li key={item}><span>{item}</span><b>{counts[item] ?? 0}</b></li>)}</ul><footer>ВСЕГО: <b>{total}</b></footer></div>}</div>;
 }
 
-const PRELOAD_IMAGES = [OFFICE_BG, ...Object.values(PROFILE_BACKGROUNDS), ...Object.values(PROFILE_PORTRAITS), ...Object.values(PROFILE_CARD_PORTRAITS), ADMIN_MAP_SVG];
+const PRELOAD_IMAGES = [OFFICE_BG, ...Object.values(PROFILE_BACKGROUNDS), ...Object.values(PROFILE_LOADING_BACKGROUNDS), ...Object.values(PROFILE_PORTRAITS), ...Object.values(PROFILE_CARD_PORTRAITS), ADMIN_MAP_SVG];
 
 export default function Home() {
   const [assetsReady, setAssetsReady] = useState(false);
@@ -241,6 +249,8 @@ export default function Home() {
   const [draftName, setDraftName] = useState("");
   const [draftGender, setDraftGender] = useState<"male" | "female">("female");
   const [location, setLocation] = useState<LocationId | null>(null);
+  const [routeLoading, setRouteLoading] = useState(false);
+  const [loadingLocation, setLoadingLocation] = useState<LocationId | null>(null);
   const [caseIndex, setCaseIndex] = useState(0);
   const [complaintIndex, setComplaintIndex] = useState(0);
   const [complaintDecision, setComplaintDecision] = useState<"accept" | "reject" | null>(null);
@@ -352,6 +362,9 @@ export default function Home() {
 
   const chooseLocation = (nextLocation: LocationId) => {
     setLocation(nextLocation);
+    setLoadingLocation(nextLocation);
+    setRouteLoading(true);
+    window.setTimeout(() => setRouteLoading(false), 720);
     setOpenMaterial(null);
     setReviewedMaterials([]);
     setComplaintIndex(0);
@@ -360,6 +373,7 @@ export default function Home() {
     setRightsAdvocateMode(nextLocation === "reception" && prosecutorOffice === "executive" && Math.random() < 0.3);
     setExtraRequested(false);
   };
+  const switchLocation = (nextLocation: LocationId) => chooseLocation(nextLocation);
 
   const activeComplaints = prosecutorOffice === "executive" && rightsAdvocateMode ? [...(PROFILE_COMPLAINTS.executive ?? []), ...advocateComplaints] : prosecutorOffice && PROFILE_COMPLAINTS[prosecutorOffice] ? PROFILE_COMPLAINTS[prosecutorOffice] : COMPLAINTS;
   const currentComplaint = activeComplaints[complaintIndex] ?? activeComplaints[0];
@@ -575,7 +589,7 @@ export default function Home() {
         <p className="location-intro">От выбранного региона будет зависеть рабочая нагрузка и специфика разрешаемых дел</p>
         <div className="region-workspace"><div className="map-column"><div ref={mapRef} className="russia-map four-region-map" aria-label="Интерактивная карта четырёх субъектов Урала"><span className="map-hanging-rail map-hanging-rail-top" aria-hidden="true" /><span className="map-hanging-rail map-hanging-rail-bottom" aria-hidden="true" />{mapSvg ? <div className="admin-map-svg" dangerouslySetInnerHTML={{ __html: mapSvg }} /> : <div className="map-loading">Загрузка карты субъектов…</div>}{region && <div className="map-selection-readout"><span>ВЫБРАННЫЙ СУБЪЕКТ</span><b>{region}</b></div>}</div></div><div className="region-panel"><label className="region-search">ПОИСК СУБЪЕКТА<input value={regionQuery} onChange={(event) => setRegionQuery(event.target.value)} placeholder="Например, Татарстан" /></label><div className="region-list">{filteredRegions.map((item) => <button key={item} className={region === item ? "selected" : ""} onClick={() => chooseRegion(item)}><span>{item}</span>{region === item && <Check size={14} />}</button>)}{filteredRegions.length === 0 && <small>Субъект не найден</small>}</div></div></div>
         <div className="region-confirm"><span>{region ? `ВЫБРАНО: ${region}${selectedOffice ? ` · ${selectedOffice.title}` : ""}` : "Выберите субъект на карте или в списке"}</span><button className="primary-button" disabled={!region || !prosecutorOffice} onClick={() => prosecutorOffice === "military" ? setMilitaryNoticeOpen(true) : setOnboardingStep("character")}>Подтвердить назначение <ChevronRight size={17} /></button></div>
-        {prosecutorModalOpen && <div className="prosecutor-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setProsecutorModalOpen(false)}><section className={`prosecutor-modal prosecutor-office-modal ${selectedOffice?.theme ?? ""}`} role="dialog" aria-modal="true" aria-labelledby="prosecutor-modal-title"><div className="prosecutor-modal-kicker">ПРИКАЗ О НАЗНАЧЕНИИ · ШАГ 02</div><button className="prosecutor-modal-close" onClick={() => setProsecutorModalOpen(false)} aria-label="Закрыть окно">×</button><h2 id="prosecutor-modal-title">Выберите прокуратуру<br /><em>Выбран регион: {region}</em></h2><p>От него будут зависеть: характер обращений, поднадзорные объекты и лица, а также организация надзора</p><div className="prosecutor-office-options">{PROSECUTOR_OFFICES.map((office) => <button key={office.id} className={`prosecutor-office-card ${office.theme} ${prosecutorOffice === office.id ? "selected" : ""}`} onClick={() => setProsecutorOffice(office.id)}><img src={office.portrait} alt="" /><span className="prosecutor-office-card-copy"><strong>{office.title}</strong><small>{office.description}</small></span><b className="prosecutor-office-number">{office.icon}</b>{prosecutorOffice === office.id && <Check className="prosecutor-office-check" size={17} />}</button>)}</div>{selectedOffice && <div className="prosecutor-specialization"><span>СПЕЦИАЛИЗАЦИЯ · {selectedOffice.title.toUpperCase()}</span><p>{selectedOffice.specialization}</p></div>}<button className="prosecutor-modal-continue" disabled={!prosecutorOffice} onClick={() => setProsecutorModalOpen(false)}>Выбрать этот режим <ChevronRight size={17} /></button></section></div>}
+        {prosecutorModalOpen && <div className="prosecutor-modal-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && setProsecutorModalOpen(false)}><section className={`prosecutor-modal prosecutor-office-modal ${selectedOffice?.theme ?? ""}`} role="dialog" aria-modal="true" aria-labelledby="prosecutor-modal-title"><div className="prosecutor-modal-kicker">ПРИКАЗ О НАЗНАЧЕНИИ · ШАГ 02</div><button className="prosecutor-modal-close" onClick={() => setProsecutorModalOpen(false)} aria-label="Закрыть окно">×</button><h2 id="prosecutor-modal-title">Определитесь со спецификой</h2><div className="prosecutor-office-options">{PROSECUTOR_OFFICES.map((office) => <button key={office.id} className={`prosecutor-office-card ${office.theme} ${prosecutorOffice === office.id ? "selected" : ""}`} onClick={() => setProsecutorOffice(office.id)}><img src={office.portrait} alt="" /><span className="prosecutor-office-card-copy"><strong>{office.title}</strong><small>{office.description}</small></span><b className="prosecutor-office-number">{office.icon}</b>{prosecutorOffice === office.id && <Check className="prosecutor-office-check" size={17} />}</button>)}</div>{selectedOffice && <div className="prosecutor-specialization"><span>СПЕЦИАЛИЗАЦИЯ · {selectedOffice.title.toUpperCase()}</span><p>{selectedOffice.specialization}</p></div>}<button className="prosecutor-modal-continue" disabled={!prosecutorOffice} onClick={() => setProsecutorModalOpen(false)}>Выбрать этот режим <ChevronRight size={17} /></button></section></div>}
         {militaryNoticeOpen && <div className="prosecutor-modal-backdrop" role="presentation"><section className="prosecutor-modal military-notice-modal" role="dialog" aria-modal="true" aria-labelledby="military-notice-title"><div className="prosecutor-modal-kicker">ПРЕДУПРЕЖДЕНИЕ · ВАЖНОЕ УСЛОВИЕ СЛУЖБЫ</div><h2 id="military-notice-title">ПРИНЯТЬ<br /><em>ВО ВНИМАНИЕ !</em></h2><p className="military-notice-text">Поступая на службу в органы военной прокуратуры, Вы подписываете военный контракт с прокуратурой Российской Федерации и тем самым приобретаете статус военнослужащего. В соответствии с п. 4 Указа Президента РФ от 21.09.2022 № 647 «Об объявлении частичной мобилизации в Российской Федерации» военнослужащие не могут расторгнуть контракт до выхода Указа Президента РФ «Об окончании частичной мобилизации в Российской Федерации».</p><div className="military-notice-actions"><button className="secondary-button" onClick={() => setMilitaryNoticeOpen(false)}>Вернуться к выбору прокуратуры</button><button className="primary-button" onClick={() => { setMilitaryNoticeOpen(false); setOnboardingStep("character"); }}>Подписать <ChevronRight size={17} /></button></div></section></div>}
         <div className="location-footer"><span>НАЗНАЧЕНИЕ · ПОМОЩНИК ПРОКУРОРА</span><span>ШАГ 01 / 03</span></div>
       </div>
@@ -601,6 +615,11 @@ export default function Home() {
       </div>
     </main>
   );
+
+  if (routeLoading && loadingLocation && prosecutorOffice) {
+    const loadingProfile = PROFILE_LOADING_BACKGROUNDS[prosecutorOffice] ?? PROFILE_BACKGROUNDS[prosecutorOffice] ?? OFFICE_BG;
+    return <main className={`route-loading-screen loading-${prosecutorOffice}`} style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.94), rgba(7,18,20,.58)), url(${loadingProfile})` }}><div className="grain" /><div className="route-loading-card"><span className="live-dot" /><div className="eyebrow">ПОДГОТОВКА · {loadingLocation === "reception" ? "ПРИЁМ ЗАЯВИТЕЛЕЙ" : "ГОРОДСКАЯ ПРОВЕРКА"}</div><h1>Подсказка</h1><p>{PROFILE_LOADING_TIPS[prosecutorOffice]}</p><small>Материалы режима загружаются в приёмную…</small></div></main>;
+  }
 
   if (dayEnded) return (
     <main className="day-summary-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.94), rgba(7,18,20,.56)), url(${OFFICE_BG})` }}>
@@ -631,7 +650,7 @@ export default function Home() {
       <header className="topbar">
         <div className="brand"><div className="brand-mark"><Scale size={18} /></div><div><p>ПРОКУРАТУРА</p><h1>Приёмная № 07</h1></div></div>
         <div className="profile-chip"><UserRound size={14} /><span>{character.name}</span><b>{prosecutorOffice === "military" ? "лейтенант" : "юрист 3 класса"}</b></div>
-          <div className="shift"><span className="live-dot" /> {location === "inspection" ? "ГОРОДСКАЯ ПРОВЕРКА" : "ПРИЁМНАЯ ГРАЖДАН"} <b>•</b> ДЕНЬ {dayNumber}</div><div className={`work-clock ${hoursLeft <= 2 ? "critical" : hoursLeft <= 4 ? "warning" : ""}`} aria-label={`Осталось ${hoursLeft} часов рабочего времени`}><div className="work-clock-top"><span>РАБОЧЕЕ ВРЕМЯ</span><strong>{hoursLeft === 0 ? "18:00" : `${10 + (8 - hoursLeft)}:00`}</strong><em>до 18:00</em></div><div className="work-clock-track"><i style={{ width: `${(hoursLeft / 8) * 100}%` }} /></div><small>ОСТАЛОСЬ <b>{hoursLeft} ч.</b></small></div><button className="menu-button top-menu-button" onClick={returnToMainMenu}>Главное меню</button><button className="end-day-button" onClick={() => endDay()}>Завершить день · 18:00</button>
+          <div className="shift"><span className="live-dot" /> {location === "inspection" ? "ГОРОДСКАЯ ПРОВЕРКА" : "ПРИЁМНАЯ ГРАЖДАН"} <b>•</b> ДЕНЬ {dayNumber}</div><div className={`work-clock ${hoursLeft <= 2 ? "critical" : hoursLeft <= 4 ? "warning" : ""}`} aria-label={`Осталось ${hoursLeft} часов рабочего времени`}><div className="work-clock-top"><span>РАБОЧЕЕ ВРЕМЯ</span><strong>{hoursLeft === 0 ? "18:00" : `${10 + (8 - hoursLeft)}:00`}</strong><em>до 18:00</em></div><div className="work-clock-track"><i style={{ width: `${(hoursLeft / 8) * 100}%` }} /></div><small>ОСТАЛОСЬ <b>{hoursLeft} ч.</b></small></div><button className="route-switch-button" onClick={() => switchLocation(location === "reception" ? "inspection" : "reception")}>{location === "reception" ? "Выйти на проверку" : "Принять заявителей"}</button><button className="menu-button top-menu-button" onClick={returnToMainMenu}>Главное меню</button><button className="end-day-button" onClick={() => endDay()}>Завершить день · 18:00</button>
         <div className="seal">ДЕЛО<br /><span>В РАБОТЕ</span></div>
       </header>
 

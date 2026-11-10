@@ -753,3 +753,43 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .prosecutor-office-modal.environmental-green .prosecutor-modal-continue { background: #557749; border-color: #3e5e37; }
 .prosecutor-office-modal.military-darkgreen .prosecutor-modal-continue { background: #405e4a; border-color: #2d4838; }
 .prosecutor-office-modal.transport-orange .prosecutor-modal-continue { background: #a96737; border-color: #7d4c29; }
+
+/* Увеличенные карточки выбора специализации и мягкое сияние за портретом */
+.prosecutor-office-modal { width: min(1160px, calc(100vw - 44px)); }
+.prosecutor-office-modal h2 { margin-bottom: 18px; }
+.prosecutor-office-options { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+.prosecutor-office-card { min-height: 320px; }
+.prosecutor-office-card::before { position: absolute; z-index: 0; inset: -24%; content: ""; opacity: 0; background: radial-gradient(ellipse at center, rgba(255,255,255,.5) 0%, transparent 63%); filter: blur(24px); transition: opacity .2s ease; pointer-events: none; }
+.prosecutor-office-card::after { z-index: 2; }
+.prosecutor-office-card img { z-index: 1; }
+.prosecutor-office-card-copy { z-index: 3; }
+.prosecutor-office-card:hover::before, .prosecutor-office-card.selected::before { opacity: .66; }
+.prosecutor-office-card:hover, .prosecutor-office-card.selected { transform: translateY(-2px); box-shadow: 0 0 30px 8px rgba(201,170,113,.18), 0 14px 28px rgba(0,0,0,.28); }
+.prosecutor-office-card.territorial-blue::before { background: radial-gradient(ellipse at center, rgba(112,176,224,.72) 0%, transparent 64%); }
+.prosecutor-office-card.executive-red::before { background: radial-gradient(ellipse at center, rgba(190,82,75,.72) 0%, transparent 64%); }
+.prosecutor-office-card.environmental-green::before { background: radial-gradient(ellipse at center, rgba(117,171,99,.7) 0%, transparent 64%); }
+.prosecutor-office-card.military-darkgreen::before { background: radial-gradient(ellipse at center, rgba(105,150,109,.62) 0%, transparent 64%); }
+.prosecutor-office-card.transport-orange::before { background: radial-gradient(ellipse at center, rgba(224,137,63,.72) 0%, transparent 64%); }
+.prosecutor-office-card.territorial-blue:hover, .prosecutor-office-card.territorial-blue.selected { box-shadow: 0 0 34px 10px rgba(83,148,201,.36), 0 14px 28px rgba(9,24,38,.28); }
+.prosecutor-office-card.executive-red:hover, .prosecutor-office-card.executive-red.selected { box-shadow: 0 0 34px 10px rgba(174,66,60,.34), 0 14px 28px rgba(42,18,20,.3); }
+.prosecutor-office-card.environmental-green:hover, .prosecutor-office-card.environmental-green.selected { box-shadow: 0 0 34px 10px rgba(91,151,76,.34), 0 14px 28px rgba(16,32,18,.28); }
+.prosecutor-office-card.military-darkgreen:hover, .prosecutor-office-card.military-darkgreen.selected { box-shadow: 0 0 34px 10px rgba(72,127,83,.32), 0 14px 28px rgba(10,26,19,.32); }
+.prosecutor-office-card.transport-orange:hover, .prosecutor-office-card.transport-orange.selected { box-shadow: 0 0 34px 10px rgba(201,111,46,.34), 0 14px 28px rgba(47,27,16,.3); }
+
+/* Перед входом в маршрут: тематическая подсказка профиля */
+.route-loading-screen { position: fixed; inset: 0; z-index: 80; display: grid; place-items: center start; padding: 7vw; background-position: center; background-size: cover; color: #f5e8c8; }
+.route-loading-card { width: min(530px, 88vw); padding: 34px 38px; background: rgba(10,24,23,.78); border: 1px solid rgba(207,173,111,.42); box-shadow: 0 18px 55px rgba(0,0,0,.28); backdrop-filter: blur(4px); }
+.route-loading-card .eyebrow { color: #d8b875; letter-spacing: .12em; }
+.route-loading-card h1 { margin: 20px 0 14px; color: #fff1cf; font: 400 clamp(42px, 5vw, 74px)/.98 'Manrope'; }
+.route-loading-card p { margin: 0; color: rgba(248,237,211,.9); font: 16px/1.58 'Manrope'; }
+.route-loading-card small { display: block; margin-top: 28px; color: rgba(229,207,164,.68); font: 10px 'IBM Plex Mono'; letter-spacing: .08em; text-transform: uppercase; }
+.loading-territorial .route-loading-card { border-color: rgba(108,158,201,.65); }
+.loading-executive .route-loading-card { border-color: rgba(177,87,80,.7); }
+.loading-environmental .route-loading-card { border-color: rgba(109,155,92,.7); }
+.loading-military .route-loading-card { border-color: rgba(99,137,102,.7); }
+.loading-transport .route-loading-card { border-color: rgba(204,125,57,.72); }
+.route-switch-button { align-self: center; min-width: 150px; padding: 10px 13px; color: #f7e7c0; background: rgba(71,91,70,.92); border: 1px solid rgba(183,149,91,.7); font: 700 10px 'IBM Plex Mono'; letter-spacing: .02em; cursor: pointer; transition: background .16s ease, transform .16s ease; }
+.route-switch-button:hover { background: rgba(123,91,49,.96); transform: translateY(-1px); }
+@media (max-width: 900px) { .prosecutor-office-options { grid-template-columns: repeat(3, minmax(0, 1fr)); } .prosecutor-office-card { min-height: 270px; } }
+@media (max-width: 640px) { .prosecutor-office-modal { width: calc(100vw - 24px); } .prosecutor-office-options { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; } .prosecutor-office-card { min-height: 220px; } .route-loading-screen { padding: 7vw 5vw; place-items: center; } .route-loading-card { padding: 26px 24px; } }
+@media (max-width: 420px) { .prosecutor-office-options { grid-template-columns: 1fr; } .prosecutor-office-card { min-height: 180px; } }
