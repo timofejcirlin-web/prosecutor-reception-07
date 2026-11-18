@@ -793,3 +793,20 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 @media (max-width: 900px) { .prosecutor-office-options { grid-template-columns: repeat(3, minmax(0, 1fr)); } .prosecutor-office-card { min-height: 270px; } }
 @media (max-width: 640px) { .prosecutor-office-modal { width: calc(100vw - 24px); } .prosecutor-office-options { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; } .prosecutor-office-card { min-height: 220px; } .route-loading-screen { padding: 7vw 5vw; place-items: center; } .route-loading-card { padding: 26px 24px; } }
 @media (max-width: 420px) { .prosecutor-office-options { grid-template-columns: 1fr; } .prosecutor-office-card { min-height: 180px; } }
+/* Финальная компоновка окна специализаций: крупные карточки 3 x 2 */
+.prosecutor-office-modal { width: min(1240px, calc(100vw - 36px)); max-height: calc(100vh - 34px); overflow-y: auto; }
+.prosecutor-office-options { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.prosecutor-office-card { min-height: 360px; }
+.prosecutor-office-card-copy { padding: 18px 16px 16px; }
+.prosecutor-office-card-copy strong { font-size: 14px; line-height: 1.18; }
+.prosecutor-office-card-copy small { font-size: 10px; line-height: 1.4; }
+.prosecutor-office-number { top: 12px; left: 13px; font-size: 12px; }
+.prosecutor-office-check { top: 12px; right: 13px; }
+/* Полноэкранная профильная заставка с крупной центральной карточкой */
+.route-loading-screen { place-items: center; padding: 28px; }
+.route-loading-card { width: min(700px, 88vw); min-height: 290px; display: flex; flex-direction: column; justify-content: center; padding: 48px 56px; background: rgba(10,24,23,.84); border-width: 2px; box-shadow: 0 26px 90px rgba(0,0,0,.5); }
+.route-loading-card h1 { margin: 24px 0 20px; font-size: clamp(56px, 7vw, 92px); }
+.route-loading-card p { font-size: clamp(17px, 1.6vw, 22px); line-height: 1.6; }
+.route-loading-card small { margin-top: 34px; font-size: 11px; }
+@media (max-width: 980px) { .prosecutor-office-options { grid-template-columns: repeat(2, minmax(0, 1fr)); } .prosecutor-office-card { min-height: 330px; } }
+@media (max-width: 640px) { .prosecutor-office-modal { width: calc(100vw - 18px); } .prosecutor-office-options { grid-template-columns: 1fr; gap: 12px; } .prosecutor-office-card { min-height: 260px; } .route-loading-card { width: min(92vw, 560px); min-height: 0; padding: 32px 26px; } .route-loading-card h1 { font-size: 56px; } .route-loading-card p { font-size: 16px; } }
