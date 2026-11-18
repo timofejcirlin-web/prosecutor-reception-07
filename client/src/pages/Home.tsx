@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { BadgeCheck, Camera, Check, ChevronRight, FileText, Gavel, MapPin, Maximize2, MessageSquare, Minimize2, Pause, Play, RotateCcw, Scale, SkipBack, SkipForward, Stamp, UserRound, Users, X, Music2 } from "lucide-react";
 
 const OFFICE_BG = "/manus-storage/prosecutor-night-office-new.png";
-const PROFILE_BACKGROUNDS: Record<string, string> = { territorial: "/manus-storage/prosecutor-territorial-new.png", executive: "/manus-storage/prosecutor-corrections-prison-new.png", environmental: "/manus-storage/prosecutor-environmental-new.png", military: "/manus-storage/prosecutor-military-base-new.png", transport: "/manus-storage/prosecutor-transport-new.png" };
+const PROFILE_BACKGROUNDS: Record<string, string> = { territorial: OFFICE_BG, executive: "/manus-storage/executive-office-bg_aa1818c9.png", environmental: "/manus-storage/environmental-office-bg_a009f425.png", military: "/manus-storage/military-office-bg-bright_f71bdfab.png", transport: OFFICE_BG };
 const PROFILE_LOADING_BACKGROUNDS: Record<string, string> = { territorial: "/manus-storage/loading-territorial-blue_98a4219b.png", executive: "/manus-storage/loading-corrections-red_aadd26a9.png", environmental: "/manus-storage/loading-environment-green_619dd58d.png", military: "/manus-storage/loading-military-darkgreen_b5a432ca.png", transport: "/manus-storage/loading-transport-orange_a567cded.png" };
 const PROFILE_LOADING_TIPS: Record<string, string> = {
   territorial: "В территориальной прокуратуре сначала установите, затрагивает ли обращение публичный интерес и полномочия органов власти.",
@@ -12,7 +12,7 @@ const PROFILE_LOADING_TIPS: Record<string, string> = {
   transport: "В транспортной проверке начинайте с безопасности людей, журналов эксплуатации и документов перевозчика.",
 };
 const PROFILE_PORTRAITS = { soldier: "/manus-storage/military-soldier-portrait_01ce969c.png", soldierTwo: "/manus-storage/russian-soldier-portrait-1_880d2d26.png", soldierThree: "/manus-storage/russian-soldier-portrait-2_31b49369.png", elderlyParent: "/manus-storage/military-elderly-parent-portrait_594adf13.png", advocate: "/manus-storage/human-rights-advocate-portrait_87e49d41.png", citizenWoman: "/manus-storage/citizen-woman-portrait_d76969e3.png", citizenMan: "/manus-storage/citizen-man-portrait_027a1fba.png", environmentalWoman: "/manus-storage/environmental-woman-portrait_d82a1e59.png" };
-const PROFILE_CARD_PORTRAITS = { territorial: "/manus-storage/prosecutor-territorial-blue_00e133c6.png", executive: "/manus-storage/prosecutor-corrections-red_50856370.png", environmental: "/manus-storage/prosecutor-environment-green_d4e516ab.png", military: "/manus-storage/prosecutor-military-darkgreen_a75adba0.png", transport: "/manus-storage/prosecutor-transport-orange_f3587ad3.png" };
+const PROFILE_CARD_PORTRAITS = { territorial: "/manus-storage/prosecutor-territorial-new.png", executive: "/manus-storage/prosecutor-corrections-prison-new.png", environmental: "/manus-storage/prosecutor-environmental-new.png", military: "/manus-storage/prosecutor-military-base-new.png", transport: "/manus-storage/prosecutor-transport-new.png" };
 const UI_CLICK = "/manus-storage/prosecutor-ui-click_a921f702.mp3";
 const BACKGROUND_MUSIC = "/manus-storage/prosecutor-soviet-ambient_98bcbd3d.mp3";
 const ALBUM_ONE_TRACKS = [
