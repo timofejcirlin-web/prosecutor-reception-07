@@ -850,3 +850,175 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .response-act-continue:hover { background: #526f5b; }
 .response-act-feedback strong { display: block; font-size: 11px; }
 .response-act-feedback p { font-size: 13px; line-height: 1.65; }
+
+/* Full-screen cinematic prosecutor specialization selection */
+.prosecutor-modal-backdrop:has(.prosecutor-office-modal) {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 38%, rgba(95, 25, 30, .24), transparent 55%),
+    linear-gradient(115deg, rgba(5, 8, 13, .97), rgba(16, 12, 18, .96) 48%, rgba(5, 8, 13, .98));
+  backdrop-filter: blur(12px);
+}
+.prosecutor-modal.prosecutor-office-modal {
+  position: relative;
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  height: 100dvh;
+  max-height: none;
+  min-height: 0;
+  margin: 0;
+  padding: clamp(22px, 3.2vh, 42px) clamp(24px, 4.4vw, 84px) 26px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  color: #f5ead7;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.prosecutor-office-modal .prosecutor-modal-kicker {
+  color: #d49a62;
+  font-size: 10px;
+  letter-spacing: .2em;
+}
+.prosecutor-office-modal .prosecutor-modal-close {
+  top: 22px;
+  right: clamp(24px, 4.4vw, 84px);
+  z-index: 10;
+  width: 42px;
+  height: 42px;
+  color: #f4dfc5;
+  border-color: rgba(221, 171, 123, .45);
+  background: rgba(20, 19, 22, .72);
+}
+.prosecutor-office-modal h2 {
+  margin: 10px 60px 24px 0;
+  color: #f5ead7;
+  font-size: clamp(30px, 4vw, 58px);
+  line-height: 1.05;
+  letter-spacing: -.045em;
+}
+.prosecutor-office-options {
+  flex: 1 1 auto;
+  min-height: 0;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(10px, 1.25vw, 22px);
+  align-items: stretch;
+}
+.prosecutor-office-card {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  aspect-ratio: 2 / 3;
+  max-height: 68vh;
+  align-self: center;
+  border: 1px solid rgba(206, 155, 111, .5);
+  background: #15191d;
+  box-shadow: 0 18px 55px rgba(0,0,0,.38);
+  transition: transform .24s ease, filter .24s ease, border-color .24s ease, box-shadow .24s ease;
+}
+.prosecutor-office-card img {
+  filter: saturate(.78) brightness(.78) contrast(1.08);
+  transition: filter .24s ease, transform .45s ease;
+}
+.prosecutor-office-card::after {
+  inset: 20% 0 0;
+  background: linear-gradient(180deg, rgba(5,8,12,.02) 0%, rgba(5,8,12,.08) 36%, rgba(5,8,12,.92) 100%);
+}
+.prosecutor-office-card-copy {
+  padding: 18px 16px 20px;
+  gap: 9px;
+}
+.prosecutor-office-card-copy strong {
+  font-size: clamp(13px, 1.05vw, 18px);
+  line-height: 1.2;
+}
+.prosecutor-office-card-copy small {
+  font-size: clamp(9px, .7vw, 11px);
+  line-height: 1.45;
+}
+.prosecutor-office-number {
+  top: 16px;
+  left: 16px;
+  color: #f3c28c;
+  font-size: 13px;
+}
+.prosecutor-office-card:hover,
+.prosecutor-office-card.selected {
+  z-index: 2;
+  transform: translateY(-8px) scale(1.015);
+  border-color: #f0bb83;
+  box-shadow: 0 0 0 1px rgba(240,187,131,.35), 0 0 38px rgba(194,89,65,.25), 0 24px 65px rgba(0,0,0,.56);
+}
+.prosecutor-office-card:hover img,
+.prosecutor-office-card.selected img {
+  filter: saturate(1.12) brightness(1.04) contrast(1.06);
+  transform: scale(1.035);
+}
+.prosecutor-office-card:hover::after,
+.prosecutor-office-card.selected::after {
+  background: linear-gradient(180deg, rgba(11,20,28,.02) 0%, rgba(12,15,18,.03) 30%, rgba(5,8,12,.94) 100%);
+}
+.prosecutor-office-card.selected::before {
+  opacity: .95;
+}
+.prosecutor-office-modal .prosecutor-specialization {
+  flex: 0 0 auto;
+  max-width: none;
+  margin: 16px 0 12px;
+  padding: 10px 16px;
+  color: #e8ddcc;
+  background: rgba(230, 213, 185, .08);
+  border-left-width: 3px;
+  border-color: #c88d5b;
+}
+.prosecutor-office-modal .prosecutor-specialization span {
+  color: #e8b37e;
+  font-size: 10px;
+  letter-spacing: .13em;
+}
+.prosecutor-office-modal .prosecutor-specialization p {
+  margin: 4px 0 0;
+  color: rgba(245,234,215,.78);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.prosecutor-office-modal .prosecutor-modal-continue {
+  flex: 0 0 auto;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 0;
+  color: #f9ebd6;
+  background: linear-gradient(90deg, #743b37, #a45c46);
+  border: 1px solid rgba(226,165,119,.55);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.prosecutor-office-modal .prosecutor-modal-continue:disabled {
+  opacity: .42;
+  filter: grayscale(.45);
+}
+@media (max-width: 1100px) {
+  .prosecutor-modal.prosecutor-office-modal { padding: 24px 22px 18px; overflow-y: auto; }
+  .prosecutor-office-options { grid-template-columns: repeat(3, minmax(0, 1fr)); flex: 0 0 auto; }
+  .prosecutor-office-card { height: min(54vh, 470px); min-height: 330px; }
+}
+@media (max-width: 680px) {
+  .prosecutor-modal.prosecutor-office-modal { padding: 20px 14px 14px; }
+  .prosecutor-office-modal h2 { font-size: 30px; margin-bottom: 16px; }
+  .prosecutor-office-options { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .prosecutor-office-card { height: 36vh; min-height: 230px; }
+  .prosecutor-office-card-copy { padding: 12px 10px; }
+  .prosecutor-office-card-copy strong { font-size: 12px; }
+  .prosecutor-office-modal .prosecutor-specialization { margin: 10px 0; }
+}
