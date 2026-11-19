@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
 import { BadgeCheck, Camera, Check, ChevronRight, FileText, Gavel, MapPin, Maximize2, MessageSquare, Minimize2, Pause, Play, RotateCcw, Scale, SkipBack, SkipForward, Stamp, UserRound, Users, X, Music2 } from "lucide-react";
 
 const OFFICE_BG = "/manus-storage/prosecutor-night-office-new.png";
@@ -130,7 +130,8 @@ PROFILE_CASES.executive.push(
 );
 
 
-type Complaint = { id: string; title: string; applicant: string; role: string; situation: string; request: string; correct: "accept" | "reject"; outcome: string; background: string; portrait: string; documents: Material[]; extra: Material; displayApplicant?: boolean; bribe?: boolean };
+type ResponseAct = "protest" | "representation";
+type Complaint = { id: string; responseAct?: ResponseAct; title: string; applicant: string; role: string; situation: string; request: string; correct: "accept" | "reject"; outcome: string; background: string; portrait: string; documents: Material[]; extra: Material; displayApplicant?: boolean; bribe?: boolean };
 type ConsequenceEvent = { title: string; text: string; tone: "good" | "warn" };
 const COMPLAINTS: Complaint[] = [
   { id: "housing", title: "Аварийное жильё", applicant: "Заявительница 01", role: "жительница района N", situation: "Я живу в доме, который признали аварийным ещё несколько лет назад. Дом должны были расселить, но решение постоянно откладывают. Прошу проверить мои жилищные права и помочь добиться безопасного жилья.", request: "Проверить, почему расселение не проводится, и принять меры для восстановления жилищных прав.", correct: "accept", outcome: "Жалоба принята: обстоятельства конкретны, есть указание на аварийный статус дома и длительное бездействие. Материал направляется на проверку.", background: "/manus-storage/complaint-housing-bg_9b956f3f.png", portrait: "/manus-storage/complaint-housing-portrait_88fe0823.png", documents: [{ label: "Решение комиссии", text: "Дом признан аварийным и подлежащим сносу. В выписке указана дата решения и состав комиссии." }, { label: "Ответ администрации", text: "В ответе говорится, что переселение запланировано, но конкретный срок предоставления жилья не указан." }, { label: "Сведения о доме", text: "Акт осмотра фиксирует неисправности конструкций, промерзание стен и жалобы жильцов на условия проживания." }], extra: { label: "План переселения", text: "Запрошенный план показывает, что срок переселения переносился дважды из-за отсутствия подготовленного жилого фонда." } },
@@ -159,9 +160,10 @@ const advocateComplaints: Complaint[] = [
   makeProfileComplaint("executive", 7, "Жалоба правозащитника на обращение с осуждённым", "представитель правозащитной организации", "Правозащитник сообщает, что конкретного осуждённого вывели на беседу без регистрации и не предоставили медицинский осмотр после возвращения.", "Проверить обращение с осуждённым, опросить сотрудников и обеспечить медицинскую фиксацию состояния.", "accept", [{label:"Письмо правозащитника",text:"В обращении указаны ФИО осуждённого, даты и просьба о проверке условий обращения."},{label:"Доверенность",text:"Организация приложила документы, подтверждающие полномочия представителя."},{label:"Медицинская справка",text:"В справке отражены жалобы на боли после возвращения с беседы."}], {label:"Объяснение учреждения",text:"Администрация не приложила журнал регистрации вывода осуждённого и предлагает дать объяснение позже."}, "Правозащитник · обращение № 41"),
   makeProfileComplaint("executive", 8, "Жалоба группы осуждённых на применение насилия", "представитель правозащитной организации", "Правозащитник передал жалобу группы осуждённых на возможное применение пыток и давление при получении объяснений.", "Незамедлительно сохранить записи камер, обеспечить медицинский осмотр и проверить действия сотрудников.", "accept", [{label:"Коллективная жалоба",text:"В жалобе приведены согласующиеся даты, помещения и фамилии сотрудников, на которых указывают заявители."},{label:"Перечень заявителей",text:"В приложении указаны шесть осуждённых, подписавших обращение через представителя."},{label:"Медицинские сведения",text:"У двух заявителей зафиксированы телесные повреждения, требующие проверки происхождения."}], {label:"Запрос видеозаписей",text:"Правозащитник просит незамедлительно изъять записи камер за указанный период, чтобы исключить их утрату."}, "Правозащитник · коллективное обращение № 42")
 ];
-const territorialComplaint = (index: number, title: string, applicant: string, role: string, situation: string, request: string, correct: "accept" | "reject", documents: Material[], extra: Material, outcome: string, portrait: string = PROFILE_PORTRAITS.citizenWoman) => ({
+const territorialComplaint = (index: number, title: string, applicant: string, role: string, situation: string, request: string, correct: "accept" | "reject", documents: Material[], extra: Material, outcome: string, portrait: string = PROFILE_PORTRAITS.citizenWoman): Complaint => ({
   ...makeProfileComplaint("territorial", index, title, role, situation, request, correct, documents, extra, applicant, portrait),
   outcome,
+  responseAct: index === 1 || index === 2 ? "protest" : "representation",
 });
 PROFILE_COMPLAINTS.territorial = [
   territorialComplaint(1, "Отказ в предоставлении земельного участка", "Алексей Морозов", "заявитель по земельному вопросу", "Гражданин обратился за предоставлением свободного земельного участка без торгов. Администрация отказала, сославшись на отсутствие оснований, но не указала конкретный пункт закона и не приложила материалы проверки.", "Проверить законность отказа и обязать администрацию предоставить участок.", "accept",
@@ -288,6 +290,7 @@ export default function Home() {
   const [caseIndex, setCaseIndex] = useState(0);
   const [complaintIndex, setComplaintIndex] = useState(0);
   const [complaintDecision, setComplaintDecision] = useState<"accept" | "reject" | null>(null);
+  const [responseActDecision, setResponseActDecision] = useState<ResponseAct | null>(null);
   const [openComplaintDoc, setOpenComplaintDoc] = useState<number | null>(null);
   const [reviewedComplaintDocs, setReviewedComplaintDocs] = useState<number[]>([]);
   const [hoursLeft, setHoursLeft] = useState(8);
@@ -403,6 +406,7 @@ export default function Home() {
     setReviewedMaterials([]);
     setComplaintIndex(0);
     setComplaintDecision(null);
+    setResponseActDecision(null);
     setHoursLeft(8);
     setRightsAdvocateMode(nextLocation === "reception" && prosecutorOffice === "executive" && Math.random() < 0.3);
     setExtraRequested(false);
@@ -436,6 +440,7 @@ export default function Home() {
     const bribeAccepted = Boolean(currentComplaint.bribe && decision === "accept");
     setHoursLeft(remaining);
     setComplaintDecision(decision);
+    setResponseActDecision(null);
     setCorrectDecisions((value) => value + (good ? 1 : 0));
     adjustReputation(good, true);
     registerDecisionConsequence(good);
@@ -446,12 +451,19 @@ export default function Home() {
       : good ? { title: "Маршрут обращения разъяснён", text: `Заявителю по делу «${currentComplaint.title}» указан компетентный порядок дальнейшего обращения.`, tone: "good" }
       : { title: "Возможное повторное обращение", text: `Решение по делу «${currentComplaint.title}» может привести к повторной жалобе и служебной проверке завтра.`, tone: "warn" };
     setConsequenceQueue((events) => [...events, event]);
-    if (remaining === 0) endDay(decision, [...consequenceQueue, event], !good);
+    if (remaining === 0 && !(decision === "accept" && prosecutorOffice === "territorial")) endDay(decision, [...consequenceQueue, event], !good);
   };
+  const chooseResponseAct = (act: ResponseAct) => {
+    if (responseActDecision || complaintDecision !== "accept" || prosecutorOffice !== "territorial" || gameOver) return;
+    setResponseActDecision(act);
+    if (hoursLeft === 0) endDay("accept");
+  };
+
   const nextComplaint = () => {
     if (!complaintDecision || dayEnded || gameOver) return;
+    if (prosecutorOffice === "territorial" && complaintDecision === "accept" && !responseActDecision) return;
     if (complaintIndex >= activeComplaints.length - 1) endDay(complaintDecision);
-    else { setComplaintIndex((value) => value + 1); setComplaintDecision(null); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setExtraRequested(false); }
+    else { setComplaintIndex((value) => value + 1); setComplaintDecision(null); setResponseActDecision(null); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setExtraRequested(false); }
   };
 
   const endDay = (resolvedDecision?: "accept" | "reject", eventsOverride?: ConsequenceEvent[], repeatOverride = false) => {
@@ -462,6 +474,7 @@ export default function Home() {
     if (resolved && unresolved > 0 && !repeats) {
       setComplaintIndex((value) => value + 1);
       setComplaintDecision(null);
+      setResponseActDecision(null);
       setOpenComplaintDoc(null);
       setReviewedComplaintDocs([]);
       setExtraRequested(false);
@@ -479,6 +492,7 @@ export default function Home() {
     setRightsAdvocateMode(pendingComplaints > 0 && prosecutorOffice === "executive" && Math.random() < 0.3);
     if (repeatComplaintIndex !== null) setComplaintIndex(repeatComplaintIndex);
     setComplaintDecision(null);
+    setResponseActDecision(null);
     setOpenComplaintDoc(null);
     setReviewedComplaintDocs([]);
     setExtraRequested(false);
@@ -702,7 +716,7 @@ export default function Home() {
 
         {location === "reception" ? <section className={`complaint-area ${isWrittenReception ? "written-complaints-mode" : ""}`} style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.15), rgba(7,18,20,.62)), url(${currentComplaint.background})` }}>
           <div className="complaint-meta"><span>{isWrittenReception ? "ОТДЕЛ ПИСЬМЕННЫХ ОБРАЩЕНИЙ" : "ПРИЁМНАЯ ГРАЖДАН"} · ОБРАЩЕНИЕ {String(complaintIndex + 1).padStart(2, "0")} / {activeComplaints.length}</span><span>{isWrittenReception ? "ТОЛЬКО ПИСЬМЕННАЯ ЖАЛОБА" : "ЛИЧНЫЙ ПРИЁМ"} · ОСТАЛОСЬ {hoursLeft} ЧАС.</span></div>
-          <div className="complaint-layout">{isWrittenReception ? <div className="written-complaint-stamp" aria-label="Письменная жалоба"><FileText size={28} /><span>ПИСЬМЕННАЯ<br />ЖАЛОБА</span><small>ЗАЯВИТЕЛЬ НЕ ПРИСУТСТВУЕТ</small></div> : <div className="complaint-portrait"><img src={currentComplaint.portrait} alt="Обезличенный портрет заявителя" /><div><span>{currentComplaint.applicant}</span><b>{currentComplaint.role}</b></div></div>}<article className="complaint-card"><div className="eyebrow"><MessageSquare size={14} /> {isWrittenReception ? "ТЕКСТ ПИСЬМЕННОГО ОБРАЩЕНИЯ" : "РАССКАЗ ЗАЯВИТЕЛЯ"}</div><h2>{currentComplaint.title}</h2><p className="complaint-speech">{isWrittenReception ? currentComplaint.situation : `«${currentComplaint.situation}»`}</p><div className="complaint-request"><span>ПРОСЬБА</span><p>{currentComplaint.request}</p></div><div className="complaint-documents"><div className="evidence-label"><span>ЗАПРОСИТЬ ДОКУМЕНТЫ</span><small>ИЗУЧЕНО: {reviewedComplaintDocs.length}/{complaintDocuments.length}</small></div><div className="material-tabs">{complaintDocuments.map((document, index) => <button key={document.label} className={reviewedComplaintDocs.includes(index) ? "reviewed" : ""} onClick={() => requestComplaintDocument(index)}><FileText size={13} /> {document.label}{reviewedComplaintDocs.includes(index) && <Check size={12} />}</button>)}</div>{openComplaintDoc !== null && <div className="material-content"><span>{complaintDocuments[openComplaintDoc].label}</span><p>{complaintDocuments[openComplaintDoc].text}</p></div>}</div><button className="extra-request" disabled={extraRequested || hoursLeft < 2 || !!complaintDecision} onClick={requestExtraMaterial}><FileText size={14} /><span>{extraRequested ? "Дополнительный материал запрошен" : "Запросить дополнительный материал"}</span><small>{extraRequested ? "−2 часа смены" : "−2 часа · ответ из ведомства"}</small></button>{complaintDecision ? <div className={`complaint-result ${complaintDecision === currentComplaint.correct ? "good" : "bad"}`}><strong>{complaintDecision === currentComplaint.correct ? "РЕШЕНИЕ ОБОСНОВАНО" : "ТРЕБУЕТСЯ ВНИМАТЕЛЬНОСТЬ"}</strong><p>{currentComplaint.outcome}</p></div> : <div className="complaint-actions"><button className="complaint-action reject" disabled={reviewedComplaintDocs.length < complaintDocuments.length || hoursLeft < 1} onClick={() => decideComplaint("reject")}><X size={18} /><span><b>Отказать</b><small>{reviewedComplaintDocs.length < complaintDocuments.length ? "Сначала изучите документы" : hoursLeft < 1 ? "Рабочий день завершён" : "−1 час · недостаточно оснований"}</small></span></button><button className="complaint-action accept" disabled={reviewedComplaintDocs.length < complaintDocuments.length || hoursLeft < 1} onClick={() => decideComplaint("accept")}><Check size={18} /><span><b>Принять жалобу</b><small>{reviewedComplaintDocs.length < complaintDocuments.length ? "Сначала изучите документы" : hoursLeft < 1 ? "Рабочий день завершён" : "−1 час · направить на проверку"}</small></span></button></div>}{complaintDecision && <button className="next-button" onClick={nextComplaint}>{complaintIndex === activeComplaints.length - 1 ? "Завершить приём" : "Следующее обращение"} <ChevronRight size={17} /></button>}</article></div>
+          <div className="complaint-layout">{isWrittenReception ? <div className="written-complaint-stamp" aria-label="Письменная жалоба"><FileText size={28} /><span>ПИСЬМЕННАЯ<br />ЖАЛОБА</span><small>ЗАЯВИТЕЛЬ НЕ ПРИСУТСТВУЕТ</small></div> : <div className="complaint-portrait"><img src={currentComplaint.portrait} alt="Обезличенный портрет заявителя" /><div><span>{currentComplaint.applicant}</span><b>{currentComplaint.role}</b></div></div>}<article className="complaint-card"><div className="eyebrow"><MessageSquare size={14} /> {isWrittenReception ? "ТЕКСТ ПИСЬМЕННОГО ОБРАЩЕНИЯ" : "РАССКАЗ ЗАЯВИТЕЛЯ"}</div><h2>{currentComplaint.title}</h2><p className="complaint-speech">{isWrittenReception ? currentComplaint.situation : `«${currentComplaint.situation}»`}</p><div className="complaint-request"><span>ПРОСЬБА</span><p>{currentComplaint.request}</p></div><div className="complaint-documents"><div className="evidence-label"><span>ЗАПРОСИТЬ ДОКУМЕНТЫ</span><small>ИЗУЧЕНО: {reviewedComplaintDocs.length}/{complaintDocuments.length}</small></div><div className="material-tabs">{complaintDocuments.map((document, index) => <button key={document.label} className={reviewedComplaintDocs.includes(index) ? "reviewed" : ""} onClick={() => requestComplaintDocument(index)}><FileText size={13} /> {document.label}{reviewedComplaintDocs.includes(index) && <Check size={12} />}</button>)}</div>{openComplaintDoc !== null && <div className="material-content"><span>{complaintDocuments[openComplaintDoc].label}</span><p>{complaintDocuments[openComplaintDoc].text}</p></div>}</div><button className="extra-request" disabled={extraRequested || hoursLeft < 2 || !!complaintDecision} onClick={requestExtraMaterial}><FileText size={14} /><span>{extraRequested ? "Дополнительный материал запрошен" : "Запросить дополнительный материал"}</span><small>{extraRequested ? "−2 часа смены" : "−2 часа · ответ из ведомства"}</small></button>{complaintDecision ? <div className={`complaint-result ${complaintDecision === currentComplaint.correct ? "good" : "bad"}`}><strong>{complaintDecision === currentComplaint.correct ? "РЕШЕНИЕ ОБОСНОВАНО" : "ТРЕБУЕТСЯ ВНИМАТЕЛЬНОСТЬ"}</strong><p>{currentComplaint.outcome}</p></div> : <div className="complaint-actions"><button className="complaint-action reject" disabled={reviewedComplaintDocs.length < complaintDocuments.length || hoursLeft < 1} onClick={() => decideComplaint("reject")}><X size={18} /><span><b>Отказать</b><small>{reviewedComplaintDocs.length < complaintDocuments.length ? "Сначала изучите документы" : hoursLeft < 1 ? "Рабочий день завершён" : "−1 час · недостаточно оснований"}</small></span></button><button className="complaint-action accept" disabled={reviewedComplaintDocs.length < complaintDocuments.length || hoursLeft < 1} onClick={() => decideComplaint("accept")}><Check size={18} /><span><b>Принять жалобу</b><small>{reviewedComplaintDocs.length < complaintDocuments.length ? "Сначала изучите документы" : hoursLeft < 1 ? "Рабочий день завершён" : "−1 час · направить на проверку"}</small></span></button></div>}{complaintDecision === "accept" && prosecutorOffice === "territorial" && <section className="response-act-panel"><div className="response-act-heading"><span>Выберите акт прокурорского реагирования</span><small>Какой акт соответствует выявленному нарушению?</small></div><div className="response-act-options"><button className={`response-act-option ${responseActDecision === "protest" ? "selected" : ""}`} disabled={!!responseActDecision} onClick={() => chooseResponseAct("protest")}><b>Протест</b><small>На противоречащий закону правовой акт</small></button><button className={`response-act-option ${responseActDecision === "representation" ? "selected" : ""}`} disabled={!!responseActDecision} onClick={() => chooseResponseAct("representation")}><b>Представление</b><small>Об устранении нарушений закона, причин и условий</small></button></div>{responseActDecision && <div className={`response-act-feedback ${responseActDecision === currentComplaint.responseAct ? "good" : "bad"}`}><strong>{responseActDecision === currentComplaint.responseAct ? "АКТ ВЫБРАН ОБОСНОВАННО" : "ЭТОТ АКТ МЕНЕЕ ПОДХОДИТ ДЛЯ СИТУАЦИИ"}</strong><p>{responseActDecision === currentComplaint.responseAct ? (responseActDecision === "protest" ? "Протест приносится на противоречащий закону правовой акт. Основание — статья 23 Закона РФ «О прокуратуре Российской Федерации»." : "Представление вносится в орган или должностному лицу, которые полномочны устранить нарушение, его причины и условия. Основание — статья 24 Закона РФ «О прокуратуре Российской Федерации»." ) : `В этом случае обоснованнее выбрать акт «${currentComplaint.responseAct === "protest" ? "Протест" : "Представление"}». ${currentComplaint.responseAct === "protest" ? "Предмет проверки — конкретный правовой акт, который может противоречить закону." : "Необходимо устранить нарушение, допущенное действием или бездействием, и его причины."}`}</p></div>}</section>}{complaintDecision && (prosecutorOffice !== "territorial" || complaintDecision !== "accept" || responseActDecision) && <button className="next-button" onClick={nextComplaint}>{complaintIndex === activeComplaints.length - 1 ? "Завершить день" : "Следующее заявление"} <ChevronRight size={17} /></button>}</article></div>
         </section> : <section className="case-area">
           <div className="case-meta"><span>МАТЕРИАЛ № {current?.number ?? "—"}</span><span>ДЕЛО {String(Math.min(caseIndex + 1, activeCases.length)).padStart(2, "0")} / {activeCases.length}</span></div>
           <div className="progress-track"><div style={{ width: `${(progress / activeCases.length) * 100}%` }} /></div>
@@ -735,4 +749,4 @@ export default function Home() {
       <footer className="footerbar"><div><b>УКАЗАНИЕ:</b> решение должно быть кратким, точным и проверяемым.</div><div className="footer-stats"><Stat label="ВЕРНЫЕ РЕШЕНИЯ" value={`${correctDecisions}/${location === "reception" ? activeComplaints.length : activeCases.length}`} tone={correctDecisions > 0 ? "good" : "default"} /><Stat label="ДОВЕРИЕ" value={`${trust}/5`} tone={trust < 2 ? "bad" : "default"} /><Stat label="РЕПУТАЦИЯ" value={`${reputation.quality}/5`} tone={reputation.quality < 2 ? "bad" : reputation.quality >= 4 ? "good" : "default"} /><Stat label="СТАТУС" value={finished ? "ЗАКРЫТО" : feedback ? "ПРОВЕРКА" : "ОЖИДАНИЕ"} /></div></footer>
     </main>
   );
-}
+}\n
