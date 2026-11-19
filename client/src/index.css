@@ -829,3 +829,19 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .response-act-feedback.bad strong { color: #954e46; }
 .response-act-feedback p { margin: 5px 0 0; color: #514c40; font-size: 10px; line-height: 1.45; }
 @media (max-width: 560px) { .response-act-options { grid-template-columns: 1fr; } .response-act-option { min-height: 56px; } }
+
+/* Отдельное модальное окно выбора акта реагирования. */
+.response-act-overlay { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; padding: 24px; background: rgba(3,10,13,.78); backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px); }
+.response-act-dialog { position: relative; width: min(560px, calc(100vw - 36px)); padding: 34px 36px 28px; color: #342f26; background: linear-gradient(145deg,#f2e8d3,#dfd0b4); border: 1px solid rgba(198,155,97,.8); box-shadow: 0 24px 90px rgba(0,0,0,.55), inset 0 0 0 5px rgba(255,255,255,.18); }
+.response-act-dialog-mark { display: grid; place-items: center; width: 48px; height: 48px; margin-bottom: 18px; color: #a7793f; border: 1px solid rgba(167,121,63,.5); border-radius: 50%; }
+.response-act-dialog .response-act-heading { margin-bottom: 22px; }
+.response-act-dialog .response-act-heading span { color: #8b6538; font-size: 11px; letter-spacing: .13em; }
+.response-act-dialog .response-act-heading small { margin-top: 6px; color: #71634e; font-size: 13px; line-height: 1.55; }
+.response-act-dialog .response-act-options { grid-template-columns: 1fr 1fr; gap: 12px; }
+.response-act-dialog .response-act-option { min-height: 116px; justify-content: center; padding: 18px; border: 1px solid rgba(130,94,51,.48); background: rgba(255,255,255,.34); }
+.response-act-dialog .response-act-option:hover { border-color: #a7793f; background: rgba(198,155,97,.22); transform: translateY(-2px); }
+.response-act-dialog .response-act-option b { color: #493a28; font-size: 17px; }
+.response-act-dialog .response-act-option small { color: #75644b; font-size: 12px; line-height: 1.5; }
+.response-act-legal-note { margin: 20px 0 0; padding-top: 14px; color: #796b55; border-top: 1px solid rgba(130,94,51,.25); font-size: 11px; line-height: 1.5; }
+.response-act-inline-feedback { margin-top: 14px; }
+@media (max-width: 600px) { .response-act-overlay { padding: 12px; } .response-act-dialog { padding: 26px 20px 20px; } .response-act-dialog .response-act-options { grid-template-columns: 1fr; } .response-act-dialog .response-act-option { min-height: 82px; } }
