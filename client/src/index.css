@@ -828,4 +828,4 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .response-act-feedback strong { color: #4d8560; font: 700 9px 'IBM Plex Mono'; letter-spacing: .08em; }
 .response-act-feedback.bad strong { color: #954e46; }
 .response-act-feedback p { margin: 5px 0 0; color: #514c40; font-size: 10px; line-height: 1.45; }
-@media (max-width: 560px) { .response-act-options { grid-template-columns: 1fr; } .response-act-option { min-height: 56px; } }\n
+@media (max-width: 560px) { .response-act-options { grid-template-columns: 1fr; } .response-act-option { min-height: 56px; } }

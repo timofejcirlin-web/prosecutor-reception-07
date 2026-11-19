@@ -749,4 +749,4 @@ export default function Home() {
       <footer className="footerbar"><div><b>УКАЗАНИЕ:</b> решение должно быть кратким, точным и проверяемым.</div><div className="footer-stats"><Stat label="ВЕРНЫЕ РЕШЕНИЯ" value={`${correctDecisions}/${location === "reception" ? activeComplaints.length : activeCases.length}`} tone={correctDecisions > 0 ? "good" : "default"} /><Stat label="ДОВЕРИЕ" value={`${trust}/5`} tone={trust < 2 ? "bad" : "default"} /><Stat label="РЕПУТАЦИЯ" value={`${reputation.quality}/5`} tone={reputation.quality < 2 ? "bad" : reputation.quality >= 4 ? "good" : "default"} /><Stat label="СТАТУС" value={finished ? "ЗАКРЫТО" : feedback ? "ПРОВЕРКА" : "ОЖИДАНИЕ"} /></div></footer>
     </main>
   );
-}\n
+}
