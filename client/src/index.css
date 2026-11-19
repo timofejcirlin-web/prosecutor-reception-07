@@ -1095,3 +1095,22 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .reception-answer p { margin: 7px 0; color: #3c382f; font-size: 13px; line-height: 1.5; }
 .reception-finding { border-top: 1px solid #d5c5a8; margin-top: 12px; padding-top: 10px; }
 @media(max-width:650px){.reception-question-list{grid-template-columns:1fr;}}
+
+.reception-questions-launch { width:100%; display:flex; align-items:center; gap:12px; margin:16px 0 4px; padding:13px 15px; color:#3e372e; text-align:left; background:rgba(255,250,238,.55); border:1px solid #c6a77b; cursor:pointer; }
+.reception-questions-launch:hover { background:#fff8e8; border-color:#a5773e; }
+.reception-questions-launch > span { display:flex; flex:1; flex-direction:column; gap:4px; }
+.reception-questions-launch b { font-size:12px; }
+.reception-questions-launch small { color:#806c4f; font-size:10px; }
+.reception-questions-overlay { position:fixed; inset:0; z-index:10001; display:grid; place-items:center; padding:20px; background:rgba(3,10,13,.8); backdrop-filter:blur(7px); }
+.reception-questions-dialog { position:relative; width:min(680px,calc(100vw - 32px)); max-height:min(86dvh,850px); overflow-y:auto; padding:30px; color:#342f26; background:linear-gradient(145deg,#f2e8d3,#dfd0b4); border:1px solid rgba(198,155,97,.8); box-shadow:0 24px 90px rgba(0,0,0,.55),inset 0 0 0 5px rgba(255,255,255,.18); }
+.reception-questions-close { position:absolute; top:14px; right:14px; width:34px; height:34px; color:#624b30; background:transparent; border:1px solid rgba(130,94,51,.35); font-size:23px; cursor:pointer; }
+.reception-questions-mark { display:grid; place-items:center; width:46px; height:46px; margin-bottom:16px; color:#a7793f; border:1px solid rgba(167,121,63,.5); border-radius:50%; }
+.reception-questions-dialog .reception-dialogue-heading { display:flex; flex-direction:column; gap:7px; margin:0 42px 16px 0; }
+.reception-questions-dialog .reception-dialogue-heading span { color:#76502e; font:700 12px 'IBM Plex Mono'; letter-spacing:.1em; text-transform:uppercase; }
+.reception-questions-dialog .reception-dialogue-heading small { color:#71634e; font-size:12px; line-height:1.5; }
+.reception-questions-dialog .reception-question-list { grid-template-columns:1fr 1fr; }
+.reception-questions-dialog .reception-question { min-height:65px; }
+.reception-questions-dialog .reception-answer { margin-top:14px; }
+.reception-questions-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:18px; padding-top:14px; border-top:1px solid rgba(130,94,51,.25); }
+.reception-questions-footer > span { color:#75644b; font-size:11px; }
+@media(max-width:600px){.reception-questions-dialog{padding:24px 18px 18px}.reception-questions-dialog .reception-question-list{grid-template-columns:1fr}.reception-questions-footer{align-items:stretch;flex-direction:column}.reception-questions-footer button{width:100%}}
