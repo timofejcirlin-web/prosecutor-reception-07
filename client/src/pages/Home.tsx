@@ -711,10 +711,6 @@ export default function Home() {
 
       <section className="workspace">
         <aside className="briefing panel">
-          <div className="eyebrow"><Stamp size={14} /> ОРИЕНТИР ДНЯ</div>
-          <h2>Сначала факты.<br /><em>Потом вывод.</em></h2>
-          <p>Проверьте материалы перед тем, как поставить печать. Решение нельзя отменить после отправки.</p>
-          <div className="rule" />
           <div className="rule-row"><span>Дел в очереди</span><b>{activeCases.length - Math.min(caseIndex, activeCases.length - 1)}</b></div>
           <div className="rule-row"><span>Доверие канцелярии</span><b>{trust} / 5</b></div>
           <div className="reputation-mini"><div><span>РЕПУТАЦИЯ</span><b>{reputationLabel}</b></div><div><span>КАЧЕСТВО</span><strong>{reputation.quality}/5</strong></div><div><span>РИСК ПРОВЕРКИ</span><strong className={reputation.risk >= 4 ? "risk-high" : ""}>{Math.round(reputation.risk)}/5</strong></div><GuidanceItem label="Поощрения" items={REWARDS_GUIDANCE} counts={rewardCounts} /><GuidanceItem label="Дисциплинарные взыскания" items={DISCIPLINE_GUIDANCE} counts={disciplineCounts} /></div>
@@ -753,7 +749,7 @@ export default function Home() {
         </section>}
       </section>
 
-      <footer className="footerbar"><div><b>УКАЗАНИЕ:</b> решение должно быть кратким, точным и проверяемым.</div><div className="footer-stats"><Stat label="ВЕРНЫЕ РЕШЕНИЯ" value={`${correctDecisions}/${location === "reception" ? activeComplaints.length : activeCases.length}`} tone={correctDecisions > 0 ? "good" : "default"} /><Stat label="ДОВЕРИЕ" value={`${trust}/5`} tone={trust < 2 ? "bad" : "default"} /><Stat label="РЕПУТАЦИЯ" value={`${reputation.quality}/5`} tone={reputation.quality < 2 ? "bad" : reputation.quality >= 4 ? "good" : "default"} /><Stat label="СТАТУС" value={finished ? "ЗАКРЫТО" : feedback ? "ПРОВЕРКА" : "ОЖИДАНИЕ"} /></div></footer>
+      <footer className="footerbar"><div></div><div className="footer-stats"><Stat label="ВЕРНЫЕ РЕШЕНИЯ" value={`${correctDecisions}/${location === "reception" ? activeComplaints.length : activeCases.length}`} tone={correctDecisions > 0 ? "good" : "default"} /><Stat label="ДОВЕРИЕ" value={`${trust}/5`} tone={trust < 2 ? "bad" : "default"} /><Stat label="РЕПУТАЦИЯ" value={`${reputation.quality}/5`} tone={reputation.quality < 2 ? "bad" : reputation.quality >= 4 ? "good" : "default"} /><Stat label="СТАТУС" value={finished ? "ЗАКРЫТО" : feedback ? "ПРОВЕРКА" : "ОЖИДАНИЕ"} /></div></footer>
     </main>
   );
 }
