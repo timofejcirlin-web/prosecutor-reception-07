@@ -1079,3 +1079,19 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
     transform: translateY(-6px) scale(1.035);
   }
 }\n
+/* Interactive territorial land reception */
+.reception-dialogue { margin: 18px 0; padding: 16px; border: 1px solid rgba(174,133,80,.35); background: rgba(245,237,220,.62); }
+.reception-dialogue-heading { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; color: #765735; font: 700 11px 'IBM Plex Mono',monospace; letter-spacing: .06em; }
+.reception-dialogue-heading small { font-size: 10px; font-weight: 500; letter-spacing: 0; }
+.reception-question-list { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px; margin-top: 12px; }
+.reception-question { display: flex; align-items: center; gap: 8px; text-align: left; padding: 11px; min-height: 54px; background: #f5efdf; border: 1px solid #d2bfa0; color: #3e372e; font-size: 12px; cursor: pointer; transition: border-color .2s,background .2s; }
+.reception-question span { color: #aa7950; font: 700 10px monospace; }
+.reception-question svg { margin-left: auto; flex-shrink: 0; color: #547454; }
+.reception-question:hover:not(:disabled),.reception-question.active { border-color: #a5773e; background: #fff8e8; }
+.reception-question.asked { border-left: 3px solid #6d8a6c; }
+.reception-question:disabled { cursor: default; }
+.reception-answer { margin-top: 12px; padding: 13px; background: #eee1c8; border-left: 3px solid #b68c57; }
+.reception-answer > span,.reception-finding strong { color: #8c633b; font: 700 10px monospace; letter-spacing: .07em; }
+.reception-answer p { margin: 7px 0; color: #3c382f; font-size: 13px; line-height: 1.5; }
+.reception-finding { border-top: 1px solid #d5c5a8; margin-top: 12px; padding-top: 10px; }
+@media(max-width:650px){.reception-question-list{grid-template-columns:1fr;}}
