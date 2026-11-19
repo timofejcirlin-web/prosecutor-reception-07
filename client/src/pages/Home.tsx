@@ -445,7 +445,7 @@ export default function Home() {
   }, [complaintAssetKey, currentComplaint, isWrittenReception]);
   const specializationLabel = selectedOffice?.title ?? "Территориальная прокуратура";
   const complaintDocuments = extraRequested ? [...currentComplaint.documents, currentComplaint.extra] : currentComplaint.documents;
-  const isLandDialogue = prosecutorOffice === "territorial" && currentComplaint.id === "territorial-1" && !isWrittenReception;
+  const isLandDialogue = prosecutorOffice === "territorial" && currentComplaint.id === "territorial-complaint-1" && !isWrittenReception;
   const receptionDialogueReady = !isLandDialogue || askedReceptionQuestions.length >= 2;
   const askReceptionQuestion = (index: number) => {
     if (!isLandDialogue || complaintDecision || gameOver) return;
