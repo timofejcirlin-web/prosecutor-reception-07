@@ -1568,23 +1568,27 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 }
 .game-shell[data-office-time="morning"]::before {
   background:
-    radial-gradient(ellipse at 88% 25%, rgba(227,175,112,.22), transparent 33%),
-    radial-gradient(ellipse at 76% 62%, rgba(222,170,103,.07), transparent 36%);
+    radial-gradient(ellipse at 88% 22%, rgba(144,190,215,.28), transparent 38%),
+    radial-gradient(ellipse at 78% 64%, rgba(172,198,207,.13), transparent 42%),
+    linear-gradient(105deg, transparent 43%, rgba(108,158,187,.09) 75%, rgba(126,170,195,.13));
 }
 .game-shell[data-office-time="day"]::before {
   background:
-    radial-gradient(ellipse at 90% 22%, rgba(180,199,191,.16), transparent 35%),
-    linear-gradient(105deg, transparent 45%, rgba(193,208,199,.035), transparent 76%);
+    radial-gradient(ellipse at 90% 20%, rgba(245,222,174,.28), transparent 39%),
+    radial-gradient(ellipse at 82% 68%, rgba(227,213,180,.14), transparent 43%),
+    linear-gradient(105deg, transparent 39%, rgba(232,224,203,.10) 72%, rgba(234,218,181,.14));
 }
 .game-shell[data-office-time="evening"]::before {
   background:
-    radial-gradient(ellipse at 88% 24%, rgba(221,132,77,.25), transparent 34%),
-    radial-gradient(ellipse at 82% 55%, rgba(215,145,81,.12), transparent 38%);
+    radial-gradient(ellipse at 88% 22%, rgba(236,135,72,.38), transparent 40%),
+    radial-gradient(ellipse at 82% 57%, rgba(226,143,78,.23), transparent 45%),
+    linear-gradient(108deg, transparent 34%, rgba(203,132,79,.12) 69%, rgba(230,155,91,.22));
 }
 .game-shell[data-office-time="night"]::before {
   background:
-    radial-gradient(ellipse at 87% 22%, rgba(65,91,132,.2), transparent 36%),
-    linear-gradient(90deg, rgba(4,10,19,.1), rgba(9,17,31,.14));
+    radial-gradient(ellipse at 88% 22%, rgba(63,100,157,.30), transparent 39%),
+    radial-gradient(ellipse at 79% 60%, rgba(38,63,103,.17), transparent 43%),
+    linear-gradient(90deg, rgba(4,10,19,.13) 0%, rgba(8,16,30,.25) 100%);
 }
 .office-atmosphere {
   position: absolute;
@@ -2012,4 +2016,149 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 }
 @media (max-width: 900px) {
   .office-return-button { min-height: 34px; padding: 8px 9px; }
+}
+
+
+/* TIME OF DAY OUTSIDE THE OFFICE WINDOW */
+.office-window-scene {
+  isolation: isolate;
+}
+.office-window-scene::before,
+.office-window-scene::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  transition: opacity 2.6s ease, filter 2.6s ease, background-color 2.6s ease;
+}
+.office-window-scene::before {
+  z-index: 1;
+  opacity: .025;
+  background-image:
+    radial-gradient(ellipse 2px 3px at 12% 26%, rgba(255,224,166,.95) 0 72%, transparent 100%),
+    radial-gradient(ellipse 2px 3px at 23% 43%, rgba(255,220,153,.9) 0 72%, transparent 100%),
+    radial-gradient(ellipse 2px 3px at 38% 18%, rgba(255,232,183,.9) 0 72%, transparent 100%),
+    radial-gradient(ellipse 2px 3px at 47% 37%, rgba(255,214,144,.88) 0 72%, transparent 100%),
+    radial-gradient(ellipse 2px 3px at 58% 23%, rgba(255,229,174,.92) 0 72%, transparent 100%),
+    radial-gradient(ellipse 2px 3px at 71% 48%, rgba(255,218,151,.9) 0 72%, transparent 100%),
+    radial-gradient(ellipse 2px 3px at 83% 29%, rgba(255,231,178,.95) 0 72%, transparent 100%),
+    radial-gradient(ellipse 2px 3px at 91% 57%, rgba(255,218,151,.9) 0 72%, transparent 100%);
+  background-size: 100% 100%;
+  mix-blend-mode: screen;
+  animation: office-neighbour-lights 18s ease-in-out infinite alternate;
+}
+.office-window-scene::after {
+  z-index: 2;
+  opacity: .12;
+  background:
+    linear-gradient(116deg, transparent 6%, rgba(200,220,229,.08) 29%, transparent 43%),
+    linear-gradient(180deg, rgba(125,166,191,.12), transparent 62%);
+  mix-blend-mode: screen;
+}
+@keyframes office-neighbour-lights {
+  0%, 28%, 74%, 100% { filter: brightness(.92); }
+  46% { filter: brightness(1.12); }
+  78% { filter: brightness(1.02); }
+}
+.game-shell[data-office-time="morning"] .office-window-scene::before {
+  opacity: .06;
+  filter: saturate(.55);
+}
+.game-shell[data-office-time="morning"] .office-window-scene::after {
+  opacity: .26;
+  background:
+    linear-gradient(112deg, rgba(104,152,181,.13), transparent 58%),
+    linear-gradient(180deg, rgba(166,197,211,.14), transparent 78%);
+}
+.game-shell[data-office-time="day"] .office-window-scene::before {
+  opacity: 0;
+  animation-play-state: paused;
+}
+.game-shell[data-office-time="day"] .office-window-scene::after {
+  opacity: .38;
+  background:
+    linear-gradient(112deg, rgba(232,221,196,.10), transparent 58%),
+    linear-gradient(180deg, rgba(244,228,194,.12), transparent 78%);
+}
+.game-shell[data-office-time="evening"] .office-window-scene::before {
+  opacity: .46;
+}
+.game-shell[data-office-time="evening"] .office-window-scene::after {
+  opacity: .48;
+  background:
+    linear-gradient(112deg, rgba(224,151,92,.15), transparent 58%),
+    linear-gradient(180deg, rgba(238,173,111,.18), transparent 75%);
+}
+.game-shell[data-office-time="night"] .office-window-scene::before {
+  opacity: .78;
+}
+.game-shell[data-office-time="night"] .office-window-scene::after {
+  opacity: .62;
+  background:
+    linear-gradient(112deg, rgba(49,77,115,.2), transparent 58%),
+    linear-gradient(180deg, rgba(35,57,89,.24), transparent 82%);
+}
+
+/* Passing headlights are only visible after dusk. */
+.office-window-headlights { animation-play-state: paused; }
+.game-shell[data-office-time="morning"] .office-window-headlights,
+.game-shell[data-office-time="day"] .office-window-headlights {
+  animation-play-state: paused;
+  opacity: 0;
+}
+.game-shell[data-office-time="evening"] .office-window-headlights {
+  animation-play-state: running;
+  animation-duration: 27s;
+  filter: blur(2px);
+}
+.game-shell[data-office-time="night"] .office-window-headlights {
+  animation-play-state: running;
+  animation-duration: 19s;
+  filter: blur(1.6px) brightness(1.12);
+}
+
+/* A faint reflection of passing traffic travels across the upper wall/ceiling. */
+.office-car-reflection {
+  position: absolute;
+  z-index: 0;
+  top: 11%;
+  right: 0;
+  width: min(46%, 720px);
+  height: 22%;
+  opacity: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(167deg, transparent 12%, rgba(244,208,151,.07) 40%, rgba(255,223,172,.13) 48%, rgba(213,179,130,.055) 58%, transparent 83%);
+  filter: blur(15px);
+  mix-blend-mode: screen;
+  transform: translateX(8%);
+  animation: office-car-light-reflection 29s ease-in-out infinite;
+}
+@keyframes office-car-light-reflection {
+  0%, 63%, 100% { opacity: 0; transform: translateX(8%); }
+  68% { opacity: .42; }
+  79% { opacity: .22; transform: translateX(-7%); }
+  87% { opacity: 0; transform: translateX(-13%); }
+}
+.game-shell[data-office-time="morning"] .office-car-reflection,
+.game-shell[data-office-time="day"] .office-car-reflection {
+  animation-play-state: paused;
+  opacity: 0;
+}
+.game-shell[data-office-time="evening"] .office-car-reflection {
+  animation-play-state: running;
+  filter: blur(17px);
+}
+.game-shell[data-office-time="night"] .office-car-reflection {
+  animation-play-state: running;
+  filter: blur(13px) brightness(1.16);
+}
+
+@media (max-width: 900px) {
+  .office-car-reflection { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .office-window-scene::before,
+  .office-window-headlights,
+  .office-car-reflection { animation: none !important; }
 }
