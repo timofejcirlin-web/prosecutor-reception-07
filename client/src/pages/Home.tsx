@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BadgeCheck, Camera, Check, ChevronRight, FileText, Gavel, MapPin, Maximize2, MessageSquare, Minimize2, Pause, Play, RotateCcw, Scale, SkipBack, SkipForward, Stamp, UserRound, Users, X, Music2 } from "lucide-react";
+import { BadgeCheck, Camera, Check, ChevronRight, Cloud, CloudRain, FileText, Gavel, MapPin, Maximize2, MessageSquare, Minimize2, Pause, Play, RotateCcw, Scale, SkipBack, SkipForward, Snowflake, Stamp, Sun, UserRound, Users, Volume2, VolumeX, X, Music2 } from "lucide-react";
 
 const OFFICE_BG = "/manus-storage/prosecutor-night-office-new.png";
 const PROFILE_BACKGROUNDS: Record<string, string> = { territorial: OFFICE_BG, executive: "/manus-storage/executive-office-bg_aa1818c9.png", environmental: "/manus-storage/environmental-office-bg_a009f425.png", military: "/manus-storage/military-office-bg-bright_f71bdfab.png", transport: OFFICE_BG };
@@ -334,6 +334,8 @@ export default function Home() {
   const [musicPlaying, setMusicPlaying] = useState(false);
   const [musicOpen, setMusicOpen] = useState(false);
   const musicRef = useRef<HTMLAudioElement | null>(null);
+  const [officeAmbienceEnabled, setOfficeAmbienceEnabled] = useState(false);
+  const officeAmbienceRef = useRef<AudioContext | null>(null);
   const [openMaterial, setOpenMaterial] = useState<number | null>(null);
   const [reviewedMaterials, setReviewedMaterials] = useState<number[]>([]);
   const activeCases = prosecutorOffice && PROFILE_CASES[prosecutorOffice] ? PROFILE_CASES[prosecutorOffice] : CASES;
@@ -401,6 +403,12 @@ export default function Home() {
   };
 
   const selectedOffice = PROSECUTOR_OFFICES.find((office) => office.id === prosecutorOffice);
+  const officeTimeHour = hoursLeft === 0 ? 18 : 10 + (8 - hoursLeft);
+  const officeTimePhase = officeTimeHour <= 12 ? "morning" : officeTimeHour <= 15 ? "day" : officeTimeHour <= 17 ? "evening" : "night";
+  const officeWeatherCycle = ["rain", "overcast", "snow", "clear"] as const;
+  const officeWeather = officeWeatherCycle[(Math.max(1, dayNumber) - 1) % officeWeatherCycle.length];
+  const officeWeatherLabel = { rain: "ДОЖДЬ", overcast: "ПАСМУРНО", snow: "СНЕГ", clear: "ЯСНО" }[officeWeather];
+  const officeWeatherIcon = officeWeather === "rain" ? <CloudRain size={14} /> : officeWeather === "overcast" ? <Cloud size={14} /> : officeWeather === "snow" ? <Snowflake size={14} /> : <Sun size={14} />;
 
   const createCharacter = () => {
     const name = draftName.trim();
@@ -570,6 +578,12 @@ export default function Home() {
     return () => document.removeEventListener("click", click, true);
   }, []);
 
+  useEffect(() => () => {
+    const context = officeAmbienceRef.current;
+    officeAmbienceRef.current = null;
+    if (context && context.state !== "closed") void context.close();
+  }, []);
+
   useEffect(() => {
     const syncFullscreen = () => setIsFullscreen(Boolean(document.fullscreenElement));
     document.addEventListener("fullscreenchange", syncFullscreen);
@@ -596,6 +610,45 @@ export default function Home() {
 
   const changeMusicTrack = (offset: number) => setMusicTrack((value) => (value + offset + MUSIC_ALBUMS[musicAlbum].tracks.length) % MUSIC_ALBUMS[musicAlbum].tracks.length);
   const changeMusicAlbum = (index: number) => { setMusicAlbum(index); setMusicTrack(0); };
+  const toggleOfficeAmbience = () => {
+    if (officeAmbienceEnabled) {
+      const context = officeAmbienceRef.current;
+      officeAmbienceRef.current = null;
+      setOfficeAmbienceEnabled(false);
+      if (context && context.state !== "closed") void context.close();
+      return;
+    }
+    const AudioContextConstructor = window.AudioContext;
+    if (!AudioContextConstructor) return;
+    try {
+      const context = new AudioContextConstructor();
+      const buffer = context.createBuffer(1, context.sampleRate * 3, context.sampleRate);
+      const channel = buffer.getChannelData(0);
+      let previous = 0;
+      for (let index = 0; index < channel.length; index += 1) {
+        const whiteNoise = Math.random() * 2 - 1;
+        previous = (previous + 0.02 * whiteNoise) / 1.02;
+        channel[index] = previous * 3.5;
+      }
+      const source = context.createBufferSource();
+      const filter = context.createBiquadFilter();
+      const volume = context.createGain();
+      source.buffer = buffer;
+      source.loop = true;
+      filter.type = "lowpass";
+      filter.frequency.value = 460;
+      volume.gain.value = 0.045;
+      source.connect(filter);
+      filter.connect(volume);
+      volume.connect(context.destination);
+      source.start();
+      officeAmbienceRef.current = context;
+      setOfficeAmbienceEnabled(true);
+      if (context.state === "suspended") void context.resume();
+    } catch {
+      setOfficeAmbienceEnabled(false);
+    }
+  };
 
   useEffect(() => {
     if (onboardingStep === "region" && !mapSvg) setMapSvg(FOUR_REGION_SVG);
@@ -729,13 +782,13 @@ export default function Home() {
   );
 
   return (
-    <main className={`game-shell office-theme-${prosecutorOffice ?? "territorial"}`} style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.88) 0%, rgba(7,18,20,.72) 33%, rgba(7,18,20,.18) 72%, rgba(7,18,20,.56) 100%), url(${PROFILE_BACKGROUNDS[prosecutorOffice ?? ""] ?? OFFICE_BG})` }}>
-      {musicPlayer}<div className="grain" />
+    <main className={`game-shell office-theme-${prosecutorOffice ?? "territorial"}`} data-office-time={officeTimePhase} data-office-weather={officeWeather} style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.88) 0%, rgba(7,18,20,.72) 33%, rgba(7,18,20,.18) 72%, rgba(7,18,20,.56) 100%), url(${PROFILE_BACKGROUNDS[prosecutorOffice ?? ""] ?? OFFICE_BG})` }}>
+      <div className="office-atmosphere" aria-hidden="true"><span className="office-window-weather" /></div>{musicPlayer}<div className="grain" />
       {gameOver && <div className="game-over-backdrop" role="dialog" aria-modal="true" aria-labelledby="game-over-title"><section className="game-over-card"><span className="eyebrow">СЛУЖЕБНОЕ РЕШЕНИЕ · {gameOverReason === "bribe" ? "КОРРУПЦИОННОЕ ПРЕСТУПЛЕНИЕ" : "ДИСЦИПЛИНА"}</span><h2 id="game-over-title">Игра окончена</h2><p>{gameOverReason === "bribe" ? "Вы были пойманы за получением взятки при проведении ОРМ «Проверочная закупка». В соответствии со ст. 114 УПК РФ и ст. 43 ФЗ «О прокуратуре Российской Федерации»." : "Вы были уволены в связи с несовместимостью с дальнейшим прохождением службы в силу наличия большого количества дисциплинарных взысканий."}</p><div className="game-over-status">Статус: <strong>{gameOverReason === "bribe" ? "получение взятки · служба прекращена" : "увольнение из органов прокуратуры"}</strong></div><button className="primary-button" onClick={returnToMainMenu}><RotateCcw size={16} /> Вернуться в главное меню</button></section></div>}
       <header className="topbar">
         <div className="brand"><div className="brand-mark"><Scale size={18} /></div><div><p>ПРОКУРАТУРА</p><h1>Приёмная № 07</h1></div></div>
         <div className="profile-chip"><UserRound size={14} /><span>{character.name}</span><b>{prosecutorOffice === "military" ? "лейтенант" : "юрист 3 класса"}</b></div>
-          <div className="shift"><span className="live-dot" /> {location === "inspection" ? "ГОРОДСКАЯ ПРОВЕРКА" : "ПРИЁМНАЯ ГРАЖДАН"} <b>•</b> ДЕНЬ {dayNumber}</div><div className={`work-clock ${hoursLeft <= 2 ? "critical" : hoursLeft <= 4 ? "warning" : ""}`} aria-label={`Осталось ${hoursLeft} часов рабочего времени`}><div className="work-clock-top"><span>РАБОЧЕЕ ВРЕМЯ</span><strong>{hoursLeft === 0 ? "18:00" : `${10 + (8 - hoursLeft)}:00`}</strong><em>до 18:00</em></div><div className="work-clock-track"><i style={{ width: `${(hoursLeft / 8) * 100}%` }} /></div><small>ОСТАЛОСЬ <b>{hoursLeft} ч.</b></small></div>{location === "reception" && <button className="registry-open-button" onClick={() => setRegistryOpen(true)}><FileText size={14}/> Журнал обращений</button>}<button className="route-switch-button" onClick={() => switchLocation(location === "reception" ? "inspection" : "reception")}>{location === "reception" ? "Выйти на проверку" : "Принять заявителей"}</button><button className="menu-button top-menu-button" onClick={returnToMainMenu}>Главное меню</button><button className="end-day-button" onClick={() => endDay()}>Завершить день · 18:00</button>
+          <div className="shift"><span className="live-dot" /> {location === "inspection" ? "ГОРОДСКАЯ ПРОВЕРКА" : "ПРИЁМНАЯ ГРАЖДАН"} <b>•</b> ДЕНЬ {dayNumber}</div><div className="office-scene-status"><div className="office-weather-readout" title={`Погода за окном: ${officeWeatherLabel.toLowerCase()}`}>{officeWeatherIcon}<span>ЗА ОКНОМ</span><b>{officeWeatherLabel}</b></div><button className={`office-ambience-toggle ${officeAmbienceEnabled ? "active" : ""}`} onClick={toggleOfficeAmbience} aria-pressed={officeAmbienceEnabled} aria-label={officeAmbienceEnabled ? "Выключить звук кабинета" : "Включить звук кабинета"} title={officeAmbienceEnabled ? "Выключить фоновый звук кабинета" : "Включить тихий фоновый звук кабинета"}>{officeAmbienceEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}</button></div><div className={`work-clock ${hoursLeft <= 2 ? "critical" : hoursLeft <= 4 ? "warning" : ""}`} aria-label={`Осталось ${hoursLeft} часов рабочего времени`}><div className="work-clock-top"><span>РАБОЧЕЕ ВРЕМЯ</span><strong>{hoursLeft === 0 ? "18:00" : `${10 + (8 - hoursLeft)}:00`}</strong><em>до 18:00</em></div><div className="work-clock-track"><i style={{ width: `${(hoursLeft / 8) * 100}%` }} /></div><small>ОСТАЛОСЬ <b>{hoursLeft} ч.</b></small></div>{location === "reception" && <button className="registry-open-button" onClick={() => setRegistryOpen(true)}><FileText size={14}/> Журнал обращений</button>}<button className="route-switch-button" onClick={() => switchLocation(location === "reception" ? "inspection" : "reception")}>{location === "reception" ? "Выйти на проверку" : "Принять заявителей"}</button><button className="menu-button top-menu-button" onClick={returnToMainMenu}>Главное меню</button><button className="end-day-button" onClick={() => endDay()}>Завершить день · 18:00</button>
         <div className="seal">ДЕЛО<br /><span>В РАБОТЕ</span></div>
       </header>
 
