@@ -305,6 +305,10 @@ export default function Home() {
   const [askedReceptionQuestions, setAskedReceptionQuestions] = useState<number[]>([]);
   const [activeReceptionQuestion, setActiveReceptionQuestion] = useState<number | null>(null);
   const [receptionQuestionsDialogOpen, setReceptionQuestionsDialogOpen] = useState(false);
+  const [registryOpen, setRegistryOpen] = useState(false);
+  const [registrySearch, setRegistrySearch] = useState("");
+  const [registryStatus, setRegistryStatus] = useState("all");
+  const [registryDecisions, setRegistryDecisions] = useState<Record<string, { decision: "accept" | "reject"; responseAct?: ResponseAct }>>({});
   const [hoursLeft, setHoursLeft] = useState(8);
   const [dayNumber, setDayNumber] = useState(1);
   const [dayEnded, setDayEnded] = useState(false);
@@ -429,6 +433,9 @@ export default function Home() {
   const activeComplaints = prosecutorOffice === "executive" && rightsAdvocateMode ? [...(PROFILE_COMPLAINTS.executive ?? []), ...advocateComplaints] : prosecutorOffice && PROFILE_COMPLAINTS[prosecutorOffice] ? PROFILE_COMPLAINTS[prosecutorOffice] : COMPLAINTS;
   const currentComplaint = activeComplaints[complaintIndex] ?? activeComplaints[0];
   const isWrittenReception = prosecutorOffice === "executive";
+  const registryRows = activeComplaints.map((item, index) => { const record=registryDecisions[item.id] ?? (index===complaintIndex && complaintDecision ? {decision:complaintDecision,responseAct:responseActDecision ?? undefined} : undefined); const status=!record ? "received" : record.decision === "reject" ? "rejected" : record.responseAct ? "verification" : "review"; return { item, index, status }; });
+  const filteredRegistryRows = registryRows.filter(({item,index,status}) => { const q=registrySearch.trim().toLowerCase(); const matches=!q || item.applicant.toLowerCase().includes(q) || item.title.toLowerCase().includes(q) || String(index+1).padStart(2,"0").includes(q); return matches && (registryStatus === "all" || status === registryStatus); });
+  const openRegistryComplaint = (index:number) => { setComplaintIndex(index); setComplaintDecision(null); setResponseActDecision(null); setResponseActDialogClosed(false); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setAskedReceptionQuestions([]); setActiveReceptionQuestion(null); setReceptionQuestionsDialogOpen(false); setExtraRequested(false); setRegistryOpen(false); setLocation("reception"); };
   const complaintAssetKey = location === "reception" && currentComplaint ? `${complaintIndex}|${currentComplaint.background}|${isWrittenReception ? "written" : currentComplaint.portrait}` : null;
   const [loadedComplaintAssetKey, setLoadedComplaintAssetKey] = useState<string | null>(null);
   useEffect(() => {
@@ -462,6 +469,7 @@ export default function Home() {
     setComplaintDecision(decision);
     setResponseActDecision(null);
     setResponseActDialogClosed(false);
+    setRegistryDecisions((records) => ({...records,[currentComplaint.id]:{decision}}));
     setCorrectDecisions((value) => value + (good ? 1 : 0));
     adjustReputation(good, true);
     registerDecisionConsequence(good);
@@ -477,6 +485,7 @@ export default function Home() {
   const chooseResponseAct = (act: ResponseAct) => {
     if (responseActDecision || complaintDecision !== "accept" || prosecutorOffice !== "territorial" || gameOver) return;
     setResponseActDecision(act);
+    setRegistryDecisions((records) => ({...records,[currentComplaint.id]:{decision:"accept",responseAct:act}}));
     setResponseActDialogClosed(false);
     if (hoursLeft === 0) endDay("accept");
   };
@@ -726,10 +735,11 @@ export default function Home() {
       <header className="topbar">
         <div className="brand"><div className="brand-mark"><Scale size={18} /></div><div><p>ПРОКУРАТУРА</p><h1>Приёмная № 07</h1></div></div>
         <div className="profile-chip"><UserRound size={14} /><span>{character.name}</span><b>{prosecutorOffice === "military" ? "лейтенант" : "юрист 3 класса"}</b></div>
-          <div className="shift"><span className="live-dot" /> {location === "inspection" ? "ГОРОДСКАЯ ПРОВЕРКА" : "ПРИЁМНАЯ ГРАЖДАН"} <b>•</b> ДЕНЬ {dayNumber}</div><div className={`work-clock ${hoursLeft <= 2 ? "critical" : hoursLeft <= 4 ? "warning" : ""}`} aria-label={`Осталось ${hoursLeft} часов рабочего времени`}><div className="work-clock-top"><span>РАБОЧЕЕ ВРЕМЯ</span><strong>{hoursLeft === 0 ? "18:00" : `${10 + (8 - hoursLeft)}:00`}</strong><em>до 18:00</em></div><div className="work-clock-track"><i style={{ width: `${(hoursLeft / 8) * 100}%` }} /></div><small>ОСТАЛОСЬ <b>{hoursLeft} ч.</b></small></div><button className="route-switch-button" onClick={() => switchLocation(location === "reception" ? "inspection" : "reception")}>{location === "reception" ? "Выйти на проверку" : "Принять заявителей"}</button><button className="menu-button top-menu-button" onClick={returnToMainMenu}>Главное меню</button><button className="end-day-button" onClick={() => endDay()}>Завершить день · 18:00</button>
+          <div className="shift"><span className="live-dot" /> {location === "inspection" ? "ГОРОДСКАЯ ПРОВЕРКА" : "ПРИЁМНАЯ ГРАЖДАН"} <b>•</b> ДЕНЬ {dayNumber}</div><div className={`work-clock ${hoursLeft <= 2 ? "critical" : hoursLeft <= 4 ? "warning" : ""}`} aria-label={`Осталось ${hoursLeft} часов рабочего времени`}><div className="work-clock-top"><span>РАБОЧЕЕ ВРЕМЯ</span><strong>{hoursLeft === 0 ? "18:00" : `${10 + (8 - hoursLeft)}:00`}</strong><em>до 18:00</em></div><div className="work-clock-track"><i style={{ width: `${(hoursLeft / 8) * 100}%` }} /></div><small>ОСТАЛОСЬ <b>{hoursLeft} ч.</b></small></div>{location === "reception" && <button className="registry-open-button" onClick={() => setRegistryOpen(true)}><FileText size={14}/> Журнал обращений</button>}<button className="route-switch-button" onClick={() => switchLocation(location === "reception" ? "inspection" : "reception")}>{location === "reception" ? "Выйти на проверку" : "Принять заявителей"}</button><button className="menu-button top-menu-button" onClick={returnToMainMenu}>Главное меню</button><button className="end-day-button" onClick={() => endDay()}>Завершить день · 18:00</button>
         <div className="seal">ДЕЛО<br /><span>В РАБОТЕ</span></div>
       </header>
 
+      {registryOpen && <div className="registry-overlay"><section className="registry-dialog" role="dialog" aria-modal="true" aria-labelledby="registry-title"><button className="registry-close" onClick={() => setRegistryOpen(false)} aria-label="Закрыть">×</button><div className="registry-kicker">КАНЦЕЛЯРИЯ · ТЕРРИТОРИАЛЬНАЯ ПРОКУРАТУРА</div><h2 id="registry-title">Журнал регистрации обращений</h2><p className="registry-subtitle">Поступившие обращения текущей смены</p><div className="registry-toolbar"><input value={registrySearch} onChange={(e)=>setRegistrySearch(e.target.value)} placeholder="Поиск по заявителю, теме или номеру"/><select value={registryStatus} onChange={(e)=>setRegistryStatus(e.target.value)}><option value="all">Все статусы</option><option value="received">Поступило</option><option value="review">На рассмотрении</option><option value="verification">Назначена проверка</option><option value="rejected">Отказано</option></select></div><div className="registry-table-wrap"><table className="registry-table"><thead><tr><th>Входящий №</th><th>Дата</th><th>Заявитель</th><th>Предмет обращения</th><th>Статус</th><th></th></tr></thead><tbody>{filteredRegistryRows.map(({item,index,status})=><tr key={item.id} className={index===complaintIndex?"current":""}><td>{String(index+1).padStart(2,"0")}-2026</td><td>17.09.2026</td><td>{item.applicant}</td><td>{item.title}</td><td><span className={"registry-status "+status}>{status==="received"?"Поступило":status==="review"?"На рассмотрении":status==="verification"?"Назначена проверка":"Отказано"}</span></td><td><button onClick={()=>openRegistryComplaint(index)}>Открыть</button></td></tr>)}</tbody></table>{filteredRegistryRows.length===0&&<div className="registry-empty">По заданным условиям обращений не найдено.</div>}</div><div className="registry-footer"><span>Всего: {registryRows.length} · Поступило: {registryRows.filter(x=>x.status==="received").length} · На рассмотрении: {registryRows.filter(x=>x.status==="review").length} · Отказано: {registryRows.filter(x=>x.status==="rejected").length}</span><button onClick={()=>setRegistryOpen(false)}>Закрыть журнал</button></div></section></div>}
       <section className="workspace">
         <aside className="briefing panel">
           <div className="rule-row"><span>Дел в очереди</span><b>{activeCases.length - Math.min(caseIndex, activeCases.length - 1)}</b></div>

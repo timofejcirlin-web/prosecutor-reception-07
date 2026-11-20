@@ -1114,3 +1114,34 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .reception-questions-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:18px; padding-top:14px; border-top:1px solid rgba(130,94,51,.25); }
 .reception-questions-footer > span { color:#75644b; font-size:11px; }
 @media(max-width:600px){.reception-questions-dialog{padding:24px 18px 18px}.reception-questions-dialog .reception-question-list{grid-template-columns:1fr}.reception-questions-footer{align-items:stretch;flex-direction:column}.reception-questions-footer button{width:100%}}
+
+.registry-open-button { display:inline-flex; align-items:center; gap:7px; padding:10px 13px; color:#e9d7b8; background:rgba(22,31,29,.94); border:1px solid rgba(198,155,97,.55); font:10px 'IBM Plex Mono'; cursor:pointer; white-space:nowrap; }
+.registry-open-button:hover { color:#fff2d9; background:#34453b; border-color:#d9ad70; }
+.registry-overlay { position:fixed; inset:0; z-index:10002; display:grid; place-items:center; padding:22px; background:rgba(3,9,12,.82); backdrop-filter:blur(8px); }
+.registry-dialog { position:relative; width:min(1180px,calc(100vw - 36px)); max-height:88dvh; overflow:hidden; display:flex; flex-direction:column; padding:34px; color:#322d24; background:linear-gradient(145deg,#f2e8d3,#dfd0b4); border:1px solid rgba(198,155,97,.8); box-shadow:0 24px 90px rgba(0,0,0,.58),inset 0 0 0 5px rgba(255,255,255,.15); }
+.registry-close { position:absolute; top:14px; right:16px; width:36px; height:36px; color:#644c31; background:transparent; border:1px solid rgba(130,94,51,.35); font-size:23px; cursor:pointer; }
+.registry-kicker { color:#986d3f; font:700 10px 'IBM Plex Mono'; letter-spacing:.15em; }
+.registry-dialog h2 { margin:10px 48px 4px 0; font-size:clamp(26px,3vw,38px); letter-spacing:-.04em; }
+.registry-subtitle { margin:0 0 20px; color:#74654e; font-size:12px; }
+.registry-toolbar { display:flex; gap:10px; margin-bottom:14px; }
+.registry-toolbar input,.registry-toolbar select { min-width:0; padding:11px 13px; color:#40382d; background:#f8f1e3; border:1px solid #c8b18b; outline:none; font:12px 'Manrope'; }
+.registry-toolbar input { flex:1; }
+.registry-table-wrap { min-height:120px; overflow:auto; border:1px solid rgba(130,94,51,.25); background:rgba(255,250,238,.4); }
+.registry-table { width:100%; border-collapse:collapse; font-size:12px; }
+.registry-table th { position:sticky; top:0; z-index:1; padding:12px 10px; color:#765633; background:#e6d6b9; text-align:left; font:700 9px 'IBM Plex Mono'; letter-spacing:.08em; text-transform:uppercase; }
+.registry-table td { padding:12px 10px; color:#40392e; border-top:1px solid rgba(130,94,51,.18); }
+.registry-table tr.current td { background:rgba(188,145,87,.15); }
+.registry-table td:nth-child(1),.registry-table td:nth-child(2) { white-space:nowrap; }
+.registry-table td:last-child { text-align:right; }
+.registry-table td:last-child button { padding:7px 10px; color:#f8edda; background:#435b4b; border:1px solid #71836b; cursor:pointer; font-size:10px; }
+.registry-status { display:inline-block; padding:5px 8px; white-space:nowrap; border:1px solid transparent; font:700 9px 'IBM Plex Mono'; }
+.registry-status.received { color:#805d32; background:#f3e5c7; border-color:#d3b985; }
+.registry-status.review { color:#345b6d; background:#dceaf0; border-color:#aac5d2; }
+.registry-status.completed { color:#426544; background:#e0ead7; border-color:#b7cda9; }
+.registry-status.rejected { color:#864d43; background:#f0dfd7; border-color:#d9b5a8; }
+.registry-empty { padding:34px; text-align:center; color:#76664e; font-size:12px; }
+.registry-footer { display:flex; justify-content:space-between; align-items:center; gap:14px; flex-wrap:wrap; margin-top:16px; color:#77644a; font-size:10px; }
+.registry-footer button { padding:10px 14px; color:#f8edda; background:#435b4b; border:1px solid #71836b; cursor:pointer; font:10px 'IBM Plex Mono'; }
+@media(max-width:760px) { .registry-dialog { padding:26px 16px 18px; } .registry-toolbar { flex-direction:column; } .registry-table { min-width:780px; } .registry-footer { align-items:stretch; flex-direction:column; } .registry-footer button { width:100%; } .registry-open-button { padding:8px; font-size:9px; } }
+
+.registry-status.verification { color:#52623b; background:#e6ebcf; border-color:#c2cf9d; }
