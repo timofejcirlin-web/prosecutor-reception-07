@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BadgeCheck, Camera, Check, ChevronRight, Cloud, CloudRain, FileText, Gavel, MapPin, Maximize2, MessageSquare, Minimize2, Pause, Play, RotateCcw, Scale, SkipBack, SkipForward, Snowflake, Stamp, Sun, UserRound, Users, Volume2, VolumeX, X, Music2 } from "lucide-react";
+import { BadgeCheck, CalendarDays, Camera, Check, ChevronRight, Cloud, CloudRain, FileText, Gavel, MapPin, Maximize2, MessageSquare, Minimize2, Pause, Play, RotateCcw, Scale, SkipBack, SkipForward, Snowflake, Stamp, Sun, UserRound, Users, Volume2, VolumeX, X, Music2 } from "lucide-react";
 
 const OFFICE_BG = "/manus-storage/prosecutor-night-office-new.png";
 const PROFILE_BACKGROUNDS: Record<string, string> = { territorial: OFFICE_BG, executive: "/manus-storage/executive-office-bg_aa1818c9.png", environmental: "/manus-storage/environmental-office-bg_a009f425.png", military: "/manus-storage/military-office-bg-bright_f71bdfab.png", transport: OFFICE_BG };
@@ -331,6 +331,7 @@ export default function Home() {
   const musicRef = useRef<HTMLAudioElement | null>(null);
   const [officeAmbienceEnabled, setOfficeAmbienceEnabled] = useState(false);
   const officeAmbienceRef = useRef<HTMLAudioElement | null>(null);
+  const [folderOpened, setFolderOpened] = useState(false);
   const [openMaterial, setOpenMaterial] = useState<number | null>(null);
   const [reviewedMaterials, setReviewedMaterials] = useState<number[]>([]);
   const activeCases = prosecutorOffice && PROFILE_CASES[prosecutorOffice] ? PROFILE_CASES[prosecutorOffice] : CASES;
@@ -404,6 +405,12 @@ export default function Home() {
   const officeWeather = officeWeatherCycle[(Math.max(1, dayNumber) - 1) % officeWeatherCycle.length];
   const officeWeatherLabel = { rain: "ДОЖДЬ", overcast: "ПАСМУРНО", snow: "СНЕГ", clear: "ЯСНО" }[officeWeather];
   const officeWeatherIcon = officeWeather === "rain" ? <CloudRain size={14} /> : officeWeather === "overcast" ? <Cloud size={14} /> : officeWeather === "snow" ? <Snowflake size={14} /> : <Sun size={14} />;
+  const officeCalendarDate = new Date(Date.UTC(2026, 8, 16 + dayNumber));
+  const officeCalendarMonths = ["ЯНВ", "ФЕВ", "МАР", "АПР", "МАЙ", "ИЮН", "ИЮЛ", "АВГ", "СЕН", "ОКТ", "НОЯ", "ДЕК"];
+  const officeCalendarDay = officeCalendarDate.getUTCDate();
+  const officeCalendarMonth = officeCalendarMonths[officeCalendarDate.getUTCMonth()];
+  const officeClockHourAngle = (officeTimeHour % 12) * 30;
+  const officeGreeting = officeTimeHour < 12 ? "Доброе утро" : officeTimeHour < 17 ? "Добрый день" : "Добрый вечер";
 
   const createCharacter = () => {
     const name = draftName.trim();
@@ -417,6 +424,7 @@ export default function Home() {
   };
 
   const chooseLocation = (nextLocation: LocationId) => {
+    setFolderOpened(false);
     setLocation(nextLocation);
     setLoadingLocation(nextLocation);
     setRouteLoading(true);
@@ -438,7 +446,7 @@ export default function Home() {
   const isWrittenReception = prosecutorOffice === "executive";
   const registryRows = activeComplaints.map((item, index) => { const record=registryDecisions[item.id] ?? (index===complaintIndex && complaintDecision ? {decision:complaintDecision,responseAct:responseActDecision ?? undefined} : undefined); const status=!record ? "received" : record.decision === "reject" ? "rejected" : record.responseAct ? "verification" : "review"; return { item, index, status }; });
   const filteredRegistryRows = registryRows.filter(({item,index,status}) => { const q=registrySearch.trim().toLowerCase(); const matches=!q || item.applicant.toLowerCase().includes(q) || item.title.toLowerCase().includes(q) || String(index+1).padStart(2,"0").includes(q); return matches && (registryStatus === "all" || status === registryStatus); });
-  const openRegistryComplaint = (index:number) => { setComplaintIndex(index); setComplaintDecision(null); setResponseActDecision(null); setResponseActDialogClosed(false); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setAskedReceptionQuestions([]); setActiveReceptionQuestion(null); setReceptionQuestionsDialogOpen(false); setExtraRequested(false); setRegistryOpen(false); setLocation("reception"); };
+  const openRegistryComplaint = (index:number) => { setFolderOpened(false); setComplaintIndex(index); setComplaintDecision(null); setResponseActDecision(null); setResponseActDialogClosed(false); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setAskedReceptionQuestions([]); setActiveReceptionQuestion(null); setReceptionQuestionsDialogOpen(false); setExtraRequested(false); setRegistryOpen(false); setLocation("reception"); };
   const complaintAssetKey = location === "reception" && currentComplaint ? `${complaintIndex}|${currentComplaint.background}|${isWrittenReception ? "written" : currentComplaint.portrait}` : null;
   const [loadedComplaintAssetKey, setLoadedComplaintAssetKey] = useState<string | null>(null);
   useEffect(() => {
@@ -497,7 +505,7 @@ export default function Home() {
     if (!complaintDecision || dayEnded || gameOver) return;
     if (prosecutorOffice === "territorial" && complaintDecision === "accept" && !responseActDecision) return;
     if (complaintIndex >= activeComplaints.length - 1) endDay(complaintDecision);
-    else { setComplaintIndex((value) => value + 1); setComplaintDecision(null); setResponseActDecision(null); setResponseActDialogClosed(false); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setAskedReceptionQuestions([]); setActiveReceptionQuestion(null); setExtraRequested(false); }
+    else { setFolderOpened(false); setComplaintIndex((value) => value + 1); setComplaintDecision(null); setResponseActDecision(null); setResponseActDialogClosed(false); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setAskedReceptionQuestions([]); setActiveReceptionQuestion(null); setExtraRequested(false); }
   };
 
   const endDay = (resolvedDecision?: "accept" | "reject", eventsOverride?: ConsequenceEvent[], repeatOverride = false) => {
@@ -526,6 +534,7 @@ export default function Home() {
     setHoursLeft(8);
     setDayEnded(false);
     setLocation(pendingComplaints > 0 ? "reception" : null);
+    setFolderOpened(false);
     setRightsAdvocateMode(pendingComplaints > 0 && prosecutorOffice === "executive" && Math.random() < 0.3);
     if (repeatComplaintIndex !== null) setComplaintIndex(repeatComplaintIndex);
     setComplaintDecision(null);
@@ -755,17 +764,21 @@ export default function Home() {
 
   return (
     <main className={`game-shell office-theme-${prosecutorOffice ?? "territorial"}`} data-office-time={officeTimePhase} data-office-weather={officeWeather} style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.88) 0%, rgba(7,18,20,.72) 33%, rgba(7,18,20,.18) 72%, rgba(7,18,20,.56) 100%), url(${PROFILE_BACKGROUNDS[prosecutorOffice ?? ""] ?? OFFICE_BG})` }}>
-      <div className="office-atmosphere" aria-hidden="true"><span className="office-window-weather" /></div>{musicPlayer}<div className="grain" />
+      <div className="office-atmosphere" aria-hidden="true"><span className="office-window-weather"><i className="office-window-headlights" /><i className="office-window-curtain" /></span><div className="office-desk-tea"><span className="office-tea-steam"><i /><i /><i /></span><span className="office-tea-cup" /></div></div>{musicPlayer}<div className="grain" />
       {gameOver && <div className="game-over-backdrop" role="dialog" aria-modal="true" aria-labelledby="game-over-title"><section className="game-over-card"><span className="eyebrow">СЛУЖЕБНОЕ РЕШЕНИЕ · {gameOverReason === "bribe" ? "КОРРУПЦИОННОЕ ПРЕСТУПЛЕНИЕ" : "ДИСЦИПЛИНА"}</span><h2 id="game-over-title">Игра окончена</h2><p>{gameOverReason === "bribe" ? "Вы были пойманы за получением взятки при проведении ОРМ «Проверочная закупка». В соответствии со ст. 114 УПК РФ и ст. 43 ФЗ «О прокуратуре Российской Федерации»." : "Вы были уволены в связи с несовместимостью с дальнейшим прохождением службы в силу наличия большого количества дисциплинарных взысканий."}</p><div className="game-over-status">Статус: <strong>{gameOverReason === "bribe" ? "получение взятки · служба прекращена" : "увольнение из органов прокуратуры"}</strong></div><button className="primary-button" onClick={returnToMainMenu}><RotateCcw size={16} /> Вернуться в главное меню</button></section></div>}
       <header className="topbar">
         <div className="brand"><div className="brand-mark"><Scale size={18} /></div><div><p>ПРОКУРАТУРА</p><h1>Приёмная № 07</h1></div></div>
         <div className="profile-chip"><UserRound size={14} /><span>{character.name}</span><b>{prosecutorOffice === "military" ? "лейтенант" : "юрист 3 класса"}</b></div>
           <div className="shift"><span className="live-dot" /> {location === "inspection" ? "ГОРОДСКАЯ ПРОВЕРКА" : "ПРИЁМНАЯ ГРАЖДАН"} <b>•</b> ДЕНЬ {dayNumber}</div><div className="office-scene-status"><div className="office-weather-readout" title={`Погода за окном: ${officeWeatherLabel.toLowerCase()}`}>{officeWeatherIcon}<span>ЗА ОКНОМ</span><b>{officeWeatherLabel}</b></div><button className={`office-ambience-toggle ${officeAmbienceEnabled ? "active" : ""}`} onClick={toggleOfficeAmbience} aria-pressed={officeAmbienceEnabled} aria-label={officeAmbienceEnabled ? "Выключить звук кабинета" : "Включить звук кабинета"} title={officeAmbienceEnabled ? "Выключить фоновый звук кабинета" : "Включить тихий фоновый звук кабинета"}>{officeAmbienceEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}</button></div><div className={`work-clock ${hoursLeft <= 2 ? "critical" : hoursLeft <= 4 ? "warning" : ""}`} aria-label={`Осталось ${hoursLeft} часов рабочего времени`}><div className="work-clock-top"><span>РАБОЧЕЕ ВРЕМЯ</span><strong>{hoursLeft === 0 ? "18:00" : `${10 + (8 - hoursLeft)}:00`}</strong><em>до 18:00</em></div><div className="work-clock-track"><i style={{ width: `${(hoursLeft / 8) * 100}%` }} /></div><small>ОСТАЛОСЬ <b>{hoursLeft} ч.</b></small></div>{location === "reception" && <button className="registry-open-button" onClick={() => setRegistryOpen(true)}><FileText size={14}/> Журнал обращений</button>}<button className="route-switch-button" onClick={() => switchLocation(location === "reception" ? "inspection" : "reception")}>{location === "reception" ? "Выйти на проверку" : "Принять заявителей"}</button><button className="menu-button top-menu-button" onClick={returnToMainMenu}>Главное меню</button><button className="end-day-button" onClick={() => endDay()}>Завершить день · 18:00</button>
-        <div className="seal">ДЕЛО<br /><span>В РАБОТЕ</span></div>
+        <div className="office-desk-objects" aria-label={`Часы ${officeTimeHour}:00, ${officeCalendarDay} ${officeCalendarMonth} 2026, день ${dayNumber}`}><div className="office-analog-clock" aria-hidden="true"><i className="office-clock-hour" style={{ transform: `rotate(${officeClockHourAngle}deg)` }} /><i className="office-clock-minute" /><i className="office-clock-second" /><b /></div><div className="office-desk-calendar"><span><CalendarDays size={7} /> {officeCalendarMonth} 2026</span><strong>{officeCalendarDay}</strong><small>ДЕНЬ {dayNumber}</small></div></div><div className="seal">ДЕЛО<br /><span>В РАБОТЕ</span></div>
       </header>
 
       {registryOpen && <div className="registry-overlay"><section className="registry-dialog" role="dialog" aria-modal="true" aria-labelledby="registry-title"><button className="registry-close" onClick={() => setRegistryOpen(false)} aria-label="Закрыть">×</button><div className="registry-kicker">КАНЦЕЛЯРИЯ · ТЕРРИТОРИАЛЬНАЯ ПРОКУРАТУРА</div><h2 id="registry-title">Журнал регистрации обращений</h2><p className="registry-subtitle">Поступившие обращения текущей смены</p><div className="registry-toolbar"><input value={registrySearch} onChange={(e)=>setRegistrySearch(e.target.value)} placeholder="Поиск по заявителю, теме или номеру"/><select value={registryStatus} onChange={(e)=>setRegistryStatus(e.target.value)}><option value="all">Все статусы</option><option value="received">Поступило</option><option value="review">На рассмотрении</option><option value="verification">Назначена проверка</option><option value="rejected">Отказано</option></select></div><div className="registry-table-wrap"><table className="registry-table"><thead><tr><th>Входящий №</th><th>Дата</th><th>Заявитель</th><th>Предмет обращения</th><th>Статус</th><th></th></tr></thead><tbody>{filteredRegistryRows.map(({item,index,status})=><tr key={item.id} className={index===complaintIndex?"current":""}><td>{String(index+1).padStart(2,"0")}-2026</td><td>17.09.2026</td><td>{item.applicant}</td><td>{item.title}</td><td><span className={"registry-status "+status}>{status==="received"?"Поступило":status==="review"?"На рассмотрении":status==="verification"?"Назначена проверка":"Отказано"}</span></td><td><button onClick={()=>openRegistryComplaint(index)}>Открыть</button></td></tr>)}</tbody></table>{filteredRegistryRows.length===0&&<div className="registry-empty">По заданным условиям обращений не найдено.</div>}</div><div className="registry-footer"><span>Всего: {registryRows.length} · Поступило: {registryRows.filter(x=>x.status==="received").length} · На рассмотрении: {registryRows.filter(x=>x.status==="review").length} · Отказано: {registryRows.filter(x=>x.status==="rejected").length}</span><button onClick={()=>setRegistryOpen(false)}>Закрыть журнал</button></div></section></div>}
-      <section className="workspace">
+      {!folderOpened ? <section className="office-arrival-screen" aria-label="Рабочий кабинет">
+        <div className="office-arrival-copy"><span className="office-arrival-kicker">РАБОЧИЙ ДЕНЬ · {officeCalendarDay} {officeCalendarMonth} 2026</span><h2>{officeGreeting},<br /><em>{character.name}.</em></h2><p>Кабинет ещё тих. На столе ждут материалы, которые предстоит рассмотреть. Осмотритесь и откройте папку, когда будете готовы.</p><div className="office-arrival-status"><span className="live-dot" /> {location === "reception" ? "ПРИЁМНАЯ ГОТОВА К РАБОТЕ" : "МАТЕРИАЛЫ ПРОВЕРКИ ПОДГОТОВЛЕНЫ"}</div></div>
+        <button type="button" className="office-arrival-folder" onClick={() => setFolderOpened(true)} aria-label="Открыть папку с входящими материалами"><span className="office-arrival-folder-tab" /><span className="office-arrival-folder-head"><span>ВХОДЯЩИЕ МАТЕРИАЛЫ</span><small>КАНЦЕЛЯРИЯ · 2026</small></span><span className="office-arrival-folder-title">{location === "reception" ? "Обращение гражданина" : "Материалы проверки"}</span><span className="office-arrival-folder-number">№ {String(location === "reception" ? complaintIndex + 1 : caseIndex + 1).padStart(3,"0")}</span><span className="office-arrival-folder-action">ОТКРЫТЬ ПАПКУ <ChevronRight size={15} /></span></button>
+        <div className="office-arrival-bottom"><span>ПРИЁМНАЯ № 07</span><span>НАЖМИТЕ НА ПАПКУ, ЧТОБЫ НАЧАТЬ РАБОТУ</span><span>СМЕНА {dayNumber} · {officeTimeHour}:00</span></div>
+      </section> : <section className="workspace">
         <aside className="briefing panel">
           <div className="rule-row"><span>Дел в очереди</span><b>{activeCases.length - Math.min(caseIndex, activeCases.length - 1)}</b></div>
           <div className="rule-row"><span>Доверие канцелярии</span><b>{trust} / 5</b></div>
@@ -803,9 +816,9 @@ export default function Home() {
             </>
           )}
         </section>}
-      </section>
+      </section>}
 
-      <footer className="footerbar"><div></div><div className="footer-stats"><Stat label="ВЕРНЫЕ РЕШЕНИЯ" value={`${correctDecisions}/${location === "reception" ? activeComplaints.length : activeCases.length}`} tone={correctDecisions > 0 ? "good" : "default"} /><Stat label="ДОВЕРИЕ" value={`${trust}/5`} tone={trust < 2 ? "bad" : "default"} /><Stat label="РЕПУТАЦИЯ" value={`${reputation.quality}/5`} tone={reputation.quality < 2 ? "bad" : reputation.quality >= 4 ? "good" : "default"} /><Stat label="СТАТУС" value={finished ? "ЗАКРЫТО" : feedback ? "ПРОВЕРКА" : "ОЖИДАНИЕ"} /></div></footer>
+      {folderOpened && <footer className="footerbar"><div></div><div className="footer-stats"><Stat label="ВЕРНЫЕ РЕШЕНИЯ" value={`${correctDecisions}/${location === "reception" ? activeComplaints.length : activeCases.length}`} tone={correctDecisions > 0 ? "good" : "default"} /><Stat label="ДОВЕРИЕ" value={`${trust}/5`} tone={trust < 2 ? "bad" : "default"} /><Stat label="РЕПУТАЦИЯ" value={`${reputation.quality}/5`} tone={reputation.quality < 2 ? "bad" : reputation.quality >= 4 ? "good" : "default"} /><Stat label="СТАТУС" value={finished ? "ЗАКРЫТО" : feedback ? "ПРОВЕРКА" : "ОЖИДАНИЕ"} /></div></footer>}
     </main>
   );
 }
