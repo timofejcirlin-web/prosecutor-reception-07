@@ -14,18 +14,13 @@ const PROFILE_LOADING_TIPS: Record<string, string> = {
 const PROFILE_PORTRAITS = { soldier: "/manus-storage/military-soldier-portrait_01ce969c.png", soldierTwo: "/manus-storage/russian-soldier-portrait-1_880d2d26.png", soldierThree: "/manus-storage/russian-soldier-portrait-2_31b49369.png", elderlyParent: "/manus-storage/military-elderly-parent-portrait_594adf13.png", advocate: "/manus-storage/human-rights-advocate-portrait_87e49d41.png", citizenWoman: "/manus-storage/citizen-woman-portrait_d76969e3.png", citizenMan: "/manus-storage/citizen-man-portrait_027a1fba.png", environmentalWoman: "/manus-storage/environmental-woman-portrait_d82a1e59.png" };
 const PROFILE_CARD_PORTRAITS = { territorial: new URL("../assets/prosecutor-territorial-new.png", import.meta.url).href, executive: new URL("../assets/prosecutor-corrections-prison-new.png", import.meta.url).href, environmental: new URL("../assets/prosecutor-environmental-new.png", import.meta.url).href, military: new URL("../assets/prosecutor-military-base-new.png", import.meta.url).href, transport: new URL("../assets/prosecutor-transport-new.png", import.meta.url).href };
 const UI_CLICK = "/manus-storage/prosecutor-ui-click_a921f702.mp3";
+const OFFICE_AMBIENCE = "/manus-storage/prosecutor-office-ambience.wav";
 const BACKGROUND_MUSIC = "/manus-storage/prosecutor-soviet-ambient_98bcbd3d.mp3";
 const ALBUM_ONE_TRACKS = [
   { title: "Смена · Неоновый архив", src: BACKGROUND_MUSIC },
   { title: "Ночной проспект · синтвейв", src: "/manus-storage/prosecutor-track-02_aaff8899.mp3" },
   { title: "Папка № 07 · архивный эмбиент", src: "/manus-storage/prosecutor-track-03-archive_ef14af90.mp3" },
   { title: "Дежурная лампа · ночной синтвейв", src: "/manus-storage/prosecutor-track-04-night-office_6a18b3bd.mp3" },
-  { title: "Протокол · служебный пульс", src: "/manus-storage/prosecutor-track-05-protocol_47fd438f.mp3" },
-  { title: "Гимн СССР · синтвейв-версия", src: "/manus-storage/anthem_c157b560.mp3" },
-  { title: "Песня о Щорсе · синтвейв-версия", src: "/manus-storage/shchors_4853eecf.mp3" },
-  { title: "Взвейтесь кострами · синтвейв-версия", src: "/manus-storage/vzveytes_5dad61c1.mp3" },
-  { title: "Полюшко-поле · синтвейв-версия", src: "/manus-storage/polyushko_ed27b57d.mp3" },
-  { title: "По долинам и по взгорьям · синтвейв-версия", src: "/manus-storage/dolinam_1d463260.mp3" },
 ];
 const MUSIC_ALBUMS = [
   { title: "ПРИЁМНАЯ № 07 · АРХИВ", tracks: ALBUM_ONE_TRACKS },
@@ -335,7 +330,7 @@ export default function Home() {
   const [musicOpen, setMusicOpen] = useState(false);
   const musicRef = useRef<HTMLAudioElement | null>(null);
   const [officeAmbienceEnabled, setOfficeAmbienceEnabled] = useState(false);
-  const officeAmbienceRef = useRef<AudioContext | null>(null);
+  const officeAmbienceRef = useRef<HTMLAudioElement | null>(null);
   const [openMaterial, setOpenMaterial] = useState<number | null>(null);
   const [reviewedMaterials, setReviewedMaterials] = useState<number[]>([]);
   const activeCases = prosecutorOffice && PROFILE_CASES[prosecutorOffice] ? PROFILE_CASES[prosecutorOffice] : CASES;
@@ -579,9 +574,12 @@ export default function Home() {
   }, []);
 
   useEffect(() => () => {
-    const context = officeAmbienceRef.current;
+    const ambience = officeAmbienceRef.current;
     officeAmbienceRef.current = null;
-    if (context && context.state !== "closed") void context.close();
+    if (ambience) {
+      ambience.pause();
+      ambience.currentTime = 0;
+    }
   }, []);
 
   useEffect(() => {
@@ -611,43 +609,17 @@ export default function Home() {
   const changeMusicTrack = (offset: number) => setMusicTrack((value) => (value + offset + MUSIC_ALBUMS[musicAlbum].tracks.length) % MUSIC_ALBUMS[musicAlbum].tracks.length);
   const changeMusicAlbum = (index: number) => { setMusicAlbum(index); setMusicTrack(0); };
   const toggleOfficeAmbience = () => {
-    if (officeAmbienceEnabled) {
-      const context = officeAmbienceRef.current;
-      officeAmbienceRef.current = null;
+    const currentAmbience = officeAmbienceRef.current;
+    if (currentAmbience && !currentAmbience.paused) {
+      currentAmbience.pause();
       setOfficeAmbienceEnabled(false);
-      if (context && context.state !== "closed") void context.close();
       return;
     }
-    const AudioContextConstructor = window.AudioContext;
-    if (!AudioContextConstructor) return;
-    try {
-      const context = new AudioContextConstructor();
-      const buffer = context.createBuffer(1, context.sampleRate * 3, context.sampleRate);
-      const channel = buffer.getChannelData(0);
-      let previous = 0;
-      for (let index = 0; index < channel.length; index += 1) {
-        const whiteNoise = Math.random() * 2 - 1;
-        previous = (previous + 0.02 * whiteNoise) / 1.02;
-        channel[index] = previous * 3.5;
-      }
-      const source = context.createBufferSource();
-      const filter = context.createBiquadFilter();
-      const volume = context.createGain();
-      source.buffer = buffer;
-      source.loop = true;
-      filter.type = "lowpass";
-      filter.frequency.value = 460;
-      volume.gain.value = 0.045;
-      source.connect(filter);
-      filter.connect(volume);
-      volume.connect(context.destination);
-      source.start();
-      officeAmbienceRef.current = context;
-      setOfficeAmbienceEnabled(true);
-      if (context.state === "suspended") void context.resume();
-    } catch {
-      setOfficeAmbienceEnabled(false);
-    }
+    const ambience = currentAmbience ?? new Audio(OFFICE_AMBIENCE);
+    ambience.loop = true;
+    ambience.volume = 0.22;
+    officeAmbienceRef.current = ambience;
+    void ambience.play().then(() => setOfficeAmbienceEnabled(true)).catch(() => setOfficeAmbienceEnabled(false));
   };
 
   useEffect(() => {

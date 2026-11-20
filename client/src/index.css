@@ -1596,17 +1596,22 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
 .office-window-weather {
   position: absolute;
   top: 0;
-  right: 0;
-  width: min(34%, 560px);
-  height: 58%;
+  right: 1.1%;
+  width: min(19.5%, 340px);
+  height: 51%;
+  overflow: hidden;
   opacity: 0;
   transition: opacity 1.5s ease;
-  mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.82) 66%, transparent 100%);
+  clip-path: polygon(2% 0, 100% 0, 100% 100%, 0 100%);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.9) 84%, transparent 100%);
+  mix-blend-mode: screen;
 }
 .game-shell[data-office-weather="rain"] .office-window-weather {
-  opacity: .46;
-  background: repeating-linear-gradient(104deg, transparent 0 20px, rgba(202,224,236,.22) 21px 22px, transparent 23px 39px);
-  animation: office-rain-fall 1.15s linear infinite;
+  opacity: .7;
+  background:
+    repeating-linear-gradient(104deg, transparent 0 12px, rgba(211,231,241,.28) 13px 14px, transparent 15px 27px),
+    repeating-linear-gradient(90deg, transparent 0 74px, rgba(211,231,241,.08) 75px 76px, transparent 77px 118px);
+  animation: office-rain-fall 1.05s linear infinite;
 }
 .game-shell[data-office-weather="overcast"] .office-window-weather {
   opacity: .42;
@@ -1614,14 +1619,14 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
   animation: office-cloud-drift 18s ease-in-out infinite alternate;
 }
 .game-shell[data-office-weather="snow"] .office-window-weather {
-  opacity: .65;
+  opacity: .82;
   background-image:
-    radial-gradient(2px 2px at 14% 16%, rgba(245,248,250,.78) 55%, transparent 60%),
-    radial-gradient(2px 2px at 72% 34%, rgba(245,248,250,.68) 55%, transparent 60%),
-    radial-gradient(1.5px 1.5px at 38% 72%, rgba(245,248,250,.75) 55%, transparent 60%),
-    radial-gradient(2px 2px at 88% 82%, rgba(245,248,250,.7) 55%, transparent 60%);
-  background-size: 86px 102px, 112px 132px, 72px 94px, 124px 118px;
-  animation: office-snow-fall 12s linear infinite;
+    radial-gradient(2.5px 2.5px at 14% 16%, rgba(248,251,255,.92) 55%, transparent 65%),
+    radial-gradient(2px 2px at 72% 34%, rgba(245,248,250,.84) 55%, transparent 65%),
+    radial-gradient(2px 2px at 38% 72%, rgba(245,248,250,.9) 55%, transparent 65%),
+    radial-gradient(2.5px 2.5px at 88% 82%, rgba(245,248,250,.82) 55%, transparent 65%);
+  background-size: 68px 82px, 94px 112px, 62px 78px, 104px 98px;
+  animation: office-snow-fall 10s linear infinite;
 }
 .game-shell[data-office-weather="clear"] .office-window-weather {
   opacity: .55;
@@ -1685,6 +1690,7 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
   border-color: #e4c68f;
 }
 @media (max-width: 900px) {
+  .office-window-weather { display: none; }
   .office-scene-status { min-height: 34px; }
 }
 @media (max-width: 560px) {
