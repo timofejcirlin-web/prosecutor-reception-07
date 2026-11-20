@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { BadgeCheck, CalendarDays, Camera, Check, ChevronRight, Cloud, CloudRain, FileText, Gavel, MapPin, Maximize2, MessageSquare, Minimize2, Pause, Play, RotateCcw, Scale, SkipBack, SkipForward, Snowflake, Stamp, Sun, UserRound, Users, Volume2, VolumeX, X, Music2 } from "lucide-react";
+import { ArrowLeft, BadgeCheck, CalendarDays, Camera, Check, ChevronRight, FileText, Gavel, MapPin, Maximize2, MessageSquare, Minimize2, Pause, Play, RotateCcw, Scale, SkipBack, SkipForward, Stamp, UserRound, Users, Volume2, VolumeX, X, Music2 } from "lucide-react";
 
 const OFFICE_BG = "/manus-storage/prosecutor-night-office-new.png";
 const PROFILE_BACKGROUNDS: Record<string, string> = { territorial: OFFICE_BG, executive: "/manus-storage/executive-office-bg_aa1818c9.png", environmental: "/manus-storage/environmental-office-bg_a009f425.png", military: "/manus-storage/military-office-bg-bright_f71bdfab.png", transport: OFFICE_BG };
@@ -401,10 +401,6 @@ export default function Home() {
   const selectedOffice = PROSECUTOR_OFFICES.find((office) => office.id === prosecutorOffice);
   const officeTimeHour = hoursLeft === 0 ? 18 : 10 + (8 - hoursLeft);
   const officeTimePhase = officeTimeHour <= 12 ? "morning" : officeTimeHour <= 15 ? "day" : officeTimeHour <= 17 ? "evening" : "night";
-  const officeWeatherCycle = ["rain", "overcast", "snow", "clear"] as const;
-  const officeWeather = officeWeatherCycle[(Math.max(1, dayNumber) - 1) % officeWeatherCycle.length];
-  const officeWeatherLabel = { rain: "ДОЖДЬ", overcast: "ПАСМУРНО", snow: "СНЕГ", clear: "ЯСНО" }[officeWeather];
-  const officeWeatherIcon = officeWeather === "rain" ? <CloudRain size={14} /> : officeWeather === "overcast" ? <Cloud size={14} /> : officeWeather === "snow" ? <Snowflake size={14} /> : <Sun size={14} />;
   const officeCalendarDate = new Date(Date.UTC(2026, 8, 16 + dayNumber));
   const officeCalendarMonths = ["ЯНВ", "ФЕВ", "МАР", "АПР", "МАЙ", "ИЮН", "ИЮЛ", "АВГ", "СЕН", "ОКТ", "НОЯ", "ДЕК"];
   const officeCalendarDay = officeCalendarDate.getUTCDate();
@@ -423,7 +419,20 @@ export default function Home() {
     else await document.documentElement.requestFullscreen?.();
   };
 
+  function startOfficeAmbience() {
+    if (officeAmbienceRef.current) return;
+    const ambience = new Audio(OFFICE_AMBIENCE);
+    ambience.loop = true;
+    ambience.volume = 0.22;
+    officeAmbienceRef.current = ambience;
+    void ambience.play().then(() => setOfficeAmbienceEnabled(true)).catch(() => {
+      officeAmbienceRef.current = null;
+      setOfficeAmbienceEnabled(false);
+    });
+  }
+
   const chooseLocation = (nextLocation: LocationId) => {
+    startOfficeAmbience();
     setFolderOpened(false);
     setLocation(nextLocation);
     setLoadingLocation(nextLocation);
@@ -624,11 +633,11 @@ export default function Home() {
       setOfficeAmbienceEnabled(false);
       return;
     }
-    const ambience = currentAmbience ?? new Audio(OFFICE_AMBIENCE);
-    ambience.loop = true;
-    ambience.volume = 0.22;
-    officeAmbienceRef.current = ambience;
-    void ambience.play().then(() => setOfficeAmbienceEnabled(true)).catch(() => setOfficeAmbienceEnabled(false));
+    if (currentAmbience) {
+      void currentAmbience.play().then(() => setOfficeAmbienceEnabled(true)).catch(() => setOfficeAmbienceEnabled(false));
+      return;
+    }
+    startOfficeAmbience();
   };
 
   useEffect(() => {
@@ -763,13 +772,13 @@ export default function Home() {
   );
 
   return (
-    <main className={`game-shell office-theme-${prosecutorOffice ?? "territorial"}`} data-office-time={officeTimePhase} data-office-weather={officeWeather} style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.88) 0%, rgba(7,18,20,.72) 33%, rgba(7,18,20,.18) 72%, rgba(7,18,20,.56) 100%), url(${PROFILE_BACKGROUNDS[prosecutorOffice ?? ""] ?? OFFICE_BG})` }}>
-      <div className="office-atmosphere" aria-hidden="true"><span className="office-window-weather"><i className="office-window-headlights" /><i className="office-window-curtain" /></span><div className="office-desk-tea"><span className="office-tea-steam"><i /><i /><i /></span><span className="office-tea-cup" /></div></div>{musicPlayer}<div className="grain" />
+    <main className={`game-shell office-theme-${prosecutorOffice ?? "territorial"}`} data-office-time={officeTimePhase} style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.88) 0%, rgba(7,18,20,.72) 33%, rgba(7,18,20,.18) 72%, rgba(7,18,20,.56) 100%), url(${PROFILE_BACKGROUNDS[prosecutorOffice ?? ""] ?? OFFICE_BG})` }}>
+      <div className="office-atmosphere" aria-hidden="true"><span className="office-window-scene"><i className="office-window-headlights" /><i className="office-window-curtain" /></span><span className="office-lamp-glow" /><div className="office-desk-tea"><span className="office-tea-steam"><i /><i /><i /></span><span className="office-tea-cup" /></div></div>{musicPlayer}<div className="grain" />
       {gameOver && <div className="game-over-backdrop" role="dialog" aria-modal="true" aria-labelledby="game-over-title"><section className="game-over-card"><span className="eyebrow">СЛУЖЕБНОЕ РЕШЕНИЕ · {gameOverReason === "bribe" ? "КОРРУПЦИОННОЕ ПРЕСТУПЛЕНИЕ" : "ДИСЦИПЛИНА"}</span><h2 id="game-over-title">Игра окончена</h2><p>{gameOverReason === "bribe" ? "Вы были пойманы за получением взятки при проведении ОРМ «Проверочная закупка». В соответствии со ст. 114 УПК РФ и ст. 43 ФЗ «О прокуратуре Российской Федерации»." : "Вы были уволены в связи с несовместимостью с дальнейшим прохождением службы в силу наличия большого количества дисциплинарных взысканий."}</p><div className="game-over-status">Статус: <strong>{gameOverReason === "bribe" ? "получение взятки · служба прекращена" : "увольнение из органов прокуратуры"}</strong></div><button className="primary-button" onClick={returnToMainMenu}><RotateCcw size={16} /> Вернуться в главное меню</button></section></div>}
       <header className="topbar">
         <div className="brand"><div className="brand-mark"><Scale size={18} /></div><div><p>ПРОКУРАТУРА</p><h1>Приёмная № 07</h1></div></div>
         <div className="profile-chip"><UserRound size={14} /><span>{character.name}</span><b>{prosecutorOffice === "military" ? "лейтенант" : "юрист 3 класса"}</b></div>
-          <div className="shift"><span className="live-dot" /> {location === "inspection" ? "ГОРОДСКАЯ ПРОВЕРКА" : "ПРИЁМНАЯ ГРАЖДАН"} <b>•</b> ДЕНЬ {dayNumber}</div><div className="office-scene-status"><div className="office-weather-readout" title={`Погода за окном: ${officeWeatherLabel.toLowerCase()}`}>{officeWeatherIcon}<span>ЗА ОКНОМ</span><b>{officeWeatherLabel}</b></div><button className={`office-ambience-toggle ${officeAmbienceEnabled ? "active" : ""}`} onClick={toggleOfficeAmbience} aria-pressed={officeAmbienceEnabled} aria-label={officeAmbienceEnabled ? "Выключить звук кабинета" : "Включить звук кабинета"} title={officeAmbienceEnabled ? "Выключить фоновый звук кабинета" : "Включить тихий фоновый звук кабинета"}>{officeAmbienceEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}</button></div><div className={`work-clock ${hoursLeft <= 2 ? "critical" : hoursLeft <= 4 ? "warning" : ""}`} aria-label={`Осталось ${hoursLeft} часов рабочего времени`}><div className="work-clock-top"><span>РАБОЧЕЕ ВРЕМЯ</span><strong>{hoursLeft === 0 ? "18:00" : `${10 + (8 - hoursLeft)}:00`}</strong><em>до 18:00</em></div><div className="work-clock-track"><i style={{ width: `${(hoursLeft / 8) * 100}%` }} /></div><small>ОСТАЛОСЬ <b>{hoursLeft} ч.</b></small></div>{location === "reception" && <button className="registry-open-button" onClick={() => setRegistryOpen(true)}><FileText size={14}/> Журнал обращений</button>}<button className="route-switch-button" onClick={() => switchLocation(location === "reception" ? "inspection" : "reception")}>{location === "reception" ? "Выйти на проверку" : "Принять заявителей"}</button><button className="menu-button top-menu-button" onClick={returnToMainMenu}>Главное меню</button><button className="end-day-button" onClick={() => endDay()}>Завершить день · 18:00</button>
+          <div className="shift"><span className="live-dot" /> {location === "inspection" ? "ГОРОДСКАЯ ПРОВЕРКА" : "ПРИЁМНАЯ ГРАЖДАН"} <b>•</b> ДЕНЬ {dayNumber}</div><div className="office-scene-status"><button className={`office-ambience-toggle ${officeAmbienceEnabled ? "active" : ""}`} onClick={toggleOfficeAmbience} aria-pressed={officeAmbienceEnabled} aria-label={officeAmbienceEnabled ? "Выключить звуки офиса" : "Включить звуки офиса"} title={officeAmbienceEnabled ? "Выключить фоновые звуки офиса" : "Включить фоновые звуки офиса"}>{officeAmbienceEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}</button></div><div className={`work-clock ${hoursLeft <= 2 ? "critical" : hoursLeft <= 4 ? "warning" : ""}`} aria-label={`Осталось ${hoursLeft} часов рабочего времени`}><div className="work-clock-top"><span>РАБОЧЕЕ ВРЕМЯ</span><strong>{hoursLeft === 0 ? "18:00" : `${10 + (8 - hoursLeft)}:00`}</strong><em>до 18:00</em></div><div className="work-clock-track"><i style={{ width: `${(hoursLeft / 8) * 100}%` }} /></div><small>ОСТАЛОСЬ <b>{hoursLeft} ч.</b></small></div>{location === "reception" && <button className="registry-open-button" onClick={() => setRegistryOpen(true)}><FileText size={14}/> Журнал обращений</button>}{folderOpened && <button className="office-return-button" onClick={() => setFolderOpened(false)} title="Вернуться к виду кабинета"><ArrowLeft size={14} /> В кабинет</button>}<button className="route-switch-button" onClick={() => switchLocation(location === "reception" ? "inspection" : "reception")}>{location === "reception" ? "Выйти на проверку" : "Принять заявителей"}</button><button className="menu-button top-menu-button" onClick={returnToMainMenu}>Главное меню</button><button className="end-day-button" onClick={() => endDay()}>Завершить день · 18:00</button>
         <div className="office-desk-objects" aria-label={`Часы ${officeTimeHour}:00, ${officeCalendarDay} ${officeCalendarMonth} 2026, день ${dayNumber}`}><div className="office-analog-clock" aria-hidden="true"><i className="office-clock-hour" style={{ transform: `rotate(${officeClockHourAngle}deg)` }} /><i className="office-clock-minute" /><i className="office-clock-second" /><b /></div><div className="office-desk-calendar"><span><CalendarDays size={7} /> {officeCalendarMonth} 2026</span><strong>{officeCalendarDay}</strong><small>ДЕНЬ {dayNumber}</small></div></div><div className="seal">ДЕЛО<br /><span>В РАБОТЕ</span></div>
       </header>
 

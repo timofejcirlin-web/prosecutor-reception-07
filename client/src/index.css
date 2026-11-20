@@ -1593,57 +1593,16 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
   overflow: hidden;
   pointer-events: none;
 }
-.office-window-weather {
+.office-window-scene {
   position: absolute;
   top: 0;
   right: 1.1%;
   width: min(19.5%, 340px);
   height: 51%;
   overflow: hidden;
-  opacity: 0;
-  transition: opacity 1.5s ease;
   clip-path: polygon(2% 0, 100% 0, 100% 100%, 0 100%);
-  mask-image: linear-gradient(180deg, #000 0%, rgba(0,0,0,.9) 84%, transparent 100%);
-  mix-blend-mode: screen;
 }
-.game-shell[data-office-weather="rain"] .office-window-weather {
-  opacity: .7;
-  background:
-    repeating-linear-gradient(104deg, transparent 0 12px, rgba(211,231,241,.28) 13px 14px, transparent 15px 27px),
-    repeating-linear-gradient(90deg, transparent 0 74px, rgba(211,231,241,.08) 75px 76px, transparent 77px 118px);
-  animation: office-rain-fall 1.05s linear infinite;
-}
-.game-shell[data-office-weather="overcast"] .office-window-weather {
-  opacity: .42;
-  background: radial-gradient(ellipse at 54% 38%, rgba(176,190,193,.24), transparent 68%);
-  animation: office-cloud-drift 18s ease-in-out infinite alternate;
-}
-.game-shell[data-office-weather="snow"] .office-window-weather {
-  opacity: .82;
-  background-image:
-    radial-gradient(2.5px 2.5px at 14% 16%, rgba(248,251,255,.92) 55%, transparent 65%),
-    radial-gradient(2px 2px at 72% 34%, rgba(245,248,250,.84) 55%, transparent 65%),
-    radial-gradient(2px 2px at 38% 72%, rgba(245,248,250,.9) 55%, transparent 65%),
-    radial-gradient(2.5px 2.5px at 88% 82%, rgba(245,248,250,.82) 55%, transparent 65%);
-  background-size: 68px 82px, 94px 112px, 62px 78px, 104px 98px;
-  animation: office-snow-fall 10s linear infinite;
-}
-.game-shell[data-office-weather="clear"] .office-window-weather {
-  opacity: .55;
-  background: radial-gradient(ellipse at 55% 58%, rgba(249,204,135,.27), transparent 72%);
-}
-@keyframes office-rain-fall {
-  from { background-position: 0 0; }
-  to { background-position: -22px 42px; }
-}
-@keyframes office-cloud-drift {
-  from { transform: translateX(-9px); opacity: .24; }
-  to { transform: translateX(8px); opacity: .48; }
-}
-@keyframes office-snow-fall {
-  from { background-position: 0 -30px, 15px -90px, -10px -40px, 20px -120px; }
-  to { background-position: -18px 140px, 35px 80px, 18px 110px, -15px 55px; }
-}
+
 .office-scene-status {
   display: inline-flex;
   align-items: center;
@@ -1654,23 +1613,7 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
   background: rgba(14,25,22,.78);
   border: 1px solid rgba(212,178,122,.2);
 }
-.office-weather-readout {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-.office-weather-readout svg { color: var(--office-brass-light); }
-.office-weather-readout span {
-  color: var(--office-muted);
-  font: 8px 'IBM Plex Mono';
-  letter-spacing: .1em;
-}
-.office-weather-readout b {
-  color: var(--office-ivory);
-  font: 9px 'IBM Plex Mono';
-  letter-spacing: .04em;
-}
+
 .office-ambience-toggle {
   display: grid;
   place-items: center;
@@ -1690,14 +1633,10 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
   border-color: #e4c68f;
 }
 @media (max-width: 900px) {
-  .office-window-weather { display: none; }
+  .office-window-scene { display: none; }
   .office-scene-status { min-height: 34px; }
 }
-@media (max-width: 560px) {
-  .office-weather-readout span { display: none; }
-}
 @media (prefers-reduced-motion: reduce) {
-  .office-window-weather,
   .game-shell::before { animation: none !important; transition: none !important; }
 }
 
@@ -2185,4 +2124,67 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
     from { opacity: 0; transform: translate(-50%, 20px) rotate(-4deg); }
     to { opacity: 1; transform: translate(-50%, 0) rotate(-1.5deg); }
   }
+}
+
+
+/* Office ambience: an occasional soft ballast flicker from the desk lamp. */
+.office-lamp-glow {
+  position: absolute;
+  top: 27%;
+  right: 0;
+  width: min(31%, 500px);
+  height: 55%;
+  opacity: .68;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  transform-origin: 88% 18%;
+  background:
+    radial-gradient(ellipse at 84% 14%, rgba(255,224,166,.34) 0, rgba(255,206,133,.14) 24%, transparent 57%),
+    radial-gradient(ellipse at 72% 68%, rgba(231,173,98,.12) 0, transparent 70%);
+  filter: blur(1.5px);
+  animation: office-lamp-soft-flicker 23s linear infinite;
+}
+@keyframes office-lamp-soft-flicker {
+  0%, 61%, 63%, 65%, 100% { opacity: .68; }
+  62% { opacity: .43; }
+  64% { opacity: .78; }
+  91% { opacity: .68; }
+  92% { opacity: .53; }
+  93% { opacity: .72; }
+}
+@media (max-width: 900px) {
+  .office-lamp-glow { width: 48%; height: 42%; top: 36%; right: -8%; opacity: .55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .office-lamp-glow { animation: none !important; }
+}
+
+.office-return-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 9px 11px;
+  color: #eadbc1;
+  background: rgba(45,57,46,.9);
+  border: 1px solid rgba(212,178,122,.55);
+  font: 600 9px 'IBM Plex Mono';
+  letter-spacing: .025em;
+  cursor: pointer;
+  transition: .18s ease;
+}
+.office-return-button:hover {
+  color: #fff4df;
+  background: #34453b;
+  border-color: var(--office-brass-light);
+  transform: translateY(-1px);
+}
+.office-return-button:focus-visible,
+.office-ambience-toggle:focus-visible {
+  outline: 2px solid var(--office-brass-light);
+  outline-offset: 3px;
+}
+@media (max-width: 900px) {
+  .office-return-button { min-height: 34px; padding: 8px 9px; }
 }
