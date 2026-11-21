@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, BadgeCheck, Camera, Check, ChevronRight, FileText, Gavel, MapPin, Maximize2, MessageSquare, Minimize2, Pause, Play, RotateCcw, Scale, SkipBack, SkipForward, Stamp, UserRound, Users, Volume2, VolumeX, X, Music2 } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Building2, Camera, Check, ChevronRight, Factory, FileText, Gavel, Home as HomeIcon, MapPin, MapPinned, Maximize2, MessageSquare, Minimize2, Pause, Play, RotateCcw, Scale, SkipBack, SkipForward, Stamp, TrainFront, Trees, UserRound, Users, Volume2, VolumeX, X, Music2 } from "lucide-react";
 
 const OFFICE_BG = "/manus-storage/prosecutor-night-office-new.png";
 const PROFILE_BACKGROUNDS: Record<string, string> = { territorial: OFFICE_BG, executive: "/manus-storage/executive-office-bg_aa1818c9.png", environmental: "/manus-storage/environmental-office-bg_a009f425.png", military: "/manus-storage/military-office-bg-bright_f71bdfab.png", transport: OFFICE_BG };
@@ -332,6 +332,8 @@ export default function Home() {
   const [officeAmbienceEnabled, setOfficeAmbienceEnabled] = useState(false);
   const officeAmbienceRef = useRef<HTMLAudioElement | null>(null);
   const [folderOpened, setFolderOpened] = useState(false);
+  const [cityMapOpen, setCityMapOpen] = useState(false);
+  const [selectedCityDistrictId, setSelectedCityDistrictId] = useState("central");
   const [openMaterial, setOpenMaterial] = useState<number | null>(null);
   const [reviewedMaterials, setReviewedMaterials] = useState<number[]>([]);
   const activeCases = prosecutorOffice && PROFILE_CASES[prosecutorOffice] ? PROFILE_CASES[prosecutorOffice] : CASES;
@@ -453,6 +455,17 @@ export default function Home() {
   const currentComplaint = activeComplaints[complaintIndex] ?? activeComplaints[0];
   const isWrittenReception = prosecutorOffice === "executive";
   const registryRows = activeComplaints.map((item, index) => { const record=registryDecisions[item.id] ?? (index===complaintIndex && complaintDecision ? {decision:complaintDecision,responseAct:responseActDecision ?? undefined} : undefined); const status=!record ? "received" : record.decision === "reject" ? "rejected" : record.responseAct ? "verification" : "review"; return { item, index, status }; });
+  const cityClamp = (value: number) => Math.max(0, Math.min(100, Math.round(value)));
+  const cityDistricts = [
+    { id: "central", name: "Центральный", kind: "Административный центр", focus: "Муниципальное управление", concern: "Земельные распоряжения, исполнение решений и работа органов власти.", signal: "Управленческая устойчивость", score: cityClamp((reputation.leadership * .55 + reputation.quality * .45) * 20), icon: Building2, note: "Здесь сосредоточены органы управления и ключевые административные решения." },
+    { id: "residential", name: "Жилой район", kind: "Городская застройка", focus: "Права жителей", concern: "Повторные обращения, содержание жилого фонда и доступность муниципальных услуг.", signal: "Доверие жителей", score: cityClamp((reputation.citizens * .65 + trust * .35) * 20), icon: HomeIcon, note: "Район отражает, насколько решения службы отвечают на повседневные проблемы граждан." },
+    { id: "industrial", name: "Промышленный", kind: "Производственная зона", focus: "Надзор на предприятиях", concern: "Соблюдение требований, проверки организаций и исполнение предписаний.", signal: "Качество надзора", score: cityClamp((reputation.quality * .7 + (5 - reputation.risk) * .3) * 20), icon: Factory, note: "Состояние района связано с качеством проверок и устранением выявленных нарушений." },
+    { id: "river", name: "Речной", kind: "Прибрежная территория", focus: "Земля и окружающая среда", concern: "Использование прибрежных земель, охрана водных объектов и природоохранные требования.", signal: "Качество надзора", score: cityClamp((reputation.quality * .52 + (5 - reputation.risk) * .48) * 20), icon: Trees, note: "Здесь особенно важны документы на землю, границы участков и соблюдение природоохранных требований." },
+    { id: "transport", name: "Транспортный", kind: "Транспортный узел", focus: "Безопасность инфраструктуры", concern: "Содержание дорог, безопасность перевозок и контроль организаций-подрядчиков.", signal: "Управленческая устойчивость", score: cityClamp((reputation.leadership * .5 + reputation.quality * .35 + (5 - reputation.risk) * .15) * 20), icon: TrainFront, note: "Район показывает, насколько последовательно организован контроль инфраструктуры и перевозчиков." },
+  ];
+  const selectedCityDistrict = cityDistricts.find((district) => district.id === selectedCityDistrictId) ?? cityDistricts[0];
+  const cityOpenAppeals = Math.max(registryRows.filter(({ status }) => status !== "rejected").length, pendingComplaints);
+  const cityStatusLabel = (value: number) => value >= 75 ? "Устойчиво" : value >= 55 ? "Под наблюдением" : "Требует внимания";
   const filteredRegistryRows = registryRows.filter(({item,index,status}) => { const q=registrySearch.trim().toLowerCase(); const matches=!q || item.applicant.toLowerCase().includes(q) || item.title.toLowerCase().includes(q) || String(index+1).padStart(2,"0").includes(q); return matches && (registryStatus === "all" || status === registryStatus); });
   const openRegistryComplaint = (index:number) => { setFolderOpened(false); setComplaintIndex(index); setComplaintDecision(null); setResponseActDecision(null); setResponseActDialogClosed(false); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setAskedReceptionQuestions([]); setActiveReceptionQuestion(null); setReceptionQuestionsDialogOpen(false); setExtraRequested(false); setRegistryOpen(false); setLocation("reception"); };
   const complaintAssetKey = location === "reception" && currentComplaint ? `${complaintIndex}|${currentComplaint.background}|${isWrittenReception ? "written" : currentComplaint.portrait}` : null;
@@ -777,11 +790,57 @@ export default function Home() {
       <header className="topbar">
         <div className="brand"><div className="brand-mark"><Scale size={18} /></div><div><p>ПРОКУРАТУРА</p><h1>Приёмная № 07</h1></div></div>
         <div className="profile-chip"><UserRound size={14} /><span>{character.name}</span><b>{prosecutorOffice === "military" ? "лейтенант" : "юрист 3 класса"}</b></div>
-          <div className="shift"><span className="live-dot" /> {location === "inspection" ? "ГОРОДСКАЯ ПРОВЕРКА" : "ПРИЁМНАЯ ГРАЖДАН"} <b>•</b> ДЕНЬ {dayNumber}</div><div className="office-scene-status"><button className={`office-ambience-toggle ${officeAmbienceEnabled ? "active" : ""}`} onClick={toggleOfficeAmbience} aria-pressed={officeAmbienceEnabled} aria-label={officeAmbienceEnabled ? "Выключить звуки офиса" : "Включить звуки офиса"} title={officeAmbienceEnabled ? "Выключить фоновые звуки офиса" : "Включить фоновые звуки офиса"}>{officeAmbienceEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}</button></div><div className={`work-clock ${hoursLeft <= 2 ? "critical" : hoursLeft <= 4 ? "warning" : ""}`} aria-label={`Осталось ${hoursLeft} часов рабочего времени`}><div className="work-clock-top"><span>РАБОЧЕЕ ВРЕМЯ</span><strong>{hoursLeft === 0 ? "18:00" : `${10 + (8 - hoursLeft)}:00`}</strong><em>до 18:00</em></div><div className="work-clock-track"><i style={{ width: `${(hoursLeft / 8) * 100}%` }} /></div><small>ОСТАЛОСЬ <b>{hoursLeft} ч.</b></small></div>{location === "reception" && <button className="registry-open-button" onClick={() => setRegistryOpen(true)}><FileText size={14}/> Журнал обращений</button>}{folderOpened && <button className="office-return-button" onClick={() => setFolderOpened(false)} title="Вернуться к виду кабинета"><ArrowLeft size={14} /> В кабинет</button>}<button className="route-switch-button" onClick={() => switchLocation(location === "reception" ? "inspection" : "reception")}>{location === "reception" ? "Выйти на проверку" : "Принять заявителей"}</button><button className="menu-button top-menu-button" onClick={returnToMainMenu}>Главное меню</button><button className="end-day-button" onClick={() => endDay()}>Завершить день · 18:00</button>
+          <div className="shift"><span className="live-dot" /> {location === "inspection" ? "ГОРОДСКАЯ ПРОВЕРКА" : "ПРИЁМНАЯ ГРАЖДАН"} <b>•</b> ДЕНЬ {dayNumber}</div><div className="office-scene-status"><button className={`office-ambience-toggle ${officeAmbienceEnabled ? "active" : ""}`} onClick={toggleOfficeAmbience} aria-pressed={officeAmbienceEnabled} aria-label={officeAmbienceEnabled ? "Выключить звуки офиса" : "Включить звуки офиса"} title={officeAmbienceEnabled ? "Выключить фоновые звуки офиса" : "Включить фоновые звуки офиса"}>{officeAmbienceEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}</button></div><div className={`work-clock ${hoursLeft <= 2 ? "critical" : hoursLeft <= 4 ? "warning" : ""}`} aria-label={`Осталось ${hoursLeft} часов рабочего времени`}><div className="work-clock-top"><span>РАБОЧЕЕ ВРЕМЯ</span><strong>{hoursLeft === 0 ? "18:00" : `${10 + (8 - hoursLeft)}:00`}</strong><em>до 18:00</em></div><div className="work-clock-track"><i style={{ width: `${(hoursLeft / 8) * 100}%` }} /></div><small>ОСТАЛОСЬ <b>{hoursLeft} ч.</b></small></div><button className="city-map-open-button" onClick={() => setCityMapOpen(true)}><MapPinned size={14} /> Город</button>{location === "reception" && <button className="registry-open-button" onClick={() => setRegistryOpen(true)}><FileText size={14}/> Журнал обращений</button>}{folderOpened && <button className="office-return-button" onClick={() => setFolderOpened(false)} title="Вернуться к виду кабинета"><ArrowLeft size={14} /> В кабинет</button>}<button className="route-switch-button" onClick={() => switchLocation(location === "reception" ? "inspection" : "reception")}>{location === "reception" ? "Выйти на проверку" : "Принять заявителей"}</button><button className="menu-button top-menu-button" onClick={returnToMainMenu}>Главное меню</button><button className="end-day-button" onClick={() => endDay()}>Завершить день · 18:00</button>
         <div className="seal">ДЕЛО<br /><span>В РАБОТЕ</span></div>
       </header>
 
       {registryOpen && <div className="registry-overlay"><section className="registry-dialog" role="dialog" aria-modal="true" aria-labelledby="registry-title"><button className="registry-close" onClick={() => setRegistryOpen(false)} aria-label="Закрыть">×</button><div className="registry-kicker">КАНЦЕЛЯРИЯ · ТЕРРИТОРИАЛЬНАЯ ПРОКУРАТУРА</div><h2 id="registry-title">Журнал регистрации обращений</h2><p className="registry-subtitle">Поступившие обращения текущей смены</p><div className="registry-toolbar"><input value={registrySearch} onChange={(e)=>setRegistrySearch(e.target.value)} placeholder="Поиск по заявителю, теме или номеру"/><select value={registryStatus} onChange={(e)=>setRegistryStatus(e.target.value)}><option value="all">Все статусы</option><option value="received">Поступило</option><option value="review">На рассмотрении</option><option value="verification">Назначена проверка</option><option value="rejected">Отказано</option></select></div><div className="registry-table-wrap"><table className="registry-table"><thead><tr><th>Входящий №</th><th>Дата</th><th>Заявитель</th><th>Предмет обращения</th><th>Статус</th><th></th></tr></thead><tbody>{filteredRegistryRows.map(({item,index,status})=><tr key={item.id} className={index===complaintIndex?"current":""}><td>{String(index+1).padStart(2,"0")}-2026</td><td>17.09.2026</td><td>{item.applicant}</td><td>{item.title}</td><td><span className={"registry-status "+status}>{status==="received"?"Поступило":status==="review"?"На рассмотрении":status==="verification"?"Назначена проверка":"Отказано"}</span></td><td><button onClick={()=>openRegistryComplaint(index)}>Открыть</button></td></tr>)}</tbody></table>{filteredRegistryRows.length===0&&<div className="registry-empty">По заданным условиям обращений не найдено.</div>}</div><div className="registry-footer"><span>Всего: {registryRows.length} · Поступило: {registryRows.filter(x=>x.status==="received").length} · На рассмотрении: {registryRows.filter(x=>x.status==="review").length} · Отказано: {registryRows.filter(x=>x.status==="rejected").length}</span><button onClick={()=>setRegistryOpen(false)}>Закрыть журнал</button></div></section></div>}
+      {cityMapOpen && <div className="city-map-overlay" role="dialog" aria-modal="true" aria-labelledby="city-map-title">
+        <section className="city-map-dialog">
+          <header className="city-map-heading">
+            <div><span className="city-map-kicker">ОПЕРАТИВНАЯ ОБСТАНОВКА · ДЕНЬ {dayNumber}</span><h2 id="city-map-title">Город под надзором</h2><p>Выберите район, чтобы посмотреть направления работы и текущую оценку обстановки.</p></div>
+            <button className="city-map-close" onClick={() => setCityMapOpen(false)} aria-label="Закрыть карту">×</button>
+          </header>
+          <div className="city-map-kpis">
+            <div><span>ДОВЕРИЕ ЖИТЕЛЕЙ</span><strong>{Math.round(reputation.citizens * 20)}<small>/100</small></strong><i><b style={{width:`${reputation.citizens * 20}%`}} /></i></div>
+            <div><span>КАЧЕСТВО НАДЗОРА</span><strong>{Math.round(reputation.quality * 20)}<small>/100</small></strong><i><b style={{width:`${reputation.quality * 20}%`}} /></i></div>
+            <div><span>УПРАВЛЕНЧЕСКАЯ УСТОЙЧИВОСТЬ</span><strong>{Math.round(reputation.leadership * 20)}<small>/100</small></strong><i><b style={{width:`${reputation.leadership * 20}%`}} /></i></div>
+            <div><span>ОТКРЫТЫЕ ОБРАЩЕНИЯ</span><strong>{cityOpenAppeals}<small>дел</small></strong><i><b style={{width:`${Math.min(100,cityOpenAppeals * 12)}%`}} /></i></div>
+          </div>
+          <div className="city-map-layout">
+            <div className="city-map-frame">
+              <div className="city-map-compass"><span>N</span><i>↑</i></div>
+              <svg className="city-road-network" viewBox="0 0 600 430" preserveAspectRatio="none" aria-hidden="true">
+                <path d="M-20 105 C110 145 165 60 280 108 S470 156 630 86 M-20 310 C105 250 185 340 300 285 S470 245 630 345 M170 -20 C200 90 245 135 238 220 S202 340 250 450 M430 -20 C388 78 425 150 390 220 S430 340 395 450 M-30 220 C105 200 165 216 300 205 S490 180 630 220" />
+                <path className="city-road-secondary" d="M30 25 L570 398 M560 18 L45 410 M300 -20 L300 450" />
+              </svg>
+              <div className="city-map-river" />
+              <div className="city-map-park" />
+              {cityDistricts.map((district) => {
+                const Icon = district.icon;
+                const isSelected = selectedCityDistrictId === district.id;
+                return <button key={district.id} type="button" className={`city-district-shape city-district-${district.id} ${isSelected ? "selected" : ""} ${district.score < 55 ? "attention" : ""}`} onClick={() => setSelectedCityDistrictId(district.id)} aria-pressed={isSelected}>
+                  <span className="city-district-name"><Icon size={15} />{district.name}</span>
+                  <strong>{district.score}<small>/100</small></strong>
+                  <span className="city-district-state">{cityStatusLabel(district.score)}</span>
+                </button>;
+              })}
+              <div className="city-map-scale">СХЕМА ГОРОДСКОГО ОКРУГА · УСЛОВНАЯ</div>
+            </div>
+            <aside className="city-district-inspector">
+              <div className="city-inspector-top"><span>ВЫБРАННЫЙ РАЙОН</span><b>№ 0{cityDistricts.findIndex((district) => district.id === selectedCityDistrict.id) + 1}</b></div>
+              <span className="city-inspector-kind">{selectedCityDistrict.kind}</span>
+              <h3>{selectedCityDistrict.name}</h3>
+              <div className={`city-inspector-score ${selectedCityDistrict.score < 55 ? "attention" : ""}`}><strong>{selectedCityDistrict.score}</strong><span>ИНДЕКС РАЙОНА / 100</span></div>
+              <div className="city-inspector-status"><i />{cityStatusLabel(selectedCityDistrict.score)}</div>
+              <div className="city-inspector-section"><span>ОСНОВНОЕ НАПРАВЛЕНИЕ</span><b>{selectedCityDistrict.focus}</b><p>{selectedCityDistrict.note}</p></div>
+              <div className="city-inspector-section"><span>ЗОНА ВНИМАНИЯ</span><p>{selectedCityDistrict.concern}</p></div>
+              <div className="city-inspector-linked"><span>СВЯЗАННЫЙ ПОКАЗАТЕЛЬ</span><b>{selectedCityDistrict.signal}</b><small>Обновляется по результатам ваших решений.</small></div>
+            </aside>
+          </div>
+          <footer className="city-map-footer"><span>МОДЕЛЬ ГОРОДСКОЙ ОБСТАНОВКИ · ДЕНЬ {dayNumber}</span><p>Индексы условные: они отражают игровые показатели службы и меняются вместе с решениями игрока. Это не статистика реального города.</p><button onClick={() => setCityMapOpen(false)}>Вернуться в кабинет <ChevronRight size={14}/></button></footer>
+        </section>
+      </div>}
       {!folderOpened ? <section className="office-arrival-screen" aria-label="Рабочий кабинет">
         <div className="office-arrival-copy"><span className="office-arrival-kicker">РАБОЧИЙ ДЕНЬ · {officeCalendarDay} {officeCalendarMonth} 2026</span><h2>{officeGreeting},<br /><em>{character.name}.</em></h2><p>Кабинет ещё тих. На столе ждут материалы, которые предстоит рассмотреть. Осмотритесь и откройте папку, когда будете готовы.</p><div className="office-arrival-status"><span className="live-dot" /> {location === "reception" ? "ПРИЁМНАЯ ГОТОВА К РАБОТЕ" : "МАТЕРИАЛЫ ПРОВЕРКИ ПОДГОТОВЛЕНЫ"}</div></div>
         <button type="button" className="office-arrival-folder" onClick={() => setFolderOpened(true)} aria-label="Открыть папку с входящими материалами"><span className="office-arrival-folder-tab" /><span className="office-arrival-folder-head"><span>ВХОДЯЩИЕ МАТЕРИАЛЫ</span><small>КАНЦЕЛЯРИЯ · 2026</small></span><span className="office-arrival-folder-title">{location === "reception" ? "Обращение гражданина" : "Материалы проверки"}</span><span className="office-arrival-folder-number">№ {String(location === "reception" ? complaintIndex + 1 : caseIndex + 1).padStart(3,"0")}</span><span className="office-arrival-folder-action">ОТКРЫТЬ ПАПКУ <ChevronRight size={15} /></span></button>
