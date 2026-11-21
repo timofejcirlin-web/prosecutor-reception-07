@@ -334,6 +334,7 @@ export default function Home() {
   const [folderOpened, setFolderOpened] = useState(false);
   const [cityMapOpen, setCityMapOpen] = useState(false);
   const [selectedCityDistrictId, setSelectedCityDistrictId] = useState("central");
+  const [selectedCityEventId, setSelectedCityEventId] = useState<string | null>(null);
   const [openMaterial, setOpenMaterial] = useState<number | null>(null);
   const [reviewedMaterials, setReviewedMaterials] = useState<number[]>([]);
   const activeCases = prosecutorOffice && PROFILE_CASES[prosecutorOffice] ? PROFILE_CASES[prosecutorOffice] : CASES;
@@ -464,6 +465,40 @@ export default function Home() {
     { id: "transport", name: "Транспортный", kind: "Транспортный узел", focus: "Безопасность инфраструктуры", concern: "Содержание дорог, безопасность перевозок и контроль организаций-подрядчиков.", signal: "Управленческая устойчивость", score: cityClamp((reputation.leadership * .5 + reputation.quality * .35 + (5 - reputation.risk) * .15) * 20), icon: TrainFront, note: "Район показывает, насколько последовательно организован контроль инфраструктуры и перевозчиков." },
   ];
   const selectedCityDistrict = cityDistricts.find((district) => district.id === selectedCityDistrictId) ?? cityDistricts[0];
+  const cityEventAnchors: Record<string, { x: number; y: number }> = {
+    central: { x: 62, y: 39 },
+    industrial: { x: 29, y: 18 },
+    river: { x: 91, y: 17 },
+    residential: { x: 36, y: 76 },
+    transport: { x: 89, y: 77 },
+  };
+  const cityEventSlots: Record<string, number> = {};
+  const territorialEventDistricts = ["central", "central", "residential", "industrial", "industrial", "residential", "residential", "central", "transport", "residential", "central"];
+  const cityEvents = registryRows.map(({ item, index, status }) => {
+    const eventText = `${item.id} ${item.title} ${item.situation}`.toLowerCase();
+    const districtId = prosecutorOffice === "territorial" ? territorialEventDistricts[index % territorialEventDistricts.length] : /дорог|транспорт|перевоз|станц|железнодорож|автобус|пут[ьи]/.test(eventText) ? "transport"
+      : /водоохран|водн|речн|прибреж|берег|эколог|лес|природ|сброс/.test(eventText) ? "river"
+      : /зарплат|выплат|увольн|предприяти|производ|трудов|заработ|завод|работодател/.test(eventText) ? "industrial"
+      : /земель|участк|администрац|пристав|вознагражден|чинов|муниципал|распоряжен/.test(eventText) ? "central"
+      : /жил|дом|кровл|управляющ|коммунал|лекар|школ|жител|многодет|сосед/.test(eventText) ? "residential"
+      : cityDistricts[index % cityDistricts.length].id;
+    const anchor = cityEventAnchors[districtId];
+    const slot = cityEventSlots[districtId] ?? 0;
+    cityEventSlots[districtId] = slot + 1;
+    const offsets = [[0, 0], [-30, 16], [30, 32], [-30, 48], [30, 64]];
+    const offset = offsets[slot % offsets.length];
+    const statusLabel = status === "received" ? "Новое обращение"
+      : status === "review" ? "На рассмотрении"
+      : status === "verification" ? "Назначена проверка"
+      : "Отказано";
+    return {
+      id: item.id, index, title: item.title, applicant: item.applicant,
+      situation: item.situation, status, statusLabel, districtId,
+      left: anchor.x + offset[0] / 6, top: anchor.y + offset[1] / 4,
+      eventNumber: index + 1,
+    };
+  });
+  const selectedCityEvent = cityEvents.find((event) => event.id === selectedCityEventId) ?? null;
   const cityOpenAppeals = Math.max(registryRows.filter(({ status }) => status !== "rejected").length, pendingComplaints);
   const cityStatusLabel = (value: number) => value >= 75 ? "Устойчиво" : value >= 55 ? "Под наблюдением" : "Требует внимания";
   const filteredRegistryRows = registryRows.filter(({item,index,status}) => { const q=registrySearch.trim().toLowerCase(); const matches=!q || item.applicant.toLowerCase().includes(q) || item.title.toLowerCase().includes(q) || String(index+1).padStart(2,"0").includes(q); return matches && (registryStatus === "all" || status === registryStatus); });
@@ -798,7 +833,7 @@ export default function Home() {
       {cityMapOpen && <div className="city-map-overlay" role="dialog" aria-modal="true" aria-labelledby="city-map-title">
         <section className="city-map-dialog">
           <header className="city-map-heading">
-            <div><span className="city-map-kicker">ОПЕРАТИВНАЯ ОБСТАНОВКА · ДЕНЬ {dayNumber}</span><h2 id="city-map-title">Город под надзором</h2><p>Выберите район, чтобы посмотреть направления работы и текущую оценку обстановки.</p></div>
+            <div><span className="city-map-kicker">ОПЕРАТИВНАЯ ОБСТАНОВКА · ДЕНЬ {dayNumber}</span><h2 id="city-map-title">Город под надзором</h2><p>Маркеры на карте показывают поступившие обращения. Выберите событие или район, чтобы изучить обстановку.</p></div><span className="city-map-events-count">{cityEvents.length} СОБЫТИЙ</span>
             <button className="city-map-close" onClick={() => setCityMapOpen(false)} aria-label="Закрыть карту">×</button>
           </header>
           <div className="city-map-kpis">
@@ -819,15 +854,27 @@ export default function Home() {
               {cityDistricts.map((district) => {
                 const Icon = district.icon;
                 const isSelected = selectedCityDistrictId === district.id;
-                return <button key={district.id} type="button" className={`city-district-shape city-district-${district.id} ${isSelected ? "selected" : ""} ${district.score < 55 ? "attention" : ""}`} onClick={() => setSelectedCityDistrictId(district.id)} aria-pressed={isSelected}>
+                return <button key={district.id} type="button" className={`city-district-shape city-district-${district.id} ${isSelected ? "selected" : ""} ${district.score < 55 ? "attention" : ""}`} onClick={() => { setSelectedCityDistrictId(district.id); setSelectedCityEventId(null); }} aria-pressed={isSelected}>
                   <span className="city-district-name"><Icon size={15} />{district.name}</span>
                   <strong>{district.score}<small>/100</small></strong>
                   <span className="city-district-state">{cityStatusLabel(district.score)}</span>
                 </button>;
               })}
+              {cityEvents.map((event) => <button key={event.id} type="button" className={`city-event-marker status-${event.status} ${selectedCityEventId === event.id ? "selected" : ""}`} style={{ left: `${event.left}%`, top: `${event.top}%` }} onClick={() => { setSelectedCityEventId(event.id); setSelectedCityDistrictId(event.districtId); }} aria-label={`Событие ${event.eventNumber}: ${event.title}`} aria-pressed={selectedCityEventId === event.id}><span className="city-event-pulse" /><b>{String(event.eventNumber).padStart(2,"0")}</b><span className="city-event-tooltip">{event.title}</span></button>)}
               <div className="city-map-scale">СХЕМА ГОРОДСКОГО ОКРУГА · УСЛОВНАЯ</div>
+              <div className="city-map-legend"><span><i className="received" /> Новое</span><span><i className="review" /> Рассмотрение</span><span><i className="verification" /> Проверка</span><span><i className="rejected" /> Отказано</span></div>
             </div>
-            <aside className="city-district-inspector">
+            {selectedCityEvent ? <aside className="city-event-inspector">
+              <div className="city-event-inspector-top"><span>СОБЫТИЕ НА КАРТЕ</span><b>№ {String(selectedCityEvent.eventNumber).padStart(2,"0")}</b></div>
+              <span className={`city-event-status-pill status-${selectedCityEvent.status}`}><i />{selectedCityEvent.statusLabel}</span>
+              <h3>{selectedCityEvent.title}</h3>
+              <div className="city-event-district-line"><MapPin size={13} />{cityDistricts.find((district) => district.id === selectedCityEvent.districtId)?.name}</div>
+              <div className="city-event-applicant"><span>ЗАЯВИТЕЛЬ</span><b>{selectedCityEvent.applicant}</b></div>
+              <div className="city-event-description"><span>ОБСТОЯТЕЛЬСТВА</span><p>{selectedCityEvent.situation}</p></div>
+              <div className="city-event-source-note">Событие связано с обращением из журнала регистрации. Статус обновляется по мере рассмотрения.</div>
+              <button className="city-event-open-case" onClick={() => { setCityMapOpen(false); setLocation("reception"); setComplaintIndex(selectedCityEvent.index); setFolderOpened(false); }}>Открыть папку дела <ChevronRight size={15} /></button>
+              <button className="city-event-back-district" onClick={() => setSelectedCityEventId(null)}>К сведениям о районе</button>
+            </aside> : <aside className="city-district-inspector">
               <div className="city-inspector-top"><span>ВЫБРАННЫЙ РАЙОН</span><b>№ 0{cityDistricts.findIndex((district) => district.id === selectedCityDistrict.id) + 1}</b></div>
               <span className="city-inspector-kind">{selectedCityDistrict.kind}</span>
               <h3>{selectedCityDistrict.name}</h3>
@@ -836,7 +883,7 @@ export default function Home() {
               <div className="city-inspector-section"><span>ОСНОВНОЕ НАПРАВЛЕНИЕ</span><b>{selectedCityDistrict.focus}</b><p>{selectedCityDistrict.note}</p></div>
               <div className="city-inspector-section"><span>ЗОНА ВНИМАНИЯ</span><p>{selectedCityDistrict.concern}</p></div>
               <div className="city-inspector-linked"><span>СВЯЗАННЫЙ ПОКАЗАТЕЛЬ</span><b>{selectedCityDistrict.signal}</b><small>Обновляется по результатам ваших решений.</small></div>
-            </aside>
+            </aside>}
           </div>
           <footer className="city-map-footer"><span>МОДЕЛЬ ГОРОДСКОЙ ОБСТАНОВКИ · ДЕНЬ {dayNumber}</span><p>Индексы условные: они отражают игровые показатели службы и меняются вместе с решениями игрока. Это не статистика реального города.</p><button onClick={() => setCityMapOpen(false)}>Вернуться в кабинет <ChevronRight size={14}/></button></footer>
         </section>
