@@ -3383,3 +3383,134 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
     max-width: 210px;
   }
 }
+
+
+/* FINAL RESPONSIVE CABINET PASS · keep every control and case content in view */
+@media (min-width: 901px) {
+  html, body, #root { height: 100%; min-height: 0; overflow: hidden; }
+  .game-shell { height: 100dvh; min-height: 0; overflow: hidden; }
+  .game-shell .topbar {
+    width: min(1480px, calc(100% - 64px)); min-height: 88px; height: auto; flex: 0 0 auto;
+    flex-wrap: wrap; align-content: center; justify-content: flex-start; gap: 9px 14px; padding: 12px 100px 12px 0;
+  }
+  .game-shell .topbar .brand { margin-right: auto; }
+  .game-shell .topbar .shift { white-space: nowrap; }
+  .game-shell .topbar .work-clock { min-width: 178px; }
+  .game-shell .music-player { top: 22px; right: 102px; }
+  .game-shell .workspace {
+    width: min(1480px, calc(100% - 64px)); flex: 1 1 0; min-height: 0;
+    grid-template-columns: 220px minmax(0, 1fr); gap: clamp(18px, 2vw, 32px); padding: 16px 0 20px; align-items: stretch;
+  }
+  .game-shell .briefing.panel { min-height: 0; align-self: stretch; overflow-y: auto; }
+  .game-shell .complaint-area {
+    display: flex; flex-direction: column; min-width: 0; min-height: 0; height: 100%;
+    padding: 18px; overflow: hidden;
+  }
+  .game-shell .complaint-meta { flex: 0 0 auto; margin-bottom: 12px; }
+  .game-shell .complaint-layout {
+    display: grid; flex: 1 1 auto; min-height: 0; height: auto;
+    grid-template-columns: 132px minmax(0, 1fr); gap: 14px; align-items: stretch;
+  }
+  .game-shell .complaint-portrait { align-self: center; min-width: 0; width: 100%; }
+  .game-shell .complaint-portrait img { width: 118px; height: min(178px, 24vh); max-height: 178px; }
+  .game-shell .complaint-card {
+    display: block; min-width: 0; min-height: 0; max-height: none; height: 100%;
+    overflow-y: auto; overscroll-behavior: contain; padding: clamp(14px, 1.25vw, 21px);
+  }
+  .game-shell .complaint-card h2 { font-size: clamp(21px, 1.85vw, 29px); }
+  .game-shell .complaint-speech { font-size: clamp(12px, .9vw, 14px); line-height: 1.55; }
+  .game-shell .complaint-request { margin-top: 12px; padding: 10px 12px; }
+  .game-shell .complaint-documents { margin-top: 13px; }
+  .game-shell .complaint-actions { margin-top: 10px; }
+  .game-shell .office-drawer-trigger { right: max(36px, calc((100vw - 1480px) / 2 + 24px)); bottom: 18px; }
+}
+@media (min-width: 901px) and (max-height: 820px) {
+  .game-shell .topbar { min-height: 78px; padding-top: 8px; padding-bottom: 8px; gap: 7px 12px; }
+  .game-shell .workspace { padding-top: 10px; padding-bottom: 12px; }
+  .game-shell .briefing.panel { padding-top: 13px; padding-bottom: 12px; }
+  .game-shell .briefing .rule-row { padding: 7px 0; }
+  .game-shell .reputation-mini { margin-top: 9px; }
+  .game-shell .reputation-mini > div { padding: 6px 0; }
+  .game-shell .briefing .stamp-note { margin-top: 14px; }
+  .game-shell .complaint-area { padding: 13px; }
+  .game-shell .complaint-meta { margin-bottom: 8px; }
+  .game-shell .complaint-layout { grid-template-columns: 112px minmax(0,1fr); gap: 11px; }
+  .game-shell .complaint-portrait img { width: 102px; height: min(145px, 20vh); }
+  .game-shell .complaint-portrait > div { padding: 8px; }
+  .game-shell .complaint-card { padding: 12px 14px; }
+  .game-shell .complaint-card h2 { margin: 7px 0 8px; font-size: 21px; }
+  .game-shell .complaint-request p { font-size: 11px; }
+  .game-shell .complaint-documents { margin-top: 9px; }
+}
+@media (max-width: 900px) {
+  .game-shell { min-height: 100dvh; height: auto; overflow: visible; }
+  .game-shell .topbar { min-height: 88px; padding-top: 12px; padding-bottom: 12px; }
+  .game-shell .music-player { top: 14px; right: 94px; }
+  .game-shell .workspace { min-height: 0; flex: 0 0 auto; }
+  .game-shell .complaint-area { min-height: 0; height: auto; overflow: visible; }
+  .game-shell .complaint-card { height: auto; max-height: none; overflow: visible; }
+  .game-shell .office-drawer-trigger { right: 16px; bottom: 18px; }
+}
+@media (max-width: 560px) {
+  .game-shell .topbar { padding-right: 88px; gap: 8px; }
+  .game-shell .music-player { top: 14px; right: 92px; }
+  .game-shell .office-drawer-trigger { right: 12px; bottom: 12px; }
+}
+
+/* A small interactive desk drawer: tactile, optional and visually subordinate. */
+.game-shell .office-drawer-trigger {
+  position: absolute; z-index: 4; display: inline-flex; align-items: center; gap: 9px;
+  min-height: 34px; padding: 6px 11px; color: rgba(232,218,190,.82);
+  border: 1px solid rgba(205,169,112,.34);
+  background: linear-gradient(180deg, rgba(25,34,29,.88), rgba(10,19,17,.9));
+  box-shadow: 0 8px 22px rgba(0,0,0,.22); font: 600 8px 'IBM Plex Mono'; letter-spacing: .14em;
+  cursor: pointer; transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease;
+}
+.game-shell .office-drawer-trigger:hover, .game-shell .office-drawer-trigger.active {
+  color: #f5e7c9; border-color: rgba(221,183,123,.72);
+  background: linear-gradient(180deg, rgba(59,72,54,.96), rgba(23,38,29,.96));
+}
+.office-drawer-handle { width: 17px; height: 3px; border: 1px solid rgba(220,190,143,.68); border-radius: 2px; background: rgba(220,190,143,.2); }
+.office-drawer-trigger > svg { transition: transform .2s ease; }
+.office-drawer-trigger.active > svg { transform: rotate(90deg); }
+.office-drawer-overlay {
+  position: fixed; z-index: 120; inset: 0; display: grid; place-items: end end;
+  padding: 28px max(28px, calc((100vw - 1480px) / 2 + 24px));
+  background: rgba(3,9,9,.22); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+}
+.office-drawer-card {
+  width: min(365px, calc(100vw - 32px)); padding: 19px 21px 16px; color: #e9dfcb;
+  border: 1px solid rgba(208,169,111,.54);
+  background: linear-gradient(145deg, rgba(31,42,35,.98), rgba(11,21,19,.985));
+  box-shadow: 0 24px 70px rgba(0,0,0,.55), inset 0 1px rgba(255,255,255,.05);
+  animation: office-drawer-slide .26s cubic-bezier(.2,.72,.2,1) both;
+}
+@keyframes office-drawer-slide { from { opacity: 0; transform: translateY(12px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.office-drawer-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; color:#caa56c; font:600 8px 'IBM Plex Mono'; letter-spacing:.14em; }
+.office-drawer-heading button { display:grid; place-items:center; width:28px; height:28px; color:#e6d5b6; background:rgba(255,255,255,.04); border:1px solid rgba(212,178,122,.28); cursor:pointer; }
+.office-drawer-card h3 { margin:15px 0 13px; color:#f0e5d1; font:500 23px Georgia,serif; }
+.office-drawer-items { display:flex; flex-direction:column; gap:0; border-top:1px solid rgba(212,178,122,.18); }
+.office-drawer-items > div { display:flex; align-items:flex-start; gap:12px; padding:12px 2px; border-bottom:1px solid rgba(212,178,122,.13); }
+.office-drawer-items > div > svg { flex:0 0 auto; margin-top:2px; color:#c9a46d; }
+.office-drawer-items span { display:flex; flex-direction:column; gap:4px; }
+.office-drawer-items b { color:#e9dfcb; font-size:11px; font-weight:600; }
+.office-drawer-items small { color:rgba(226,214,190,.62); font-size:9px; line-height:1.45; }
+.office-drawer-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:13px; color:rgba(212,178,122,.64); font:600 7px 'IBM Plex Mono'; letter-spacing:.1em; }
+.office-drawer-foot b { color:rgba(232,218,190,.52); font-weight:500; }
+@media (max-width: 900px) { .office-drawer-overlay { place-items:end center; padding:16px; } .office-drawer-card { width:min(390px,100%); } }
+
+@media (min-width: 901px) { .game-shell .music-player { right: max(150px, calc((100vw - 1480px) / 2 + 150px)); } .game-shell .office-drawer-trigger { right: 28px; } }
+@media (max-width: 900px) { .game-shell .office-drawer-trigger { right: 16px; } }
+
+/* Header cleanup: keep the service seal decorative, not a flex row that grows the header. */
+@media (min-width: 901px) {
+  .game-shell .topbar .seal { position: absolute; left: 0; bottom: 7px; margin: 0; }
+  .game-shell .music-player { right: 18px; }
+  .game-shell .briefing.panel { overflow-x: hidden; }
+}
+
+@media (min-width: 901px) {
+  .game-shell .workspace { grid-template-columns: 248px minmax(0, 1fr); }
+  .game-shell .reputation-mini > div span { font-size: 7px; letter-spacing: .08em; }
+}
+@media (max-width: 900px) { .game-shell .music-player { right: 106px; } }
