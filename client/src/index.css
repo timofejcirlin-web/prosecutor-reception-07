@@ -2931,3 +2931,103 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
   border-radius: 5px;
   background: rgba(140,112,72,.36);
 }
+
+/* Scenario-specific intake question and follow-up actions */
+.intake-question-card {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(184,151,102,.34);
+  background: linear-gradient(135deg,rgba(226,211,180,.12),rgba(35,55,43,.16));
+}
+.intake-question-card > span,
+.response-followups > span {
+  display: block;
+  margin-bottom: 8px;
+  color: #b99a67;
+  font: 700 8px 'IBM Plex Mono';
+  letter-spacing: .13em;
+}
+.intake-question-card > button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 11px;
+  color: #e9dcc4;
+  border: 1px solid rgba(184,151,102,.43);
+  background: rgba(20,37,29,.88);
+  font: 600 11px 'Manrope';
+  text-align: left;
+  cursor: pointer;
+}
+.intake-question-card > button:disabled {
+  color: #c4b28f;
+  cursor: default;
+}
+.intake-question-card > p {
+  margin: 9px 0 0;
+  color: rgba(238,226,204,.82);
+  font: 400 11px/1.55 'Manrope';
+}
+.response-followups {
+  display: grid;
+  gap: 7px;
+  margin-top: 13px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(104,83,52,.2);
+}
+.response-followup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 11px;
+  color: #433b2e;
+  border: 1px solid rgba(111,89,56,.27);
+  background: rgba(255,252,241,.48);
+  text-align: left;
+  cursor: pointer;
+  transition: .16s ease;
+}
+.response-followup:hover:not(:disabled) {
+  border-color: rgba(92,119,81,.6);
+  background: rgba(255,255,255,.76);
+}
+.response-followup:disabled { cursor: default; opacity: .76; }
+.response-followup.done {
+  border-color: rgba(91,128,87,.38);
+  background: rgba(108,143,98,.12);
+}
+.response-followup > span {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.response-followup b {
+  color: #3b352b;
+  font: 700 10px 'Manrope';
+}
+.response-followup small {
+  color: #70644f;
+  font: 400 9px/1.4 'Manrope';
+}
+.response-followup em {
+  color: #8c704a;
+  font: normal 700 7px 'IBM Plex Mono';
+  letter-spacing: .04em;
+}
+.response-followup > strong {
+  flex: 0 0 auto;
+  color: #5d7954;
+  font-size: 17px;
+}
+.response-act-continue:disabled {
+  opacity: .48;
+  cursor: not-allowed;
+}
+@media (max-width: 600px) {
+  .intake-question-card { padding: 10px; }
+  .response-followup { padding: 9px; }
+  .response-followup small { font-size: 8px; }
+}

@@ -125,8 +125,10 @@ PROFILE_CASES.executive.push(
 );
 
 
-type ResponseAct = "protest" | "representation";
-type Complaint = { id: string; responseAct?: ResponseAct; responseActReason?: string; title: string; applicant: string; role: string; situation: string; request: string; correct: "accept" | "reject"; outcome: string; background: string; portrait: string; documents: Material[]; extra: Material; displayApplicant?: boolean; bribe?: boolean };
+type ResponseAct = "protest" | "representation" | "site-inspection" | "court-45" | "send-to-ic" | "explain-rights";
+type ResponseOption = { id: ResponseAct; title: string; detail: string; energyCost?: number };
+type ComplaintFollowUp = { id: string; title: string; detail: string; energyCost: number; required?: boolean; dependsOn?: string };
+type Complaint = { id: string; responseAct?: ResponseAct; responseActReason?: string; acceptedResponseActs?: ResponseAct[]; responseOptions?: ResponseOption[]; responseFollowUps?: ComplaintFollowUp[]; intakeQuestion?: { prompt: string; answer: string }; title: string; applicant: string; role: string; situation: string; request: string; correct: "accept" | "reject"; outcome: string; background: string; portrait: string; documents: Material[]; extra: Material; displayApplicant?: boolean; bribe?: boolean };
 type ReceptionQuestion = { prompt: string; answer: string; finding: string };
 const LAND_RECEPTION_QUESTIONS: ReceptionQuestion[] = [
   { prompt: "Когда вы подали заявление и получили отказ?", answer: "Заявление я подал 12 августа. Письменный отказ получил 3 сентября. Сохранил оба документа.", finding: "Даты можно сопоставить с регистрацией заявления и сроком рассмотрения." },
@@ -169,26 +171,92 @@ const territorialComplaint = (index: number, title: string, applicant: string, r
   responseActReason: index === 1 ? "При подтверждении нарушения со стороны администрации подходит представление по статье 24 Закона о прокуратуре: оно направляется органу или должностному лицу, способным устранить нарушение, его причины и условия. В этом сценарии задача — добиться устранения незаконного отказа и повторного законного рассмотрения заявления, а не ограничиваться оспариванием акта." : index === 2 ? "При подтверждении нарушения регионального порядка предоставления земли подходит представление по статье 24 Закона о прокуратуре. Оно адресуется администрации для устранения нарушения и его причин. Необходимо проверить статус семьи, региональные условия, очередность и возможные альтернативные меры поддержки." : index === 3 ? "Установлено предполагаемое продолжающееся бездействие управляющей организации по содержанию общего имущества. Представление по статье 24 направлено на устранение нарушения, его причин и условий; протест не подходит, поскольку конкретный противоречащий закону правовой акт не указан." : index === 4 ? "Проверяется нарушение обязанности работодателя своевременно выплачивать зарплату. Представление по статье 24 адресуется уполномоченному руководителю для погашения задолженности и устранения причин задержки; незаконный правовой акт для протеста не обозначен." : index === 5 ? "В материалах речь о нарушении работодателем процедуры увольнения и необходимости устранить последствия. Поэтому в рамках этого сценария подходит представление по статье 24. Если отдельно установлен конкретный незаконный приказ как правовой акт, вопрос о протесте или судебном оспаривании оценивается дополнительно." : index === 6 ? "Проверяется не незаконный нормативный акт, а неисполнение обязанности по льготному лекарственному обеспечению. Представление по статье 24 адресуется компетентному органу или должностному лицу для устранения нарушения и его причин." : index === 7 ? "Предполагается бездействие школы по обеспечению безопасных условий обучения и рассмотрению сигналов о травле. Представление по статье 24 направлено на устранение выявленного нарушения и его причин; протесту не на что быть принесённым." : index === 8 ? "Предмет проверки — бездействие пристава и несвоевременное совершение исполнительных действий, а не противоречащий закону правовой акт. При подтверждении нарушения подходит представление по статье 24; конкретное постановление пристава можно отдельно оценить на предмет протеста или судебного оспаривания." : index === 9 ? "Проверяется ненадлежащее содержание дороги и непринятие мер безопасности. Представление по статье 24 адресуется органу или должностному лицу, способным устранить нарушение. Протест возможен только при выявлении конкретного противоречащего закону правового акта." : "По материалам нарушения не установлено: начисления подтверждены расчётом и показаниями. Ни протест, ни представление в этой ситуации не подходят — оснований для акта прокурорского реагирования нет.",
 });
 PROFILE_COMPLAINTS.territorial = [
-  territorialComplaint(1, "Отказ в предоставлении земельного участка", "Алексей Морозов", "заявитель по земельному вопросу", "Гражданин обратился за предоставлением свободного земельного участка без торгов. Администрация отказала, сославшись на отсутствие оснований, но не указала конкретный пункт закона и не приложила материалы проверки.", "Проверить законность отказа и обязать администрацию предоставить участок.", "accept",
-    [{label:"Заявление о предоставлении участка",text:"Заявитель просит предоставить участок без торгов. В заявлении указаны цель использования и кадастровый квартал."},{label:"Письменный отказ администрации",text:"В отказе приведена общая ссылка на Земельный кодекс РФ без указания конкретного основания и фактических обстоятельств."},{label:"Схема расположения участка",text:"Схема позволяет определить местоположение, но сама по себе не подтверждает возможность предоставления участка без торгов."}],
-    {label:"Материалы земельного дела",text:"Дополнительный запрос позволит получить заключения профильных подразделений, сведения о правах третьих лиц, территориальной зоне и применённой процедуре."},
-    "Жалобу принять к рассмотрению: истребовать земельное дело и проверить, имелось ли предусмотренное законом основание отказа. Не предрешать предоставление участка: решение принимает уполномоченный орган, а прокурор оценивает законность его действий.", PROFILE_PORTRAITS.citizenMan),
-  territorialComplaint(2, "Отказ многодетной семье в предоставлении участка", "Елена Соколова", "мать троих несовершеннолетних детей", "Многодетная семья подала заявление о бесплатном предоставлении земельного участка. Администрация отказала, сославшись на неполный пакет документов, хотя часть сведений уже имелась в государственных информационных системах.", "Проверить отказ и соблюдение регионального порядка предоставления земли многодетным семьям.", "accept",
-    [{label:"Удостоверение многодетной семьи",text:"Документ подтверждает статус семьи на дату обращения."},{label:"Заявление и опись документов",text:"В описи указаны документы, приложенные к заявлению, и дата его регистрации."},{label:"Решение администрации",text:"Отказ ссылается на отсутствие сведений о составе семьи, но не объясняет, почему эти сведения нельзя было получить межведомственно."}],
-    {label:"Региональный порядок",text:"Нужно проверить закон субъекта РФ и муниципальный порядок: условия постановки на учёт, очередность, основания отказа и возможные альтернативные меры поддержки."},
-    "Жалобу принять к рассмотрению: сопоставить отказ с пунктом 6 статьи 39.5 ЗК РФ и региональным законом. Само наличие статуса многодетной семьи не означает право на немедленное получение любого выбранного участка."),
-  territorialComplaint(3, "Протечка кровли и бездействие управляющей компании", "Ирина Волкова", "собственник квартиры", "После дождей вода проникает через кровлю в квартиру на последнем этаже. Управляющая организация несколько раз обещала провести ремонт, но акт осмотра и сроки работ жильцу не предоставила.", "Проверить бездействие управляющей организации и добиться устранения протечки.", "accept",
-    [{label:"Заявки в аварийную службу",text:"Заявки зарегистрированы в разные даты, протечка повторяется."},{label:"Фото повреждений",text:"На фотографиях видны мокрые пятна на потолке и повреждение отделки."},{label:"Ответ управляющей компании",text:"Компания сообщает о включении ремонта в план, но не прикладывает акт осмотра и график работ."}],
-    {label:"Договор управления и акт осмотра",text:"Запросить договор управления, сведения о содержании общего имущества, журнал заявок и акт обследования кровли."},
-    "Жалобу принять к рассмотрению: проверить обязанности управляющей организации по содержанию общего имущества и фактическое реагирование. При наличии оснований принять меры прокурорского реагирования; вопросы государственного жилищного надзора учитывать в пределах компетенции ГЖИ."),
-  territorialComplaint(4, "Задержка выплаты заработной платы", "Дмитрий Кузнецов", "работник муниципального предприятия", "Работодатель задерживает заработную плату за два месяца. В бухгалтерии устно сообщают о нехватке средств, письменного ответа работник не получил.", "Проверить соблюдение сроков выплаты зарплаты и принять меры для погашения задолженности.", "accept",
-    [{label:"Трудовой договор",text:"В договоре закреплены даты выплаты заработной платы дважды в месяц."},{label:"Расчётные листки",text:"Листки подтверждают начисление, но перечисление за два периода отсутствует."},{label:"Выписка по счёту",text:"Банковская выписка не содержит поступлений от работодателя за спорные даты."}],
-    {label:"Платёжные ведомости и сведения о задолженности",text:"Дополнительно запросить ведомости, реестр перечислений, данные о количестве работников и сроке задержки."},
-    "Жалобу принять к рассмотрению: проверить сроки выплаты и размер долга, рассчитать компенсацию за задержку. Уголовно-правовую оценку давать только при наличии предусмотренных законом признаков, а не автоматически.", PROFILE_PORTRAITS.citizenMan),
-  territorialComplaint(5, "Предположительно незаконное увольнение", "Мария Белова", "бывший работник организации", "Работницу уволили за прогул. Она утверждает, что в спорный день находилась на больничном, а сведения об электронном листке нетрудоспособности работодателю были доступны.", "Проверить законность увольнения и соблюдение трудовой процедуры.", "accept",
-    [{label:"Приказ об увольнении",text:"Основание увольнения указано как прогул, дата приказа совпадает с окончанием рабочего дня."},{label:"Сведения об электронном больничном",text:"Электронный листок нетрудоспособности охватывает спорную дату."},{label:"Запрос объяснений",text:"В материалах работодателя нет подтверждения надлежащего запроса объяснений и акта об отказе."}],
-    {label:"Табель и личное дело",text:"Запросить табель, документы о дисциплинарном проступке, переписку, сведения об ЭЛН и доказательства соблюдения процедуры."},
-    "Жалобу принять к рассмотрению: проверить наличие прогула и соблюдение статей 192–193 ТК РФ. Прокуратура не восстанавливает работника на работе собственным постановлением; при необходимости разъясняется судебный способ защиты."),
+  {
+    ...territorialComplaint(1, "Информация на интернет-сайте", "Мать несовершеннолетнего ребёнка", "мать ребёнка", "Мой ребенок все утро рассказывал мне гадости про русских солдат, спросила его, откуда он это взял, он дал телефон и показал сайт Дискредитацияармии.рф, прошу принять меры.", "Проверить содержание указанной страницы, зафиксировать её осмотр и направить материалы по установленному маршруту.", "accept",
+      [
+        { label: "Страница сайта «Дискредитацияармии.рф»", text: "Материал для осмотра интернет-страницы. При фиксации необходимо отразить адрес страницы, дату и время доступа, заголовок, доступное содержание и сведения, позволяющие воспроизвести осмотр. Содержание в игре представлено как исследуемый материал, а не как заранее установленный юридический вывод." },
+        { label: "Письменные объяснения заявителя", text: "Мать сообщает, что ребёнок показал ей сайт на телефоне и объяснил, что именно оттуда узнал сведения о российских военнослужащих. Просит провести проверку и принять предусмотренные законом меры." }
+      ],
+      { label: "Сведения об интернет-странице", text: "Дополнительный материал может содержать сведения о доступности страницы, её адресе и технических обстоятельствах обнаружения. Осмотр страницы и оценка её содержания должны быть зафиксированы отдельно." },
+      "После принятия обращения необходимо составить акт осмотра интернет-сайта и приложение к нему. Затем материалы направляются в прокуратуру субъекта РФ для подготовки заключения, а оттуда — в Генеральную прокуратуру РФ для решения вопроса о реализации полномочий, предусмотренных статьёй 15.3 Федерального закона от 27.07.2006 № 149-ФЗ.", PROFILE_PORTRAITS.citizenWoman),
+    id: "territorial-internet-site",
+    responseAct: "site-inspection",
+    acceptedResponseActs: ["site-inspection"],
+    responseActReason: "Надлежащий первоначальный документ — акт осмотра интернет-сайта с приложением. Не подменяйте осмотр обычным представлением или протестом: сначала необходимо надлежащим образом зафиксировать интернет-страницу.",
+    responseOptions: [
+      { id: "site-inspection", title: "Акт осмотра интернет-сайта и приложение", detail: "Зафиксировать адрес, дату и время доступа, содержание страницы и ход осмотра." }
+    ],
+    responseFollowUps: [
+      { id: "send-to-subject", title: "Направить материалы в прокуратуру субъекта РФ", detail: "Для составления заключения по материалам осмотра.", energyCost: 0, required: true },
+      { id: "send-to-general", title: "Направить материалы в Генеральную прокуратуру РФ", detail: "После подготовки заключения — для решения вопроса о полномочиях по статье 15.3 Федерального закона № 149-ФЗ.", energyCost: 0, required: true, dependsOn: "send-to-subject" }
+    ]
+  },
+  {
+    ...territorialComplaint(2, "Увольнение беременной работницы", "Беременная женщина", "бывший менеджер коммерческой организации", "Работала в компании менеджером, начальник еще при устройстве сказал, что нужно выбирать между семьей и карьерой, так что если забеременеешь — увольняйся. Я все же решила завести ребенка, через неделю после того, как об этом узнал начальник, я была уволена в связи с нарушением трудовой дисциплины: он всегда отпускал работников пораньше, думала, это от доброты, а он в это время фиксировал отсутствие на рабочем месте. Прошу, примите меры, помогите мне и ребенку.", "Проверить обстоятельства увольнения, дать оценку действиям работодателя, рассмотреть вопрос о мерах прокурорского реагирования и разъяснить заявительнице способы защиты прав.", "accept",
+      [
+        { label: "Приказ об увольнении", text: "Работница уволена по подп. «а» п. 6 ч. 1 ст. 81 ТК РФ. Формулировка приказа: «по причине отсутствия на рабочем месте без уважительных причин более четырех часов подряд в течение рабочего дня»." },
+        { label: "Письменные объяснения заявителя", text: "Заявительница сообщает о беременности, разговоре с руководителем о выборе между семьёй и карьерой и увольнении через неделю после того, как начальник узнал о беременности. По её словам, работодатель регулярно отпускал сотрудников раньше, а затем фиксировал их отсутствие на рабочем месте." }
+      ],
+      { label: "Табель рабочего времени и документы о дисциплинарном проступке", text: "Дополнительно можно запросить табель, график работы, документы о фиксации отсутствия, запрос объяснений и материалы, на основании которых издан приказ об увольнении." },
+      "Основные варианты по сценарию: внесение представления либо обращение в суд в порядке статьи 45 ГПК РФ. Судебный маршрут требует дополнительных временных ресурсов. Отдельно следует направить материалы в Следственный комитет РФ для решения вопроса об уголовном преследовании и разъяснить заявительнице её права.", PROFILE_PORTRAITS.citizenWoman),
+    id: "territorial-pregnant-dismissal",
+    responseAct: "representation",
+    acceptedResponseActs: ["representation", "court-45"],
+    responseActReason: "Оба основных маршрута предусмотрены учебным сценарием: представление об устранении нарушений либо обращение прокурора в суд в порядке статьи 45 ГПК РФ. Судебный вариант требует больше времени. Дополнительные действия — направление материалов в Следственный комитет РФ и разъяснение прав — выполняются отдельно.",
+    responseOptions: [
+      { id: "representation", title: "Внести представление", detail: "Поставить вопрос об устранении выявленных нарушений трудовых прав.", energyCost: 0 },
+      { id: "court-45", title: "Обратиться в суд по статье 45 ГПК РФ", detail: "Судебный маршрут защиты прав заявительницы. Требует дополнительных временных ресурсов.", energyCost: 3 }
+    ],
+    responseFollowUps: [
+      { id: "send-to-ic", title: "Направить материалы в Следственный комитет РФ", detail: "Для решения вопроса об уголовном преследовании.", energyCost: 1, required: true },
+      { id: "explain-rights", title: "Разъяснить заявительнице её права", detail: "Сообщить о доступных способах защиты трудовых и связанных с беременностью прав.", energyCost: 0, required: true }
+    ]
+  },
+  {
+    ...territorialComplaint(3, "Травмоопасная детская площадка", "Мужчина — местный житель", "работник, житель улицы Пушкина", "Детская площадка на улице Пушкина находится в плохом состоянии. Соседский мальчик травмировался, играя на ней с друзьями. Думаю, че ж за скотство такое, что площадку нормально сделать не могут, пошел в администрацию. Администрация на мое обращение не реагирует.", "Проверить бездействие администрации и принять меры для устранения нарушений требований безопасности на детской площадке.", "accept",
+      [
+        { label: "Фотография детской площадки", text: "На фотографии видно отсутствие необходимых креплений у качелей. Состояние оборудования создаёт риск травмирования детей и требует проверки ответственным органом." },
+        { label: "Текст обращения в администрацию города", text: "Заявитель ранее обратился в администрацию с просьбой привести площадку на улице Пушкина в безопасное состояние. По его словам, ответных мер после обращения не последовало." }
+      ],
+      { label: "Ответ администрации и документы о содержании площадки", text: "Дополнительно можно истребовать сведения о владельце и ответственном за содержание оборудования лице, акты осмотра, график обслуживания и меры, принятые после обращения жителя." },
+      "При подтверждении бездействия и нарушений требований безопасности надлежащий акт реагирования по сценарию — представление.", PROFILE_PORTRAITS.citizenMan),
+    id: "territorial-playground",
+    responseAct: "representation",
+    acceptedResponseActs: ["representation"],
+    responseActReason: "Представление направляется органу или должностному лицу, способным устранить нарушения, обеспечить безопасное состояние детской площадки и принять меры к ответственным лицам."
+  },
+  {
+    ...territorialComplaint(4, "Поле конопли рядом с домом культуры", "Женщина — учительница", "учительница городской школы", "Недалеко от дома культуры города выросло большое поле конопли. Мимо этого поля ходит много школьников, некоторые из них пытаются листки сорвать и употребить. Просим принять меры.", "Проверить сведения о произрастании растений, установить правообладателя и ответственных лиц, оценить риски для несовершеннолетних и принять меры реагирования.", "accept",
+      [
+        { label: "Письменные объяснения заявителя", text: "Учительница сообщает о поле рядом с домом культуры и о том, что мимо него ежедневно проходят школьники. В объяснениях приведены кадастровый номер участка и его координаты. В игровом материале эти идентификаторы используются как условные данные сценария." },
+        { label: "Фотография поля", text: "Фотография показывает участок с растительностью, которую заявитель считает коноплёй. Вид растений и правовую оценку необходимо установить в ходе проверки, а не только по заявлению." }
+      ],
+      { label: "Сведения о земельном участке", text: "Дополнительный запрос позволяет проверить кадастровый номер, координаты, правообладателя участка, категорию земли и сведения об использовании территории." },
+      "Основной акт реагирования по сценарию — представление. Дополнительно можно организовать профилактические мероприятия для предупреждения вовлечения несовершеннолетних; они требуют значительных временных ресурсов.", PROFILE_PORTRAITS.citizenWoman),
+    id: "territorial-hemp-field",
+    responseAct: "representation",
+    acceptedResponseActs: ["representation"],
+    responseActReason: "Представление — основной акт реагирования. Помимо него важно организовать профилактические мероприятия с участием компетентных органов и образовательных учреждений, чтобы снизить риск для несовершеннолетних.",
+    responseFollowUps: [
+      { id: "preventive-measures", title: "Организовать профилактические мероприятия", detail: "Провести профилактическую работу с участием школы, администрации и компетентных органов. Это затратное по времени действие.", energyCost: 3, required: false }
+    ]
+  },
+  {
+    ...territorialComplaint(5, "Штрафы в коллективном договоре ООО «Завод»", "Мужчина — работник завода", "столяр на производственном предприятии", "Работаю столяром на заводе. В нашем коллективном договоре сказано про это наказание, даже размеры установлены. Недавно в Интернете прочитал, что это незаконно. Это правда?", "Проверить содержание коллективного договора ООО «Завод» и дать оценку условию о денежном наказании работников.", "accept",
+      [
+        { label: "Письменные объяснения заявителя", text: "Заявитель работает столяром и сообщает, что в коллективном договоре его организации предусмотрено наказание для работников, причём установлены конкретные размеры денежных взысканий. Просит проверить законность такого положения." }
+      ],
+      { label: "Коллективный договор ООО «Завод»", text: "В коллективном договоре содержится положение о денежном наказании работника с установленными размерами взысканий. При изучении документа необходимо определить характер этого положения и сопоставить его с трудовым законодательством." },
+      "После получения и изучения коллективного договора надлежащий акт реагирования по сценарию — протест на противоречащее закону положение коллективного договора.", PROFILE_PORTRAITS.citizenMan),
+    id: "territorial-collective-agreement",
+    responseAct: "protest",
+    acceptedResponseActs: ["protest"],
+    responseActReason: "Протест приносится на противоречащее закону положение коллективного договора. Перед выбором акта необходимо запросить и изучить сам коллективный договор.",
+    intakeQuestion: { prompt: "В какой организации Вы работаете?", answer: "ООО «Завод»." },
+    responseOptions: [
+      { id: "protest", title: "Протест на коллективный договор", detail: "Опротестовать положение коллективного договора, противоречащее трудовому законодательству." }
+    ]
+  },
   territorialComplaint(6, "Не выдают льготное лекарство", "Ольга Никитина", "пациент, имеющий право на льготу", "Врач выписал льготный рецепт на жизненно важный препарат. В аптеке лекарства нет уже несколько недель, сроки обеспечения неоднократно переносили.", "Проверить соблюдение права на льготное лекарственное обеспечение.", "accept",
     [{label:"Льготный рецепт",text:"Рецепт оформлен врачом и действует в указанный период."},{label:"Обращения в аптеку",text:"Заявки зарегистрированы, но препарат не выдан."},{label:"Ответ поликлиники",text:"Медицинская организация сообщает о задержке поставки без конкретной даты обеспечения."}],
     {label:"Сведения о льготной категории и закупке",text:"Установить вид льготы, источник финансирования, ответственный орган, сведения о закупке и наличии препарата."},
@@ -295,6 +363,8 @@ export default function Home() {
   const [complaintDecision, setComplaintDecision] = useState<"accept" | "reject" | null>(null);
   const [responseActDecision, setResponseActDecision] = useState<ResponseAct | null>(null);
   const [responseActDialogClosed, setResponseActDialogClosed] = useState(false);
+  const [completedResponseFollowUps, setCompletedResponseFollowUps] = useState<string[]>([]);
+  const [intakeQuestionAsked, setIntakeQuestionAsked] = useState(false);
   const [openComplaintDoc, setOpenComplaintDoc] = useState<number | null>(null);
   const [reviewedComplaintDocs, setReviewedComplaintDocs] = useState<number[]>([]);
   const [askedReceptionQuestions, setAskedReceptionQuestions] = useState<number[]>([]);
@@ -446,6 +516,8 @@ export default function Home() {
     setComplaintDecision(null);
     setResponseActDecision(null);
     setResponseActDialogClosed(false);
+    setCompletedResponseFollowUps([]);
+    setIntakeQuestionAsked(false);
     setHoursLeft(8);
     setRightsAdvocateMode(nextLocation === "reception" && prosecutorOffice === "executive" && Math.random() < 0.3);
     setExtraRequested(false);
@@ -473,7 +545,7 @@ export default function Home() {
     transport: { x: 89, y: 77 },
   };
   const cityEventSlots: Record<string, number> = {};
-  const territorialEventDistricts = ["central", "central", "residential", "industrial", "industrial", "residential", "residential", "central", "transport", "residential", "central"];
+  const territorialEventDistricts = ["central", "industrial", "residential", "residential", "industrial", "residential", "residential", "central", "transport", "residential", "central"];
   const cityEvents = registryRows.map(({ item, index, status }) => {
     const eventText = `${item.id} ${item.title} ${item.situation}`.toLowerCase();
     const districtId = prosecutorOffice === "territorial" ? territorialEventDistricts[index % territorialEventDistricts.length] : /дорог|транспорт|перевоз|станц|железнодорож|автобус|пут[ьи]/.test(eventText) ? "transport"
@@ -502,7 +574,7 @@ export default function Home() {
   const cityOpenAppeals = Math.max(registryRows.filter(({ status }) => status !== "rejected").length, pendingComplaints);
   const cityStatusLabel = (value: number) => value >= 75 ? "Устойчиво" : value >= 55 ? "Под наблюдением" : "Требует внимания";
   const filteredRegistryRows = registryRows.filter(({item,index,status}) => { const q=registrySearch.trim().toLowerCase(); const matches=!q || item.applicant.toLowerCase().includes(q) || item.title.toLowerCase().includes(q) || String(index+1).padStart(2,"0").includes(q); return matches && (registryStatus === "all" || status === registryStatus); });
-  const openRegistryComplaint = (index:number) => { setFolderOpened(false); setComplaintIndex(index); setComplaintDecision(null); setResponseActDecision(null); setResponseActDialogClosed(false); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setAskedReceptionQuestions([]); setActiveReceptionQuestion(null); setReceptionQuestionsDialogOpen(false); setExtraRequested(false); setRegistryOpen(false); setLocation("reception"); };
+  const openRegistryComplaint = (index:number) => { setFolderOpened(false); setComplaintIndex(index); setComplaintDecision(null); setResponseActDecision(null); setResponseActDialogClosed(false); setCompletedResponseFollowUps([]); setIntakeQuestionAsked(false); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setAskedReceptionQuestions([]); setActiveReceptionQuestion(null); setReceptionQuestionsDialogOpen(false); setExtraRequested(false); setRegistryOpen(false); setLocation("reception"); };
   const complaintAssetKey = location === "reception" && currentComplaint ? `${complaintIndex}|${currentComplaint.background}|${isWrittenReception ? "written" : currentComplaint.portrait}` : null;
   const [loadedComplaintAssetKey, setLoadedComplaintAssetKey] = useState<string | null>(null);
   useEffect(() => {
@@ -521,14 +593,27 @@ export default function Home() {
   const specializationLabel = selectedOffice?.title ?? "Территориальная прокуратура";
   const complaintDocuments = extraRequested ? [...currentComplaint.documents, currentComplaint.extra] : currentComplaint.documents;
   const isLandDialogue = prosecutorOffice === "territorial" && currentComplaint.id === "territorial-complaint-1" && !isWrittenReception;
-  const receptionDialogueReady = !isLandDialogue || askedReceptionQuestions.length >= 2;
+  const isIntakeQuestionDialogue = Boolean(currentComplaint.intakeQuestion);
+  const receptionDialogueReady = isLandDialogue
+    ? askedReceptionQuestions.length >= 2
+    : !isIntakeQuestionDialogue || (intakeQuestionAsked && extraRequested);
+  const responseActOptions = currentComplaint.responseOptions ?? [
+    { id: "protest" as ResponseAct, title: "Протест", detail: "На противоречащий закону правовой акт." },
+    { id: "representation" as ResponseAct, title: "Представление", detail: "Об устранении нарушений закона, причин и условий." }
+  ];
+  const responseActIsCorrect = responseActDecision
+    ? currentComplaint.acceptedResponseActs?.includes(responseActDecision) ?? responseActDecision === currentComplaint.responseAct
+    : false;
+  const requiredResponseFollowUps = (currentComplaint.responseFollowUps ?? []).filter((action) => action.required);
+  const requiredFollowUpEnergy = requiredResponseFollowUps.reduce((total, action) => total + action.energyCost, 0);
+  const responseFollowUpsReady = requiredResponseFollowUps.every((action) => completedResponseFollowUps.includes(action.id));
   const askReceptionQuestion = (index: number) => {
     if (!isLandDialogue || complaintDecision || gameOver) return;
     setActiveReceptionQuestion(index);
     setAskedReceptionQuestions((items) => items.includes(index) ? items : [...items, index]);
   };
   const decideComplaint = (decision: "accept" | "reject") => {
-    if (complaintDecision || hoursLeft < 1 || gameOver) return;
+    if (complaintDecision || hoursLeft < 1 || gameOver || (decision === "accept" && hoursLeft < 1 + requiredFollowUpEnergy)) return;
     const remaining = Math.max(0, hoursLeft - 1);
     const good = decision === currentComplaint.correct;
     const bribeAccepted = Boolean(currentComplaint.bribe && decision === "accept");
@@ -551,17 +636,36 @@ export default function Home() {
   };
   const chooseResponseAct = (act: ResponseAct) => {
     if (responseActDecision || complaintDecision !== "accept" || prosecutorOffice !== "territorial" || gameOver) return;
+    const option = responseActOptions.find((item) => item.id === act);
+    const energyCost = option?.energyCost ?? 0;
+    if (hoursLeft < energyCost + requiredFollowUpEnergy) return;
+    if (energyCost > 0) setHoursLeft((value) => value - energyCost);
+    setCompletedResponseFollowUps([]);
     setResponseActDecision(act);
     setRegistryDecisions((records) => ({...records,[currentComplaint.id]:{decision:"accept",responseAct:act}}));
     setResponseActDialogClosed(false);
-    if (hoursLeft === 0) endDay("accept");
+    if (hoursLeft === energyCost && (currentComplaint.responseFollowUps ?? []).length === 0) endDay("accept");
+  };
+
+  const completeResponseFollowUp = (id: string) => {
+    const action = currentComplaint.responseFollowUps?.find((item) => item.id === id);
+    if (!action || completedResponseFollowUps.includes(id) || hoursLeft < action.energyCost) return;
+    if (action.dependsOn && !completedResponseFollowUps.includes(action.dependsOn)) return;
+    if (action.energyCost > 0) setHoursLeft((value) => value - action.energyCost);
+    setCompletedResponseFollowUps((items) => [...items, id]);
+    const event = { title: action.title, text: action.detail, tone: "good" as const };
+    const nextEvents = [...consequenceQueue, event];
+    setConsequenceQueue(nextEvents);
+    const allRequiredDone = requiredResponseFollowUps.every((item) => completedResponseFollowUps.includes(item.id) || item.id === id);
+    if (hoursLeft === action.energyCost && allRequiredDone) endDay("accept", nextEvents);
   };
 
   const nextComplaint = () => {
     if (!complaintDecision || dayEnded || gameOver) return;
-    if (prosecutorOffice === "territorial" && complaintDecision === "accept" && !responseActDecision) return;
+    if (hoursLeft === 0) { endDay(complaintDecision); return; }
+    if (prosecutorOffice === "territorial" && complaintDecision === "accept" && (!responseActDecision || !responseFollowUpsReady)) return;
     if (complaintIndex >= activeComplaints.length - 1) endDay(complaintDecision);
-    else { setFolderOpened(false); setComplaintIndex((value) => value + 1); setComplaintDecision(null); setResponseActDecision(null); setResponseActDialogClosed(false); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setAskedReceptionQuestions([]); setActiveReceptionQuestion(null); setExtraRequested(false); }
+    else { setFolderOpened(false); setComplaintIndex((value) => value + 1); setComplaintDecision(null); setResponseActDecision(null); setResponseActDialogClosed(false); setCompletedResponseFollowUps([]); setIntakeQuestionAsked(false); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setAskedReceptionQuestions([]); setActiveReceptionQuestion(null); setExtraRequested(false); }
   };
 
   const endDay = (resolvedDecision?: "accept" | "reject", eventsOverride?: ConsequenceEvent[], repeatOverride = false) => {
@@ -574,6 +678,8 @@ export default function Home() {
       setComplaintDecision(null);
       setResponseActDecision(null);
       setResponseActDialogClosed(false);
+      setCompletedResponseFollowUps([]);
+      setIntakeQuestionAsked(false);
       setOpenComplaintDoc(null);
       setReviewedComplaintDocs([]);
       setAskedReceptionQuestions([]);
@@ -596,6 +702,8 @@ export default function Home() {
     setComplaintDecision(null);
     setResponseActDecision(null);
     setResponseActDialogClosed(false);
+    setCompletedResponseFollowUps([]);
+    setIntakeQuestionAsked(false);
     setOpenComplaintDoc(null);
     setReviewedComplaintDocs([]);
     setAskedReceptionQuestions([]);
@@ -902,7 +1010,7 @@ export default function Home() {
 
         {location === "reception" ? <section className={`complaint-area ${isWrittenReception ? "written-complaints-mode" : ""}`} style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.15), rgba(7,18,20,.62)), url(${currentComplaint.background})` }}>
           <div className="complaint-meta"><span>{isWrittenReception ? "ОТДЕЛ ПИСЬМЕННЫХ ОБРАЩЕНИЙ" : "ПРИЁМНАЯ ГРАЖДАН"} · ОБРАЩЕНИЕ {String(complaintIndex + 1).padStart(2, "0")} / {activeComplaints.length}</span><span>{isWrittenReception ? "ТОЛЬКО ПИСЬМЕННАЯ ЖАЛОБА" : "ЛИЧНЫЙ ПРИЁМ"} · ОСТАЛОСЬ {hoursLeft} ЧАС.</span></div>
-          <div className="complaint-layout">{isWrittenReception ? <div className="written-complaint-stamp" aria-label="Письменная жалоба"><FileText size={28} /><span>ПИСЬМЕННАЯ<br />ЖАЛОБА</span><small>ЗАЯВИТЕЛЬ НЕ ПРИСУТСТВУЕТ</small></div> : <div className="complaint-portrait"><img src={currentComplaint.portrait} alt="Обезличенный портрет заявителя" /><div><span>{currentComplaint.applicant}</span><b>{currentComplaint.role}</b></div></div>}<article className="complaint-card"><div className="eyebrow"><MessageSquare size={14} /> {isWrittenReception ? "ТЕКСТ ПИСЬМЕННОГО ОБРАЩЕНИЯ" : "РАССКАЗ ЗАЯВИТЕЛЯ"}</div><h2>{currentComplaint.title}</h2><p className="complaint-speech">{isWrittenReception ? currentComplaint.situation : `«${currentComplaint.situation}»`}</p>{isLandDialogue && <button type="button" className="reception-questions-launch" onClick={() => setReceptionQuestionsDialogOpen(true)}><MessageSquare size={16} /><span><b>Задать уточняющие вопросы</b><small>Задано {askedReceptionQuestions.length} из {LAND_RECEPTION_QUESTIONS.length} · минимум 2 для решения</small></span><ChevronRight size={17} /></button>}{isLandDialogue && receptionQuestionsDialogOpen && <div className="reception-questions-overlay"><section className="reception-questions-dialog" role="dialog" aria-modal="true" aria-labelledby="reception-questions-title"><button type="button" className="reception-questions-close" aria-label="Закрыть" onClick={() => setReceptionQuestionsDialogOpen(false)}>×</button><div className="reception-questions-mark"><MessageSquare size={24}/></div><div className="reception-dialogue-heading"><span id="reception-questions-title">Уточняющие вопросы прокурора</span><small>Выберите вопросы, чтобы уточнить обстоятельства обращения. Задано {askedReceptionQuestions.length} из {LAND_RECEPTION_QUESTIONS.length}.</small></div><div className="reception-question-list">{LAND_RECEPTION_QUESTIONS.map((question,index)=><button key={question.prompt} type="button" className={`reception-question ${activeReceptionQuestion===index?"active":""} ${askedReceptionQuestions.includes(index)?"asked":""}`} onClick={()=>askReceptionQuestion(index)}><span>{String(index+1).padStart(2,"0")}</span>{question.prompt}{askedReceptionQuestions.includes(index)&&<Check size={14}/>}</button>)}</div>{activeReceptionQuestion!==null&&<div className="reception-answer" aria-live="polite"><span>ОТВЕТ ЗАЯВИТЕЛЯ</span><p>«{LAND_RECEPTION_QUESTIONS[activeReceptionQuestion].answer}»</p><div className="reception-finding"><strong>ЗАМЕТКА ПО ДЕЛУ</strong><p>{LAND_RECEPTION_QUESTIONS[activeReceptionQuestion].finding}</p></div></div>}<div className="reception-questions-footer"><span>{receptionDialogueReady?"Достаточно сведений для принятия решения":"Для продолжения задайте минимум два вопроса"}</span><button type="button" className="response-act-continue" onClick={()=>setReceptionQuestionsDialogOpen(false)}>Вернуться к обращению <ChevronRight size={15}/></button></div></section></div>}<div className="complaint-request"><span>ПРОСЬБА</span><p>{currentComplaint.request}</p></div><div className="complaint-documents"><div className="evidence-label"><span>ЗАПРОСИТЬ ДОКУМЕНТЫ</span><small>ИЗУЧЕНО: {reviewedComplaintDocs.length}/{complaintDocuments.length}</small></div><div className="material-tabs">{complaintDocuments.map((document, index) => <button key={document.label} className={reviewedComplaintDocs.includes(index) ? "reviewed" : ""} onClick={() => requestComplaintDocument(index)}><FileText size={13} /> {document.label}{reviewedComplaintDocs.includes(index) && <Check size={12} />}</button>)}</div>{openComplaintDoc !== null && <div className="material-content"><span>{complaintDocuments[openComplaintDoc].label}</span><p>{complaintDocuments[openComplaintDoc].text}</p></div>}</div><button className="extra-request" disabled={extraRequested || hoursLeft < 2 || !!complaintDecision} onClick={requestExtraMaterial}><FileText size={14} /><span>{extraRequested ? "Дополнительный материал запрошен" : "Запросить дополнительный материал"}</span><small>{extraRequested ? "−2 часа смены" : "−2 часа · ответ из ведомства"}</small></button>{complaintDecision ? <div className={`complaint-result ${complaintDecision === currentComplaint.correct ? "good" : "bad"}`}><strong>{complaintDecision === currentComplaint.correct ? "РЕШЕНИЕ ОБОСНОВАНО" : "ТРЕБУЕТСЯ ВНИМАТЕЛЬНОСТЬ"}</strong><p>{currentComplaint.outcome}</p></div> : <div className="complaint-actions"><button className="complaint-action reject" disabled={reviewedComplaintDocs.length < complaintDocuments.length || hoursLeft < 1 || !receptionDialogueReady} onClick={() => decideComplaint("reject")}><X size={18} /><span><b>Отказать</b><small>{reviewedComplaintDocs.length < complaintDocuments.length ? "Сначала изучите документы" : !receptionDialogueReady ? "Задайте минимум два вопроса" : hoursLeft < 1 ? "Рабочий день завершён" : "−1 час · недостаточно оснований"}</small></span></button><button className="complaint-action accept" disabled={reviewedComplaintDocs.length < complaintDocuments.length || hoursLeft < 1 || !receptionDialogueReady} onClick={() => decideComplaint("accept")}><Check size={18} /><span><b>Принять жалобу</b><small>{reviewedComplaintDocs.length < complaintDocuments.length ? "Сначала изучите документы" : !receptionDialogueReady ? "Задайте минимум два вопроса" : hoursLeft < 1 ? "Рабочий день завершён" : "−1 час · направить на проверку"}</small></span></button></div>}{complaintDecision === "accept" && prosecutorOffice === "territorial" && !responseActDialogClosed && <div className="response-act-overlay"><section className="response-act-dialog" role="dialog" aria-modal="true" aria-labelledby="response-act-title"><div className="response-act-dialog-mark"><Scale size={24} /></div><div className="response-act-heading"><span id="response-act-title">Выбор акта прокурорского реагирования</span><small>Жалоба принята к рассмотрению. Определите надлежащий акт реагирования.</small></div><p className="response-act-legal-note">Выбор оценивается с учётом характера установленного нарушения и материалов обращения.</p>{!responseActDecision ? <div className="response-act-options"><button className="response-act-option" onClick={() => chooseResponseAct("protest")}><b>Протест</b><small>На противоречащий закону правовой акт</small></button><button className="response-act-option" onClick={() => chooseResponseAct("representation")}><b>Представление</b><small>Об устранении нарушений закона, причин и условий</small></button></div> : <div className={`response-act-feedback ${responseActDecision === currentComplaint.responseAct ? "good" : "bad"}`}><strong>{currentComplaint.responseAct ? (responseActDecision === currentComplaint.responseAct ? "АКТ ПОДХОДИТ" : "АКТ НЕ ПОДХОДИТ") : "АКТ РЕАГИРОВАНИЯ НЕ ТРЕБУЕТСЯ"}</strong><p>{currentComplaint.responseActReason}</p><button className="response-act-continue" onClick={() => setResponseActDialogClosed(true)}>Продолжить <ChevronRight size={15} /></button></div>}</section></div>}{complaintDecision && (prosecutorOffice !== "territorial" || complaintDecision !== "accept" || responseActDecision) && <button className="next-button" onClick={nextComplaint}>{complaintIndex === activeComplaints.length - 1 ? "Завершить день" : "Следующее заявление"} <ChevronRight size={17} /></button>}</article></div>
+          <div className="complaint-layout">{isWrittenReception ? <div className="written-complaint-stamp" aria-label="Письменная жалоба"><FileText size={28} /><span>ПИСЬМЕННАЯ<br />ЖАЛОБА</span><small>ЗАЯВИТЕЛЬ НЕ ПРИСУТСТВУЕТ</small></div> : <div className="complaint-portrait"><img src={currentComplaint.portrait} alt="Обезличенный портрет заявителя" /><div><span>{currentComplaint.applicant}</span><b>{currentComplaint.role}</b></div></div>}<article className="complaint-card"><div className="eyebrow"><MessageSquare size={14} /> {isWrittenReception ? "ТЕКСТ ПИСЬМЕННОГО ОБРАЩЕНИЯ" : "РАССКАЗ ЗАЯВИТЕЛЯ"}</div><h2>{currentComplaint.title}</h2><p className="complaint-speech">{isWrittenReception ? currentComplaint.situation : `«${currentComplaint.situation}»`}</p>{isLandDialogue && <button type="button" className="reception-questions-launch" onClick={() => setReceptionQuestionsDialogOpen(true)}><MessageSquare size={16} /><span><b>Задать уточняющие вопросы</b><small>Задано {askedReceptionQuestions.length} из {LAND_RECEPTION_QUESTIONS.length} · минимум 2 для решения</small></span><ChevronRight size={17} /></button>}{isLandDialogue && receptionQuestionsDialogOpen && <div className="reception-questions-overlay"><section className="reception-questions-dialog" role="dialog" aria-modal="true" aria-labelledby="reception-questions-title"><button type="button" className="reception-questions-close" aria-label="Закрыть" onClick={() => setReceptionQuestionsDialogOpen(false)}>×</button><div className="reception-questions-mark"><MessageSquare size={24}/></div><div className="reception-dialogue-heading"><span id="reception-questions-title">Уточняющие вопросы прокурора</span><small>Выберите вопросы, чтобы уточнить обстоятельства обращения. Задано {askedReceptionQuestions.length} из {LAND_RECEPTION_QUESTIONS.length}.</small></div><div className="reception-question-list">{LAND_RECEPTION_QUESTIONS.map((question,index)=><button key={question.prompt} type="button" className={`reception-question ${activeReceptionQuestion===index?"active":""} ${askedReceptionQuestions.includes(index)?"asked":""}`} onClick={()=>askReceptionQuestion(index)}><span>{String(index+1).padStart(2,"0")}</span>{question.prompt}{askedReceptionQuestions.includes(index)&&<Check size={14}/>}</button>)}</div>{activeReceptionQuestion!==null&&<div className="reception-answer" aria-live="polite"><span>ОТВЕТ ЗАЯВИТЕЛЯ</span><p>«{LAND_RECEPTION_QUESTIONS[activeReceptionQuestion].answer}»</p><div className="reception-finding"><strong>ЗАМЕТКА ПО ДЕЛУ</strong><p>{LAND_RECEPTION_QUESTIONS[activeReceptionQuestion].finding}</p></div></div>}<div className="reception-questions-footer"><span>{receptionDialogueReady?"Достаточно сведений для принятия решения":"Для продолжения задайте минимум два вопроса"}</span><button type="button" className="response-act-continue" onClick={()=>setReceptionQuestionsDialogOpen(false)}>Вернуться к обращению <ChevronRight size={15}/></button></div></section></div>}{isIntakeQuestionDialogue && <div className="intake-question-card"><span>УТОЧНЕНИЕ ПРОКУРОРА</span><button type="button" onClick={() => setIntakeQuestionAsked(true)} disabled={intakeQuestionAsked || !!complaintDecision}><MessageSquare size={15}/>{intakeQuestionAsked ? "Вопрос задан" : currentComplaint.intakeQuestion?.prompt}</button>{intakeQuestionAsked && <p>Заявитель отвечает: «{currentComplaint.intakeQuestion?.answer}» Теперь можно запросить коллективный договор ООО «Завод».</p>}</div>}<div className="complaint-request"><span>ПРОСЬБА</span><p>{currentComplaint.request}</p></div><div className="complaint-documents"><div className="evidence-label"><span>ЗАПРОСИТЬ ДОКУМЕНТЫ</span><small>ИЗУЧЕНО: {reviewedComplaintDocs.length}/{complaintDocuments.length}</small></div><div className="material-tabs">{complaintDocuments.map((document, index) => <button key={document.label} className={reviewedComplaintDocs.includes(index) ? "reviewed" : ""} onClick={() => requestComplaintDocument(index)}><FileText size={13} /> {document.label}{reviewedComplaintDocs.includes(index) && <Check size={12} />}</button>)}</div>{openComplaintDoc !== null && <div className="material-content"><span>{complaintDocuments[openComplaintDoc].label}</span><p>{complaintDocuments[openComplaintDoc].text}</p></div>}</div><button className="extra-request" disabled={extraRequested || hoursLeft < 2 || !!complaintDecision || (isIntakeQuestionDialogue && !intakeQuestionAsked)} onClick={requestExtraMaterial}><FileText size={14} /><span>{extraRequested ? (currentComplaint.intakeQuestion ? "Коллективный договор получен" : "Дополнительный материал запрошен") : isIntakeQuestionDialogue ? (intakeQuestionAsked ? "Запросить коллективный договор" : "Сначала уточните организацию") : "Запросить дополнительный материал"}</span><small>{extraRequested ? "Документ добавлен в папку" : "−2 часа · ответ из ведомства"}</small></button>{complaintDecision ? <div className={`complaint-result ${complaintDecision === currentComplaint.correct ? "good" : "bad"}`}><strong>{complaintDecision === currentComplaint.correct ? "РЕШЕНИЕ ОБОСНОВАНО" : "ТРЕБУЕТСЯ ВНИМАТЕЛЬНОСТЬ"}</strong><p>{currentComplaint.outcome}</p></div> : <div className="complaint-actions"><button className="complaint-action reject" disabled={reviewedComplaintDocs.length < complaintDocuments.length || hoursLeft < 1 || !receptionDialogueReady} onClick={() => decideComplaint("reject")}><X size={18} /><span><b>Отказать</b><small>{reviewedComplaintDocs.length < complaintDocuments.length ? "Сначала изучите документы" : !receptionDialogueReady ? (isIntakeQuestionDialogue ? "Уточните организацию и запросите договор" : "Задайте минимум два вопроса") : hoursLeft < 1 ? "Рабочий день завершён" : "−1 час · недостаточно оснований"}</small></span></button><button className="complaint-action accept" disabled={reviewedComplaintDocs.length < complaintDocuments.length || hoursLeft < 1 + requiredFollowUpEnergy || !receptionDialogueReady} onClick={() => decideComplaint("accept")}><Check size={18} /><span><b>Принять жалобу</b><small>{reviewedComplaintDocs.length < complaintDocuments.length ? "Сначала изучите документы" : !receptionDialogueReady ? (isIntakeQuestionDialogue ? "Уточните организацию и запросите договор" : "Задайте минимум два вопроса") : hoursLeft < 1 + requiredFollowUpEnergy ? "Недостаточно времени для обязательных действий" : "−1 час · направить на проверку"}</small></span></button></div>}{complaintDecision === "accept" && prosecutorOffice === "territorial" && !responseActDialogClosed && <div className="response-act-overlay"><section className="response-act-dialog" role="dialog" aria-modal="true" aria-labelledby="response-act-title"><div className="response-act-dialog-mark"><Scale size={24} /></div><div className="response-act-heading"><span id="response-act-title">Выбор акта прокурорского реагирования</span><small>Жалоба принята к рассмотрению. Определите надлежащий акт и выполните необходимые последующие действия.</small></div><p className="response-act-legal-note">Выбор оценивается с учётом характера установленного нарушения и материалов обращения.</p>{!responseActDecision ? <div className="response-act-options">{responseActOptions.map((option) => <button key={option.id} className="response-act-option" disabled={hoursLeft < (option.energyCost ?? 0) + requiredFollowUpEnergy} onClick={() => chooseResponseAct(option.id)}><b>{option.title}</b><small>{option.detail}{option.energyCost ? ` · −${option.energyCost} часа` : ""}</small></button>)}</div> : <div className={`response-act-feedback ${responseActIsCorrect ? "good" : "bad"}`}><strong>{responseActIsCorrect ? "ВЫБОР СООТВЕТСТВУЕТ СЦЕНАРИЮ" : "ПРОВЕРЬТЕ ВЫБРАННОЕ РЕШЕНИЕ"}</strong><p>{currentComplaint.responseActReason}</p>{(currentComplaint.responseFollowUps ?? []).length > 0 && <div className="response-followups"><span>ПОСЛЕДУЮЩИЕ ДЕЙСТВИЯ</span>{currentComplaint.responseFollowUps?.map((action) => { const done = completedResponseFollowUps.includes(action.id); const waiting = Boolean(action.dependsOn && !completedResponseFollowUps.includes(action.dependsOn)); return <button key={action.id} type="button" className={`response-followup ${done ? "done" : ""}`} disabled={done || waiting || hoursLeft < action.energyCost} onClick={() => completeResponseFollowUp(action.id)}><span><b>{action.title}</b><small>{action.detail}</small><em>{waiting ? "Сначала выполните предыдущий этап" : done ? "Выполнено" : action.energyCost ? `−${action.energyCost} часа смены` : "Без затрат времени"}{action.required ? " · обязательно" : " · дополнительно"}</em></span><strong>{done ? "✓" : waiting ? "…" : "→"}</strong></button>; })}</div>}<button className="response-act-continue" disabled={!responseFollowUpsReady} onClick={() => setResponseActDialogClosed(true)}>{responseFollowUpsReady ? "Продолжить" : "Выполните обязательные действия"} <ChevronRight size={15} /></button></div>}</section></div>}{complaintDecision && (prosecutorOffice !== "territorial" || complaintDecision !== "accept" || (responseActDecision && responseFollowUpsReady)) && <button className="next-button" onClick={nextComplaint}>{complaintIndex === activeComplaints.length - 1 ? "Завершить день" : "Следующее заявление"} <ChevronRight size={17} /></button>}</article></div>
         </section> : <section className="case-area">
           <div className="case-meta"><span>МАТЕРИАЛ № {current?.number ?? "—"}</span><span>ДЕЛО {String(Math.min(caseIndex + 1, activeCases.length)).padStart(2, "0")} / {activeCases.length}</span></div>
           <div className="progress-track"><div style={{ width: `${(progress / activeCases.length) * 100}%` }} /></div>
