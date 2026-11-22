@@ -1,5 +1,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, BadgeCheck, Building2, Camera, Check, ChevronRight, Factory, FileText, Gavel, Home as HomeIcon, MapPin, MapPinned, Maximize2, MessageSquare, Minimize2, Pause, Play, RotateCcw, Scale, SkipBack, SkipForward, Stamp, TrainFront, Trees, UserRound, Users, Volume2, VolumeX, X, Music2 } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Building2, Camera, Check, ChevronRight, Factory, FileText, Gavel, Home as HomeIcon, MapPin, MapPinned, Maximize2, MessageSquare, Minimize2, Pause, Play, RotateCcw, Save, Scale, SkipBack, SkipForward, Stamp, TrainFront, Trees, UserRound, Users, Volume2, VolumeX, X, Music2 } from "lucide-react";
+
+const GAME_SAVE_KEY = "prosecutor-reception-07-save-v1";
+type StoredGame = { version: 1; savedAt: string; state: Record<string, unknown> };
+const readStoredGame = (): StoredGame | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(GAME_SAVE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as StoredGame;
+    return parsed?.version === 1 && parsed.state && typeof parsed.state === "object" ? parsed : null;
+  } catch { return null; }
+};
 
 const OFFICE_BG = "/manus-storage/prosecutor-night-office-new.png";
 const PROFILE_BACKGROUNDS: Record<string, string> = { territorial: OFFICE_BG, executive: "/manus-storage/executive-office-bg_aa1818c9.png", environmental: "/manus-storage/environmental-office-bg_a009f425.png", military: "/manus-storage/military-office-bg-bright_f71bdfab.png", transport: OFFICE_BG };
@@ -330,6 +342,8 @@ const PRELOAD_IMAGES = [OFFICE_BG, ...Object.values(PROFILE_BACKGROUNDS), ...Obj
 
 export default function Home() {
   const [assetsReady, setAssetsReady] = useState(false);
+  const [savedGameAvailable, setSavedGameAvailable] = useState(() => Boolean(readStoredGame()));
+  const [saveNotice, setSaveNotice] = useState<"saved" | "error" | null>(null);
   useEffect(() => {
     Promise.all(PRELOAD_IMAGES.map((src) => new Promise<void>((resolve) => {
       const image = new Image();
@@ -453,6 +467,95 @@ export default function Home() {
   };
 
   const restart = () => { setDayNumber(1); setDayEnded(false); setPendingComplaints(0); setDailyComplaintIds([]); setSeenComplaintIds([]); setCarriedComplaintIds([]); setRepeatComplaintIndex(null); setConsequenceQueue([]); setDayConsequences([]); setRightsAdvocateMode(false); setOnboardingStep("intro"); setRegion(null); setProsecutorOffice(null); setProsecutorModalOpen(false); setMilitaryNoticeOpen(false); setCharacter(null); setDraftName(""); setLocation(null); setCaseIndex(0); setComplaintIndex(0); setComplaintDecision(null); setScore(0); setCorrectDecisions(0); setTrust(3); setReputation({ quality: 3, leadership: 3, citizens: 3, risk: 1 }); setFeedback(null); setFinished(false); setGameOver(false); setGameOverReason("discipline"); setWrongDecisions(0); setRewardCounts(emptyCounts(REWARDS_GUIDANCE)); setDisciplineCounts(emptyCounts(DISCIPLINE_GUIDANCE)); setOpenMaterial(null); setReviewedMaterials([]); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setHoursLeft(8); setExtraRequested(false); };
+  const saveGame = () => {
+    try {
+      const state = {
+        onboardingStep, region, prosecutorOffice, rightsAdvocateMode, character, draftName, draftGender, location,
+        caseIndex, complaintIndex, dailyComplaintIds, seenComplaintIds, carriedComplaintIds, complaintDecision,
+        responseActDecision, responseActDialogClosed, completedResponseFollowUps, intakeQuestionAsked, openComplaintDoc,
+        reviewedComplaintDocs, askedReceptionQuestions, activeReceptionQuestion, registryDecisions, hoursLeft, dayNumber,
+        dayEnded, pendingComplaints, repeatComplaintIndex, consequenceQueue, dayConsequences, extraRequested, score,
+        correctDecisions, trust, reputation, feedback, finished, gameOver, gameOverReason, wrongDecisions,
+        rewardCounts, disciplineCounts, folderOpened, selectedCityDistrictId, selectedCityEventId, openMaterial, reviewedMaterials
+      };
+      window.localStorage.setItem(GAME_SAVE_KEY, JSON.stringify({ version: 1, savedAt: new Date().toISOString(), state }));
+      setSavedGameAvailable(true);
+      setSaveNotice("saved");
+      window.setTimeout(() => setSaveNotice(null), 2200);
+    } catch (error) {
+      console.error("Не удалось сохранить игру", error);
+      setSaveNotice("error");
+      window.setTimeout(() => setSaveNotice(null), 3200);
+    }
+  };
+
+  const loadSavedGame = () => {
+    const saved = readStoredGame();
+    if (!saved) { setSavedGameAvailable(false); return; }
+    const data = saved.state;
+    const getSaved = <T,>(key: string, fallback: T): T =>
+      Object.prototype.hasOwnProperty.call(data, key) ? data[key] as T : fallback;
+    setOnboardingStep(getSaved<"intro" | "region" | "character">("onboardingStep", "character"));
+    setRegion(getSaved<string | null>("region", null));
+    setProsecutorOffice(getSaved<(typeof PROSECUTOR_OFFICES)[number]["id"] | null>("prosecutorOffice", null));
+    setRightsAdvocateMode(getSaved("rightsAdvocateMode", false));
+    setCharacter(getSaved<{ name: string; gender: "male" | "female" } | null>("character", null));
+    setDraftName(getSaved("draftName", ""));
+    setDraftGender(getSaved<"male" | "female">("draftGender", "female"));
+    setLocation(getSaved<LocationId | null>("location", null));
+    setCaseIndex(getSaved("caseIndex", 0));
+    setComplaintIndex(getSaved("complaintIndex", 0));
+    setDailyComplaintIds(getSaved("dailyComplaintIds", []));
+    setSeenComplaintIds(getSaved("seenComplaintIds", []));
+    setCarriedComplaintIds(getSaved("carriedComplaintIds", []));
+    setComplaintDecision(getSaved<"accept" | "reject" | null>("complaintDecision", null));
+    setResponseActDecision(getSaved<ResponseAct | null>("responseActDecision", null));
+    setResponseActDialogClosed(getSaved("responseActDialogClosed", false));
+    setCompletedResponseFollowUps(getSaved("completedResponseFollowUps", []));
+    setIntakeQuestionAsked(getSaved("intakeQuestionAsked", false));
+    setOpenComplaintDoc(getSaved<number | null>("openComplaintDoc", null));
+    setReviewedComplaintDocs(getSaved("reviewedComplaintDocs", []));
+    setAskedReceptionQuestions(getSaved("askedReceptionQuestions", []));
+    setActiveReceptionQuestion(getSaved<number | null>("activeReceptionQuestion", null));
+    setRegistryDecisions(getSaved("registryDecisions", {}));
+    setHoursLeft(getSaved("hoursLeft", 8));
+    setDayNumber(getSaved("dayNumber", 1));
+    setDayEnded(getSaved("dayEnded", false));
+    setPendingComplaints(getSaved("pendingComplaints", 0));
+    setRepeatComplaintIndex(getSaved<number | null>("repeatComplaintIndex", null));
+    setConsequenceQueue(getSaved("consequenceQueue", []));
+    setDayConsequences(getSaved("dayConsequences", []));
+    setExtraRequested(getSaved("extraRequested", false));
+    setScore(getSaved("score", 0));
+    setCorrectDecisions(getSaved("correctDecisions", 0));
+    setTrust(getSaved("trust", 3));
+    setReputation(getSaved("reputation", { quality: 3, leadership: 3, citizens: 3, risk: 1 }));
+    setFeedback(getSaved<typeof feedback>("feedback", null));
+    setFinished(getSaved("finished", false));
+    setGameOver(getSaved("gameOver", false));
+    setGameOverReason(getSaved<"discipline" | "bribe">("gameOverReason", "discipline"));
+    setWrongDecisions(getSaved("wrongDecisions", 0));
+    setRewardCounts(getSaved("rewardCounts", emptyCounts(REWARDS_GUIDANCE)));
+    setDisciplineCounts(getSaved("disciplineCounts", emptyCounts(DISCIPLINE_GUIDANCE)));
+    setFolderOpened(getSaved("folderOpened", false));
+    setSelectedCityDistrictId(getSaved("selectedCityDistrictId", "central"));
+    setSelectedCityEventId(getSaved<string | null>("selectedCityEventId", null));
+    setOpenMaterial(getSaved<number | null>("openMaterial", null));
+    setReviewedMaterials(getSaved("reviewedMaterials", []));
+    setRegistryOpen(false);
+    setCityMapOpen(false);
+    setReceptionQuestionsDialogOpen(false);
+    setProsecutorModalOpen(false);
+    setMilitaryNoticeOpen(false);
+    setRouteLoading(false);
+    setLoadingLocation(null);
+    setMusicOpen(false);
+    setMusicPlaying(false);
+    setOfficeAmbienceEnabled(false);
+    setSavedGameAvailable(true);
+    setSaveNotice(null);
+  };
+
   const returnToMainMenu = () => { restart(); setMusicOpen(false); };
 
   const chooseRegion = (nextRegion: string) => {
@@ -877,7 +980,7 @@ export default function Home() {
         <h1>После университета —<br /><em>на службу !</em></h1>
         <p className="onboarding-copy">Вы только что окончили Уральский государственный юридический университет. Приказом прокурора вас направили работать помощником прокурора в один из районов субъекта Российской Федерации.</p>
         <p className="onboarding-copy">Впереди — незнакомая приёмная, первые материалы проверок и решения, за которыми стоят реальные люди. Сегодня теория останется в конспектах: на столе будут только факты, документы и ответственность.</p>
-        <div className="intro-actions"><button className="primary-button onboarding-button" onClick={() => setOnboardingStep("region")}>Приступить к службе <ChevronRight size={17} /></button><button className="fullscreen-button" onClick={toggleFullscreen}>{isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}<span>{isFullscreen ? "Выйти из полного экрана" : "На весь экран"}</span></button></div>
+        <div className="intro-actions"><button className="primary-button onboarding-button" onClick={() => setOnboardingStep("region")}>Приступить к службе <ChevronRight size={17} /></button>{savedGameAvailable && <button className="resume-save-button" onClick={loadSavedGame}><Play size={15} /> Продолжить сохранённую игру</button>}<button className="fullscreen-button" onClick={toggleFullscreen}>{isFullscreen ? <Minimize2 size={16} /> : <Maximize2 size={16} />}<span>{isFullscreen ? "Выйти из полного экрана" : "На весь экран"}</span></button></div>
         <div className="location-footer"><span>ДЕЛО НОВОГО СОТРУДНИКА · 01</span><span>ТОЧНОСТЬ · БЕСПРИСТРАСТНОСТЬ · ОТВЕТСТВЕННОСТЬ</span></div>
       </div>
     </main>
@@ -926,7 +1029,7 @@ export default function Home() {
 
   if (dayEnded) return (
     <main className="day-summary-screen" style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.94), rgba(7,18,20,.56)), url(${OFFICE_BG})` }}>
-      {musicPlayer}<div className="grain" /><div className="day-summary-card"><div className="eyebrow"><Stamp size={14} /> ИТОГИ РАБОЧЕГО ДНЯ · 18:00</div><h1>Смена закрыта.<br /><em>День {dayNumber}</em></h1><p>Канцелярия зафиксировала результаты дня. Не разобранные обращения не исчезают — они переходят в очередь следующего рабочего дня.</p><div className="day-summary-stats"><div><span>ОСТАЛОСЬ ЖАЛОБ</span><b>{pendingComplaints}</b></div><div><span>РАБОЧЕЕ ВРЕМЯ</span><b>10:00 — 18:00</b></div><div><span>РЕШЕНИЯ ПО ЖАЛОБАМ</span><b>{location === "reception" ? activeComplaints.length - pendingComplaints : score}</b></div></div>{dayConsequences.length > 0 && <div className="consequence-summary"><div className="reputation-heading"><span>ПОСЛЕДСТВИЯ СМЕНЫ</span><b>ПРОЯВЯТСЯ ЗАВТРА</b></div>{dayConsequences.map((event, index) => <div className={`consequence-event ${event.tone}`} key={`${event.title}-${index}`}><strong>{event.title}</strong><p>{event.text}</p></div>)}</div>}<div className="reputation-summary"><div className="reputation-heading"><span>РЕПУТАЦИЯ СОТРУДНИКА</span><b>{reputationLabel}</b></div><div className="reputation-grid"><div><span>КАЧЕСТВО РЕШЕНИЙ</span><strong>{reputation.quality}/5</strong></div><div><span>ДОВЕРИЕ РУКОВОДСТВА</span><strong>{reputation.leadership}/5</strong></div><div><span>ДОВЕРИЕ ГРАЖДАН</span><strong>{reputation.citizens}/5</strong></div><div className="risk"><span>РИСК ПРОВЕРКИ</span><strong>{Math.round(reputation.risk)}/5</strong></div></div></div><div className="summary-actions"><button className="primary-button" onClick={startNextDay}>{pendingComplaints > 0 ? "Продолжить жалобы на следующий день" : "Начать следующий рабочий день"} <ChevronRight size={17} /></button><button className="menu-button" onClick={returnToMainMenu}>Вернуться в главное меню</button></div></div>
+      {musicPlayer}<div className="grain" /><div className="day-summary-card"><div className="eyebrow"><Stamp size={14} /> ИТОГИ РАБОЧЕГО ДНЯ · 18:00</div><h1>Смена закрыта.<br /><em>День {dayNumber}</em></h1><p>Канцелярия зафиксировала результаты дня. Не разобранные обращения не исчезают — они переходят в очередь следующего рабочего дня.</p><div className="day-summary-stats"><div><span>ОСТАЛОСЬ ЖАЛОБ</span><b>{pendingComplaints}</b></div><div><span>РАБОЧЕЕ ВРЕМЯ</span><b>10:00 — 18:00</b></div><div><span>РЕШЕНИЯ ПО ЖАЛОБАМ</span><b>{location === "reception" ? activeComplaints.length - pendingComplaints : score}</b></div></div>{dayConsequences.length > 0 && <div className="consequence-summary"><div className="reputation-heading"><span>ПОСЛЕДСТВИЯ СМЕНЫ</span><b>ПРОЯВЯТСЯ ЗАВТРА</b></div>{dayConsequences.map((event, index) => <div className={`consequence-event ${event.tone}`} key={`${event.title}-${index}`}><strong>{event.title}</strong><p>{event.text}</p></div>)}</div>}<div className="reputation-summary"><div className="reputation-heading"><span>РЕПУТАЦИЯ СОТРУДНИКА</span><b>{reputationLabel}</b></div><div className="reputation-grid"><div><span>КАЧЕСТВО РЕШЕНИЙ</span><strong>{reputation.quality}/5</strong></div><div><span>ДОВЕРИЕ РУКОВОДСТВА</span><strong>{reputation.leadership}/5</strong></div><div><span>ДОВЕРИЕ ГРАЖДАН</span><strong>{reputation.citizens}/5</strong></div><div className="risk"><span>РИСК ПРОВЕРКИ</span><strong>{Math.round(reputation.risk)}/5</strong></div></div></div><div className="summary-actions"><button className="primary-button" onClick={startNextDay}>{pendingComplaints > 0 ? "Продолжить жалобы на следующий день" : "Начать следующий рабочий день"} <ChevronRight size={17} /></button><button className="summary-save-button" onClick={saveGame}><Save size={15} /> Сохранить прогресс</button><button className="menu-button summary-menu-icon" onClick={returnToMainMenu} title="Главное меню" aria-label="Главное меню"><HomeIcon size={18} /></button></div></div>
     </main>
   );
 
@@ -950,11 +1053,11 @@ export default function Home() {
     <main className={`game-shell office-theme-${prosecutorOffice ?? "territorial"}`} data-office-time={officeTimePhase} style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.88) 0%, rgba(7,18,20,.72) 33%, rgba(7,18,20,.18) 72%, rgba(7,18,20,.56) 100%), url(${PROFILE_BACKGROUNDS[prosecutorOffice ?? ""] ?? OFFICE_BG})` }}>
       <div className="office-atmosphere" aria-hidden="true"><span className="office-window-scene"><i className="office-window-headlights" /><i className="office-window-curtain" /></span><span className="office-car-reflection" /><span className="office-lamp-glow" /></div>{musicPlayer}<div className="grain" />
       {gameOver && <div className="game-over-backdrop" role="dialog" aria-modal="true" aria-labelledby="game-over-title"><section className="game-over-card"><span className="eyebrow">СЛУЖЕБНОЕ РЕШЕНИЕ · {gameOverReason === "bribe" ? "КОРРУПЦИОННОЕ ПРЕСТУПЛЕНИЕ" : "ДИСЦИПЛИНА"}</span><h2 id="game-over-title">Игра окончена</h2><p>{gameOverReason === "bribe" ? "Вы были пойманы за получением взятки при проведении ОРМ «Проверочная закупка». В соответствии со ст. 114 УПК РФ и ст. 43 ФЗ «О прокуратуре Российской Федерации»." : "Вы были уволены в связи с несовместимостью с дальнейшим прохождением службы в силу наличия большого количества дисциплинарных взысканий."}</p><div className="game-over-status">Статус: <strong>{gameOverReason === "bribe" ? "получение взятки · служба прекращена" : "увольнение из органов прокуратуры"}</strong></div><button className="primary-button" onClick={returnToMainMenu}><RotateCcw size={16} /> Вернуться в главное меню</button></section></div>}
-      <header className="topbar">
+      <header className={`topbar ${folderOpened ? "topbar-with-return" : ""}`}>
         <div className="brand"><div className="brand-mark"><Scale size={18} /></div><div><p>ПРОКУРАТУРА</p><h1>Приёмная № 07</h1></div></div>
         <div className="profile-chip"><UserRound size={14} /><span>{character.name}</span><b>{prosecutorOffice === "military" ? "лейтенант" : "юрист 3 класса"}</b></div>
-          <div className="shift"><span className="live-dot" /> {location === "inspection" ? "ГОРОДСКАЯ ПРОВЕРКА" : "ПРИЁМНАЯ ГРАЖДАН"} <b>•</b> ДЕНЬ {dayNumber}{location === "reception" && <b className="shift-arrivals">+{dailyComplaintIds.length} НОВЫХ</b>}</div><div className="office-scene-status"><button className={`office-ambience-toggle ${officeAmbienceEnabled ? "active" : ""}`} onClick={toggleOfficeAmbience} aria-pressed={officeAmbienceEnabled} aria-label={officeAmbienceEnabled ? "Выключить звуки офиса" : "Включить звуки офиса"} title={officeAmbienceEnabled ? "Выключить фоновые звуки офиса" : "Включить фоновые звуки офиса"}>{officeAmbienceEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}</button></div><div className={`work-clock ${hoursLeft <= 2 ? "critical" : hoursLeft <= 4 ? "warning" : ""}`} aria-label={`Осталось ${hoursLeft} часов рабочего времени`}><div className="work-clock-top"><span>РАБОЧЕЕ ВРЕМЯ</span><strong>{hoursLeft === 0 ? "18:00" : `${10 + (8 - hoursLeft)}:00`}</strong><em>до 18:00</em></div><div className="work-clock-track"><i style={{ width: `${(hoursLeft / 8) * 100}%` }} /></div><small>ОСТАЛОСЬ <b>{hoursLeft} ч.</b></small></div><button className="city-map-open-button" onClick={() => setCityMapOpen(true)}><MapPinned size={14} /> Город</button>{location === "reception" && <button className="registry-open-button" onClick={() => setRegistryOpen(true)}><FileText size={14}/> Журнал обращений</button>}{folderOpened && <button className="office-return-button" onClick={() => setFolderOpened(false)} title="Вернуться к виду кабинета"><ArrowLeft size={14} /> В кабинет</button>}<button className="route-switch-button" onClick={() => switchLocation(location === "reception" ? "inspection" : "reception")}>{location === "reception" ? "Выйти на проверку" : "Принять заявителей"}</button><button className="menu-button top-menu-button" onClick={returnToMainMenu}>Главное меню</button><button className="end-day-button" onClick={() => endDay()}>Завершить день · 18:00</button>
-        <div className="seal">ДЕЛО<br /><span>В РАБОТЕ</span></div>
+          <div className="shift"><span className="live-dot" /> {location === "inspection" ? "ГОРОДСКАЯ ПРОВЕРКА" : "ПРИЁМНАЯ ГРАЖДАН"} <b>•</b> ДЕНЬ {dayNumber}{location === "reception" && <b className="shift-arrivals">+{dailyComplaintIds.length} НОВЫХ</b>}</div><div className="office-scene-status"><button className={`office-ambience-toggle ${officeAmbienceEnabled ? "active" : ""}`} onClick={toggleOfficeAmbience} aria-pressed={officeAmbienceEnabled} aria-label={officeAmbienceEnabled ? "Выключить звуки офиса" : "Включить звуки офиса"} title={officeAmbienceEnabled ? "Выключить фоновые звуки офиса" : "Включить фоновые звуки офиса"}>{officeAmbienceEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}</button></div><div className={`work-clock ${hoursLeft <= 2 ? "critical" : hoursLeft <= 4 ? "warning" : ""}`} aria-label={`Осталось ${hoursLeft} часов рабочего времени`}><div className="work-clock-top"><span>РАБОЧЕЕ ВРЕМЯ</span><strong>{hoursLeft === 0 ? "18:00" : `${10 + (8 - hoursLeft)}:00`}</strong><em>до 18:00</em></div><div className="work-clock-track"><i style={{ width: `${(hoursLeft / 8) * 100}%` }} /></div><small>ОСТАЛОСЬ <b>{hoursLeft} ч.</b></small></div><button className="city-map-open-button" onClick={() => setCityMapOpen(true)}><MapPinned size={14} /> Город</button>{location === "reception" && <button className="registry-open-button" onClick={() => setRegistryOpen(true)}><FileText size={14}/> Журнал обращений</button>}{folderOpened && <button className="office-return-button" onClick={() => setFolderOpened(false)} title="Вернуться к виду кабинета"><ArrowLeft size={14} /> В кабинет</button>}<button className="route-switch-button" onClick={() => switchLocation(location === "reception" ? "inspection" : "reception")}>{location === "reception" ? "Выйти на проверку" : "Принять заявителей"}</button><button className="end-day-button" onClick={() => endDay()}>Завершить день · 18:00</button>
+        <div className="seal">ДЕЛО<br /><span>В РАБОТЕ</span></div><button type="button" className="save-game-icon" onClick={saveGame} title={saveNotice === "saved" ? "Игра сохранена" : saveNotice === "error" ? "Ошибка сохранения" : "Сохранить игру"} aria-label="Сохранить игру">{saveNotice === "saved" ? <Check size={17} /> : <Save size={17} />}</button><button type="button" className="menu-button top-menu-button top-menu-icon" onClick={returnToMainMenu} title="Главное меню" aria-label="Главное меню"><HomeIcon size={18} /></button><div className={`save-notice ${saveNotice ?? ""}`} role="status" aria-live="polite">{saveNotice === "saved" ? "ИГРА СОХРАНЕНА" : saveNotice === "error" ? "НЕ УДАЛОСЬ СОХРАНИТЬ" : ""}</div>
       </header>
 
       {registryOpen && <div className="registry-overlay"><section className="registry-dialog" role="dialog" aria-modal="true" aria-labelledby="registry-title"><button className="registry-close" onClick={() => setRegistryOpen(false)} aria-label="Закрыть">×</button><div className="registry-kicker">КАНЦЕЛЯРИЯ · ТЕРРИТОРИАЛЬНАЯ ПРОКУРАТУРА</div><h2 id="registry-title">Журнал регистрации обращений</h2><p className="registry-subtitle">Сегодня поступило: {dailyComplaintIds.length} новых · Перенесено: {carriedComplaintIds.length}</p><div className="registry-toolbar"><input value={registrySearch} onChange={(e)=>setRegistrySearch(e.target.value)} placeholder="Поиск по заявителю, теме или номеру"/><select value={registryStatus} onChange={(e)=>setRegistryStatus(e.target.value)}><option value="all">Все статусы</option><option value="received">Поступило</option><option value="review">На рассмотрении</option><option value="verification">Назначена проверка</option><option value="rejected">Отказано</option></select></div><div className="registry-table-wrap"><table className="registry-table"><thead><tr><th>Входящий №</th><th>Дата</th><th>Заявитель</th><th>Предмет обращения</th><th>Статус</th><th></th></tr></thead><tbody>{filteredRegistryRows.map(({item,index,status})=><tr key={item.id} className={index===complaintIndex?"current":""}><td>{String(index+1).padStart(2,"0")}-2026</td><td>17.09.2026</td><td>{item.applicant}</td><td>{item.title}</td><td><span className={"registry-status "+status}>{status==="received"?"Поступило":status==="review"?"На рассмотрении":status==="verification"?"Назначена проверка":"Отказано"}</span></td><td><button onClick={()=>openRegistryComplaint(index)}>Открыть</button></td></tr>)}</tbody></table>{filteredRegistryRows.length===0&&<div className="registry-empty">По заданным условиям обращений не найдено.</div>}</div><div className="registry-footer"><span>Всего: {registryRows.length} · Поступило: {registryRows.filter(x=>x.status==="received").length} · На рассмотрении: {registryRows.filter(x=>x.status==="review").length} · Отказано: {registryRows.filter(x=>x.status==="rejected").length}</span><button onClick={()=>setRegistryOpen(false)}>Закрыть журнал</button></div></section></div>}
