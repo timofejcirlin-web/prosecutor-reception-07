@@ -129,6 +129,19 @@ type ResponseAct = "protest" | "representation" | "site-inspection" | "court-45"
 type ResponseOption = { id: ResponseAct; title: string; detail: string; energyCost?: number };
 type ComplaintFollowUp = { id: string; title: string; detail: string; energyCost: number; required?: boolean; dependsOn?: string };
 type Complaint = { id: string; responseAct?: ResponseAct; responseActReason?: string; acceptedResponseActs?: ResponseAct[]; responseOptions?: ResponseOption[]; responseFollowUps?: ComplaintFollowUp[]; intakeQuestion?: { prompt: string; answer: string }; title: string; applicant: string; role: string; situation: string; request: string; correct: "accept" | "reject"; outcome: string; background: string; portrait: string; documents: Material[]; extra: Material; displayApplicant?: boolean; bribe?: boolean };
+
+const drawDailyComplaintIds = (pool: Complaint[], seenIds: string[]) => {
+  const count = Math.min(3, pool.length);
+  const unseen = pool.filter((complaint) => !seenIds.includes(complaint.id));
+  const resetCycle = unseen.length < count;
+  const source = [...(resetCycle ? pool : unseen)];
+  for (let i = source.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [source[i], source[j]] = [source[j], source[i]];
+  }
+  const ids = source.slice(0, count).map((complaint) => complaint.id);
+  return { ids, seenIds: resetCycle ? ids : [...seenIds, ...ids] };
+};
 type ReceptionQuestion = { prompt: string; answer: string; finding: string };
 const LAND_RECEPTION_QUESTIONS: ReceptionQuestion[] = [
   { prompt: "Когда вы подали заявление и получили отказ?", answer: "Заявление я подал 12 августа. Письменный отказ получил 3 сентября. Сохранил оба документа.", finding: "Даты можно сопоставить с регистрацией заявления и сроком рассмотрения." },
@@ -224,22 +237,6 @@ PROFILE_COMPLAINTS.territorial = [
     responseAct: "representation",
     acceptedResponseActs: ["representation"],
     responseActReason: "Представление направляется органу или должностному лицу, способным устранить нарушения, обеспечить безопасное состояние детской площадки и принять меры к ответственным лицам."
-  },
-  {
-    ...territorialComplaint(4, "Поле конопли рядом с домом культуры", "Женщина — учительница", "учительница городской школы", "Недалеко от дома культуры города выросло большое поле конопли. Мимо этого поля ходит много школьников, некоторые из них пытаются листки сорвать и употребить. Просим принять меры.", "Проверить сведения о произрастании растений, установить правообладателя и ответственных лиц, оценить риски для несовершеннолетних и принять меры реагирования.", "accept",
-      [
-        { label: "Письменные объяснения заявителя", text: "Учительница сообщает о поле рядом с домом культуры и о том, что мимо него ежедневно проходят школьники. В объяснениях приведены кадастровый номер участка и его координаты. В игровом материале эти идентификаторы используются как условные данные сценария." },
-        { label: "Фотография поля", text: "Фотография показывает участок с растительностью, которую заявитель считает коноплёй. Вид растений и правовую оценку необходимо установить в ходе проверки, а не только по заявлению." }
-      ],
-      { label: "Сведения о земельном участке", text: "Дополнительный запрос позволяет проверить кадастровый номер, координаты, правообладателя участка, категорию земли и сведения об использовании территории." },
-      "Основной акт реагирования по сценарию — представление. Дополнительно можно организовать профилактические мероприятия для предупреждения вовлечения несовершеннолетних; они требуют значительных временных ресурсов.", PROFILE_PORTRAITS.citizenWoman),
-    id: "territorial-hemp-field",
-    responseAct: "representation",
-    acceptedResponseActs: ["representation"],
-    responseActReason: "Представление — основной акт реагирования. Помимо него важно организовать профилактические мероприятия с участием компетентных органов и образовательных учреждений, чтобы снизить риск для несовершеннолетних.",
-    responseFollowUps: [
-      { id: "preventive-measures", title: "Организовать профилактические мероприятия", detail: "Провести профилактическую работу с участием школы, администрации и компетентных органов. Это затратное по времени действие.", energyCost: 3, required: false }
-    ]
   },
   {
     ...territorialComplaint(5, "Штрафы в коллективном договоре ООО «Завод»", "Мужчина — работник завода", "столяр на производственном предприятии", "Работаю столяром на заводе. В нашем коллективном договоре сказано про это наказание, даже размеры установлены. Недавно в Интернете прочитал, что это незаконно. Это правда?", "Проверить содержание коллективного договора ООО «Завод» и дать оценку условию о денежном наказании работников.", "accept",
@@ -360,6 +357,9 @@ export default function Home() {
   const [loadingLocation, setLoadingLocation] = useState<LocationId | null>(null);
   const [caseIndex, setCaseIndex] = useState(0);
   const [complaintIndex, setComplaintIndex] = useState(0);
+  const [dailyComplaintIds, setDailyComplaintIds] = useState<string[]>([]);
+  const [seenComplaintIds, setSeenComplaintIds] = useState<string[]>([]);
+  const [carriedComplaintIds, setCarriedComplaintIds] = useState<string[]>([]);
   const [complaintDecision, setComplaintDecision] = useState<"accept" | "reject" | null>(null);
   const [responseActDecision, setResponseActDecision] = useState<ResponseAct | null>(null);
   const [responseActDialogClosed, setResponseActDialogClosed] = useState(false);
@@ -452,7 +452,7 @@ export default function Home() {
     setReviewedMaterials((items) => items.includes(index) ? items : [...items, index]);
   };
 
-  const restart = () => { setDayNumber(1); setDayEnded(false); setPendingComplaints(0); setRepeatComplaintIndex(null); setConsequenceQueue([]); setDayConsequences([]); setRightsAdvocateMode(false); setOnboardingStep("intro"); setRegion(null); setProsecutorOffice(null); setProsecutorModalOpen(false); setMilitaryNoticeOpen(false); setCharacter(null); setDraftName(""); setLocation(null); setCaseIndex(0); setComplaintIndex(0); setComplaintDecision(null); setScore(0); setCorrectDecisions(0); setTrust(3); setReputation({ quality: 3, leadership: 3, citizens: 3, risk: 1 }); setFeedback(null); setFinished(false); setGameOver(false); setGameOverReason("discipline"); setWrongDecisions(0); setRewardCounts(emptyCounts(REWARDS_GUIDANCE)); setDisciplineCounts(emptyCounts(DISCIPLINE_GUIDANCE)); setOpenMaterial(null); setReviewedMaterials([]); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setHoursLeft(8); setExtraRequested(false); };
+  const restart = () => { setDayNumber(1); setDayEnded(false); setPendingComplaints(0); setDailyComplaintIds([]); setSeenComplaintIds([]); setCarriedComplaintIds([]); setRepeatComplaintIndex(null); setConsequenceQueue([]); setDayConsequences([]); setRightsAdvocateMode(false); setOnboardingStep("intro"); setRegion(null); setProsecutorOffice(null); setProsecutorModalOpen(false); setMilitaryNoticeOpen(false); setCharacter(null); setDraftName(""); setLocation(null); setCaseIndex(0); setComplaintIndex(0); setComplaintDecision(null); setScore(0); setCorrectDecisions(0); setTrust(3); setReputation({ quality: 3, leadership: 3, citizens: 3, risk: 1 }); setFeedback(null); setFinished(false); setGameOver(false); setGameOverReason("discipline"); setWrongDecisions(0); setRewardCounts(emptyCounts(REWARDS_GUIDANCE)); setDisciplineCounts(emptyCounts(DISCIPLINE_GUIDANCE)); setOpenMaterial(null); setReviewedMaterials([]); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setHoursLeft(8); setExtraRequested(false); };
   const returnToMainMenu = () => { restart(); setMusicOpen(false); };
 
   const chooseRegion = (nextRegion: string) => {
@@ -519,12 +519,22 @@ export default function Home() {
     setCompletedResponseFollowUps([]);
     setIntakeQuestionAsked(false);
     setHoursLeft(8);
-    setRightsAdvocateMode(nextLocation === "reception" && prosecutorOffice === "executive" && Math.random() < 0.3);
+    const hasAdvocateCarry = carriedComplaintIds.some((id) => advocateComplaints.some((item) => item.id === id));
+    const nextRightsAdvocateMode = nextLocation === "reception" && prosecutorOffice === "executive" && (dailyComplaintIds.length > 0 ? rightsAdvocateMode : hasAdvocateCarry || Math.random() < 0.3);
+    setRightsAdvocateMode(nextRightsAdvocateMode);
+    if (nextLocation === "reception" && dailyComplaintIds.length === 0) {
+      const pool = prosecutorOffice === "executive" && nextRightsAdvocateMode ? [...(PROFILE_COMPLAINTS.executive ?? []), ...advocateComplaints] : prosecutorOffice && PROFILE_COMPLAINTS[prosecutorOffice] ? PROFILE_COMPLAINTS[prosecutorOffice] : COMPLAINTS;
+      const batch = drawDailyComplaintIds(pool, seenComplaintIds);
+      setDailyComplaintIds(batch.ids);
+      setSeenComplaintIds(batch.seenIds);
+    }
     setExtraRequested(false);
   };
   const switchLocation = (nextLocation: LocationId) => chooseLocation(nextLocation);
 
-  const activeComplaints = prosecutorOffice === "executive" && rightsAdvocateMode ? [...(PROFILE_COMPLAINTS.executive ?? []), ...advocateComplaints] : prosecutorOffice && PROFILE_COMPLAINTS[prosecutorOffice] ? PROFILE_COMPLAINTS[prosecutorOffice] : COMPLAINTS;
+  const allProfileComplaints = prosecutorOffice === "executive" && rightsAdvocateMode ? [...(PROFILE_COMPLAINTS.executive ?? []), ...advocateComplaints] : prosecutorOffice && PROFILE_COMPLAINTS[prosecutorOffice] ? PROFILE_COMPLAINTS[prosecutorOffice] : COMPLAINTS;
+  const activeComplaintIds = [...carriedComplaintIds, ...dailyComplaintIds.filter((id) => !carriedComplaintIds.includes(id))];
+  const activeComplaints = activeComplaintIds.length > 0 ? activeComplaintIds.map((id) => allProfileComplaints.find((item) => item.id === id)).filter((item): item is Complaint => Boolean(item)) : allProfileComplaints.slice(0, 3);
   const currentComplaint = activeComplaints[complaintIndex] ?? activeComplaints[0];
   const isWrittenReception = prosecutorOffice === "executive";
   const registryRows = activeComplaints.map((item, index) => { const record=registryDecisions[item.id] ?? (index===complaintIndex && complaintDecision ? {decision:complaintDecision,responseAct:responseActDecision ?? undefined} : undefined); const status=!record ? "received" : record.decision === "reject" ? "rejected" : record.responseAct ? "verification" : "review"; return { item, index, status }; });
@@ -545,7 +555,7 @@ export default function Home() {
     transport: { x: 89, y: 77 },
   };
   const cityEventSlots: Record<string, number> = {};
-  const territorialEventDistricts = ["central", "industrial", "residential", "residential", "industrial", "residential", "residential", "central", "transport", "residential", "central"];
+  const territorialEventDistricts = ["central", "industrial", "residential", "industrial", "residential", "residential", "central", "transport", "residential"];
   const cityEvents = registryRows.map(({ item, index, status }) => {
     const eventText = `${item.id} ${item.title} ${item.situation}`.toLowerCase();
     const districtId = prosecutorOffice === "territorial" ? territorialEventDistricts[index % territorialEventDistricts.length] : /дорог|транспорт|перевоз|станц|железнодорож|автобус|пут[ьи]/.test(eventText) ? "transport"
@@ -671,7 +681,10 @@ export default function Home() {
   const endDay = (resolvedDecision?: "accept" | "reject", eventsOverride?: ConsequenceEvent[], repeatOverride = false) => {
     const resolved = resolvedDecision ?? complaintDecision;
     const repeats = location === "reception" && (repeatComplaintIndex !== null || repeatOverride);
-    const unresolved = location === "reception" ? Math.max(0, activeComplaints.length - complaintIndex - (resolved && !repeats ? 1 : 0)) : 0;
+    const nextPendingStart = repeats ? (repeatComplaintIndex ?? complaintIndex) : complaintIndex + (resolved ? 1 : 0);
+    const nextCarry = location === "reception" ? activeComplaints.slice(Math.max(0, nextPendingStart)).map((item) => item.id) : carriedComplaintIds;
+    const unresolved = nextCarry.length;
+    if (location === "reception") setCarriedComplaintIds(nextCarry);
     setPendingComplaints(unresolved);
     if (resolved && unresolved > 0 && !repeats) {
       setComplaintIndex((value) => value + 1);
@@ -692,13 +705,20 @@ export default function Home() {
   };
 
   const startNextDay = () => {
+    const hasAdvocateCarry = carriedComplaintIds.some((id) => advocateComplaints.some((item) => item.id === id));
+    const nextRightsAdvocateMode = prosecutorOffice === "executive" && (hasAdvocateCarry || Math.random() < 0.3);
+    const pool = prosecutorOffice === "executive" && nextRightsAdvocateMode ? [...(PROFILE_COMPLAINTS.executive ?? []), ...advocateComplaints] : prosecutorOffice && PROFILE_COMPLAINTS[prosecutorOffice] ? PROFILE_COMPLAINTS[prosecutorOffice] : COMPLAINTS;
+    const batch = drawDailyComplaintIds(pool, seenComplaintIds);
+    setDailyComplaintIds(batch.ids);
+    setSeenComplaintIds(batch.seenIds);
+    setPendingComplaints(carriedComplaintIds.length);
     setDayNumber((value) => value + 1);
     setHoursLeft(8);
     setDayEnded(false);
-    setLocation(pendingComplaints > 0 ? "reception" : null);
+    setLocation("reception");
     setFolderOpened(false);
-    setRightsAdvocateMode(pendingComplaints > 0 && prosecutorOffice === "executive" && Math.random() < 0.3);
-    if (repeatComplaintIndex !== null) setComplaintIndex(repeatComplaintIndex);
+    setRightsAdvocateMode(nextRightsAdvocateMode);
+    setComplaintIndex(0);
     setComplaintDecision(null);
     setResponseActDecision(null);
     setResponseActDialogClosed(false);
@@ -933,11 +953,11 @@ export default function Home() {
       <header className="topbar">
         <div className="brand"><div className="brand-mark"><Scale size={18} /></div><div><p>ПРОКУРАТУРА</p><h1>Приёмная № 07</h1></div></div>
         <div className="profile-chip"><UserRound size={14} /><span>{character.name}</span><b>{prosecutorOffice === "military" ? "лейтенант" : "юрист 3 класса"}</b></div>
-          <div className="shift"><span className="live-dot" /> {location === "inspection" ? "ГОРОДСКАЯ ПРОВЕРКА" : "ПРИЁМНАЯ ГРАЖДАН"} <b>•</b> ДЕНЬ {dayNumber}</div><div className="office-scene-status"><button className={`office-ambience-toggle ${officeAmbienceEnabled ? "active" : ""}`} onClick={toggleOfficeAmbience} aria-pressed={officeAmbienceEnabled} aria-label={officeAmbienceEnabled ? "Выключить звуки офиса" : "Включить звуки офиса"} title={officeAmbienceEnabled ? "Выключить фоновые звуки офиса" : "Включить фоновые звуки офиса"}>{officeAmbienceEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}</button></div><div className={`work-clock ${hoursLeft <= 2 ? "critical" : hoursLeft <= 4 ? "warning" : ""}`} aria-label={`Осталось ${hoursLeft} часов рабочего времени`}><div className="work-clock-top"><span>РАБОЧЕЕ ВРЕМЯ</span><strong>{hoursLeft === 0 ? "18:00" : `${10 + (8 - hoursLeft)}:00`}</strong><em>до 18:00</em></div><div className="work-clock-track"><i style={{ width: `${(hoursLeft / 8) * 100}%` }} /></div><small>ОСТАЛОСЬ <b>{hoursLeft} ч.</b></small></div><button className="city-map-open-button" onClick={() => setCityMapOpen(true)}><MapPinned size={14} /> Город</button>{location === "reception" && <button className="registry-open-button" onClick={() => setRegistryOpen(true)}><FileText size={14}/> Журнал обращений</button>}{folderOpened && <button className="office-return-button" onClick={() => setFolderOpened(false)} title="Вернуться к виду кабинета"><ArrowLeft size={14} /> В кабинет</button>}<button className="route-switch-button" onClick={() => switchLocation(location === "reception" ? "inspection" : "reception")}>{location === "reception" ? "Выйти на проверку" : "Принять заявителей"}</button><button className="menu-button top-menu-button" onClick={returnToMainMenu}>Главное меню</button><button className="end-day-button" onClick={() => endDay()}>Завершить день · 18:00</button>
+          <div className="shift"><span className="live-dot" /> {location === "inspection" ? "ГОРОДСКАЯ ПРОВЕРКА" : "ПРИЁМНАЯ ГРАЖДАН"} <b>•</b> ДЕНЬ {dayNumber}{location === "reception" && <b className="shift-arrivals">+{dailyComplaintIds.length} НОВЫХ</b>}</div><div className="office-scene-status"><button className={`office-ambience-toggle ${officeAmbienceEnabled ? "active" : ""}`} onClick={toggleOfficeAmbience} aria-pressed={officeAmbienceEnabled} aria-label={officeAmbienceEnabled ? "Выключить звуки офиса" : "Включить звуки офиса"} title={officeAmbienceEnabled ? "Выключить фоновые звуки офиса" : "Включить фоновые звуки офиса"}>{officeAmbienceEnabled ? <Volume2 size={15} /> : <VolumeX size={15} />}</button></div><div className={`work-clock ${hoursLeft <= 2 ? "critical" : hoursLeft <= 4 ? "warning" : ""}`} aria-label={`Осталось ${hoursLeft} часов рабочего времени`}><div className="work-clock-top"><span>РАБОЧЕЕ ВРЕМЯ</span><strong>{hoursLeft === 0 ? "18:00" : `${10 + (8 - hoursLeft)}:00`}</strong><em>до 18:00</em></div><div className="work-clock-track"><i style={{ width: `${(hoursLeft / 8) * 100}%` }} /></div><small>ОСТАЛОСЬ <b>{hoursLeft} ч.</b></small></div><button className="city-map-open-button" onClick={() => setCityMapOpen(true)}><MapPinned size={14} /> Город</button>{location === "reception" && <button className="registry-open-button" onClick={() => setRegistryOpen(true)}><FileText size={14}/> Журнал обращений</button>}{folderOpened && <button className="office-return-button" onClick={() => setFolderOpened(false)} title="Вернуться к виду кабинета"><ArrowLeft size={14} /> В кабинет</button>}<button className="route-switch-button" onClick={() => switchLocation(location === "reception" ? "inspection" : "reception")}>{location === "reception" ? "Выйти на проверку" : "Принять заявителей"}</button><button className="menu-button top-menu-button" onClick={returnToMainMenu}>Главное меню</button><button className="end-day-button" onClick={() => endDay()}>Завершить день · 18:00</button>
         <div className="seal">ДЕЛО<br /><span>В РАБОТЕ</span></div>
       </header>
 
-      {registryOpen && <div className="registry-overlay"><section className="registry-dialog" role="dialog" aria-modal="true" aria-labelledby="registry-title"><button className="registry-close" onClick={() => setRegistryOpen(false)} aria-label="Закрыть">×</button><div className="registry-kicker">КАНЦЕЛЯРИЯ · ТЕРРИТОРИАЛЬНАЯ ПРОКУРАТУРА</div><h2 id="registry-title">Журнал регистрации обращений</h2><p className="registry-subtitle">Поступившие обращения текущей смены</p><div className="registry-toolbar"><input value={registrySearch} onChange={(e)=>setRegistrySearch(e.target.value)} placeholder="Поиск по заявителю, теме или номеру"/><select value={registryStatus} onChange={(e)=>setRegistryStatus(e.target.value)}><option value="all">Все статусы</option><option value="received">Поступило</option><option value="review">На рассмотрении</option><option value="verification">Назначена проверка</option><option value="rejected">Отказано</option></select></div><div className="registry-table-wrap"><table className="registry-table"><thead><tr><th>Входящий №</th><th>Дата</th><th>Заявитель</th><th>Предмет обращения</th><th>Статус</th><th></th></tr></thead><tbody>{filteredRegistryRows.map(({item,index,status})=><tr key={item.id} className={index===complaintIndex?"current":""}><td>{String(index+1).padStart(2,"0")}-2026</td><td>17.09.2026</td><td>{item.applicant}</td><td>{item.title}</td><td><span className={"registry-status "+status}>{status==="received"?"Поступило":status==="review"?"На рассмотрении":status==="verification"?"Назначена проверка":"Отказано"}</span></td><td><button onClick={()=>openRegistryComplaint(index)}>Открыть</button></td></tr>)}</tbody></table>{filteredRegistryRows.length===0&&<div className="registry-empty">По заданным условиям обращений не найдено.</div>}</div><div className="registry-footer"><span>Всего: {registryRows.length} · Поступило: {registryRows.filter(x=>x.status==="received").length} · На рассмотрении: {registryRows.filter(x=>x.status==="review").length} · Отказано: {registryRows.filter(x=>x.status==="rejected").length}</span><button onClick={()=>setRegistryOpen(false)}>Закрыть журнал</button></div></section></div>}
+      {registryOpen && <div className="registry-overlay"><section className="registry-dialog" role="dialog" aria-modal="true" aria-labelledby="registry-title"><button className="registry-close" onClick={() => setRegistryOpen(false)} aria-label="Закрыть">×</button><div className="registry-kicker">КАНЦЕЛЯРИЯ · ТЕРРИТОРИАЛЬНАЯ ПРОКУРАТУРА</div><h2 id="registry-title">Журнал регистрации обращений</h2><p className="registry-subtitle">Сегодня поступило: {dailyComplaintIds.length} новых · Перенесено: {carriedComplaintIds.length}</p><div className="registry-toolbar"><input value={registrySearch} onChange={(e)=>setRegistrySearch(e.target.value)} placeholder="Поиск по заявителю, теме или номеру"/><select value={registryStatus} onChange={(e)=>setRegistryStatus(e.target.value)}><option value="all">Все статусы</option><option value="received">Поступило</option><option value="review">На рассмотрении</option><option value="verification">Назначена проверка</option><option value="rejected">Отказано</option></select></div><div className="registry-table-wrap"><table className="registry-table"><thead><tr><th>Входящий №</th><th>Дата</th><th>Заявитель</th><th>Предмет обращения</th><th>Статус</th><th></th></tr></thead><tbody>{filteredRegistryRows.map(({item,index,status})=><tr key={item.id} className={index===complaintIndex?"current":""}><td>{String(index+1).padStart(2,"0")}-2026</td><td>17.09.2026</td><td>{item.applicant}</td><td>{item.title}</td><td><span className={"registry-status "+status}>{status==="received"?"Поступило":status==="review"?"На рассмотрении":status==="verification"?"Назначена проверка":"Отказано"}</span></td><td><button onClick={()=>openRegistryComplaint(index)}>Открыть</button></td></tr>)}</tbody></table>{filteredRegistryRows.length===0&&<div className="registry-empty">По заданным условиям обращений не найдено.</div>}</div><div className="registry-footer"><span>Всего: {registryRows.length} · Поступило: {registryRows.filter(x=>x.status==="received").length} · На рассмотрении: {registryRows.filter(x=>x.status==="review").length} · Отказано: {registryRows.filter(x=>x.status==="rejected").length}</span><button onClick={()=>setRegistryOpen(false)}>Закрыть журнал</button></div></section></div>}
       {cityMapOpen && <div className="city-map-overlay" role="dialog" aria-modal="true" aria-labelledby="city-map-title">
         <section className="city-map-dialog">
           <header className="city-map-heading">
@@ -997,12 +1017,12 @@ export default function Home() {
         </section>
       </div>}
       {!folderOpened ? <section className="office-arrival-screen" aria-label="Рабочий кабинет">
-        <div className="office-arrival-copy"><span className="office-arrival-kicker">РАБОЧИЙ ДЕНЬ · {officeCalendarDay} {officeCalendarMonth} 2026</span><h2>{officeGreeting},<br /><em>{character.name}.</em></h2><p>Кабинет ещё тих. На столе ждут материалы, которые предстоит рассмотреть. Осмотритесь и откройте папку, когда будете готовы.</p><div className="office-arrival-status"><span className="live-dot" /> {location === "reception" ? "ПРИЁМНАЯ ГОТОВА К РАБОТЕ" : "МАТЕРИАЛЫ ПРОВЕРКИ ПОДГОТОВЛЕНЫ"}</div></div>
+        <div className="office-arrival-copy"><span className="office-arrival-kicker">РАБОЧИЙ ДЕНЬ · {officeCalendarDay} {officeCalendarMonth} 2026</span><h2>{officeGreeting},<br /><em>{character.name}.</em></h2><p>Кабинет ещё тих. На столе ждут материалы, которые предстоит рассмотреть. Осмотритесь и откройте папку, когда будете готовы.</p><div className="office-arrival-status"><span className="live-dot" /> {location === "reception" ? "ПРИЁМНАЯ ГОТОВА К РАБОТЕ" : "МАТЕРИАЛЫ ПРОВЕРКИ ПОДГОТОВЛЕНЫ"}</div>{location === "reception" && <div className="office-arrival-incoming"><span>НОВЫЕ ЗАЯВЛЕНИЯ</span><strong>{dailyComplaintIds.length}</strong><small>сегодня</small>{carriedComplaintIds.length > 0 && <em>+{carriedComplaintIds.length} перенесено</em>}</div>}</div>
         <button type="button" className="office-arrival-folder" onClick={() => setFolderOpened(true)} aria-label="Открыть папку с входящими материалами"><span className="office-arrival-folder-tab" /><span className="office-arrival-folder-head"><span>ВХОДЯЩИЕ МАТЕРИАЛЫ</span><small>КАНЦЕЛЯРИЯ · 2026</small></span><span className="office-arrival-folder-title">{location === "reception" ? "Обращение гражданина" : "Материалы проверки"}</span><span className="office-arrival-folder-number">№ {String(location === "reception" ? complaintIndex + 1 : caseIndex + 1).padStart(3,"0")}</span><span className="office-arrival-folder-action">ОТКРЫТЬ ПАПКУ <ChevronRight size={15} /></span></button>
         <div className="office-arrival-bottom"><span>ПРИЁМНАЯ № 07</span><span>НАЖМИТЕ НА ПАПКУ, ЧТОБЫ НАЧАТЬ РАБОТУ</span><span>СМЕНА {dayNumber} · {officeTimeHour}:00</span></div>
       </section> : <section className="workspace">
         <aside className="briefing panel">
-          <div className="rule-row"><span>Дел в очереди</span><b>{activeCases.length - Math.min(caseIndex, activeCases.length - 1)}</b></div>
+          <div className="rule-row"><span>{location === "reception" ? "Обращений в очереди" : "Дел в очереди"}</span><b>{location === "reception" ? Math.max(0, activeComplaints.length - complaintIndex) : activeCases.length - Math.min(caseIndex, activeCases.length - 1)}</b></div>
           <div className="rule-row"><span>Доверие канцелярии</span><b>{trust} / 5</b></div>
           <div className="reputation-mini"><div><span>РЕПУТАЦИЯ</span><b>{reputationLabel}</b></div><div><span>КАЧЕСТВО</span><strong>{reputation.quality}/5</strong></div><div><span>РИСК ПРОВЕРКИ</span><strong className={reputation.risk >= 4 ? "risk-high" : ""}>{Math.round(reputation.risk)}/5</strong></div><GuidanceItem label="Поощрения" items={REWARDS_GUIDANCE} counts={rewardCounts} /><GuidanceItem label="Дисциплинарные взыскания" items={DISCIPLINE_GUIDANCE} counts={disciplineCounts} /></div>
           <div className="stamp-note">«Не торопись<br />с формулировкой»</div>

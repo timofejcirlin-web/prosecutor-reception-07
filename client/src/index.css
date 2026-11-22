@@ -3031,3 +3031,162 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
   .response-followup { padding: 9px; }
   .response-followup small { font-size: 8px; }
 }
+
+/* CINEMATIC SCREEN TRANSITIONS · gentle camera movement between workspaces */
+@keyframes office-cinematic-arrival {
+  0% { opacity: 0; transform: scale(1.018) translateY(8px); filter: brightness(.82) blur(2px); }
+  55% { opacity: 1; filter: brightness(1.025) blur(0); }
+  100% { opacity: 1; transform: scale(1) translateY(0); filter: brightness(1) blur(0); }
+}
+@keyframes office-dossier-open {
+  0% { opacity: 0; transform: translateY(18px) scale(.985); filter: blur(3px); }
+  65% { opacity: 1; filter: blur(0); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes office-document-arrive {
+  0% { opacity: 0; transform: translateY(10px) rotateX(2deg); filter: blur(2px); }
+  100% { opacity: 1; transform: translateY(0) rotateX(0); filter: blur(0); }
+}
+@keyframes office-dialog-arrive {
+  0% { opacity: 0; transform: translateY(18px) scale(.975); filter: blur(4px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+@keyframes office-summary-arrive {
+  0% { opacity: 0; transform: translateY(22px) scale(.985); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.office-arrival-screen {
+  animation: office-cinematic-arrival .95s cubic-bezier(.2,.72,.2,1) both;
+}
+.office-arrival-copy {
+  animation: office-document-arrive .8s .12s both;
+}
+.office-arrival-folder {
+  animation: office-dossier-open .82s .22s cubic-bezier(.18,.74,.2,1) both;
+}
+.workspace,
+.case-area {
+  animation: office-dossier-open .72s cubic-bezier(.2,.72,.2,1) both;
+  transform-origin: 50% 55%;
+}
+.complaint-area,
+.paper-card {
+  animation: office-document-arrive .68s .08s both;
+  transform-origin: 50% 28%;
+}
+.complaint-portrait,
+.complaint-card {
+  animation: office-document-arrive .58s .14s both;
+}
+.complaint-documents .material-content,
+.materials-box .material-content {
+  animation: office-document-arrive .38s cubic-bezier(.2,.72,.2,1) both;
+  transform-origin: top center;
+}
+.registry-dialog,
+.city-map-dialog,
+.response-act-dialog,
+.reception-questions-dialog,
+.game-over-card {
+  animation: office-dialog-arrive .46s cubic-bezier(.18,.74,.2,1) both;
+  transform-origin: center;
+}
+.day-summary-card,
+.finish-card {
+  animation: office-summary-arrive .72s cubic-bezier(.2,.72,.2,1) both;
+}
+.office-arrival-folder:active {
+  transition-duration: .12s;
+}
+.city-map-open-button,
+.registry-open-button,
+.office-return-button,
+.route-switch-button,
+.end-day-button {
+  transition: transform .18s ease, filter .18s ease, background-color .18s ease;
+}
+.city-map-open-button:active,
+.registry-open-button:active,
+.office-return-button:active,
+.route-switch-button:active,
+.end-day-button:active {
+  transform: translateY(1px) scale(.985);
+}
+.office-arrival-incoming {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  margin-top: 13px;
+  padding-top: 11px;
+  border-top: 1px solid rgba(212,178,122,.17);
+}
+.office-arrival-incoming span {
+  color: rgba(221,207,183,.58);
+  font: 600 7px 'IBM Plex Mono';
+  letter-spacing: .12em;
+}
+.office-arrival-incoming strong {
+  color: #e1c18b;
+  font: 500 21px/1 'Manrope';
+  font-variant-numeric: tabular-nums;
+}
+.office-arrival-incoming small {
+  color: rgba(221,207,183,.62);
+  font: 400 9px 'Manrope';
+}
+.office-arrival-incoming em {
+  margin-left: auto;
+  color: #bca174;
+  font: normal 600 7px 'IBM Plex Mono';
+  letter-spacing: .03em;
+}
+@media (max-width: 600px) {
+  .office-arrival-incoming { gap: 5px; }
+  .office-arrival-incoming em { font-size: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .office-arrival-screen,
+  .office-arrival-copy,
+  .office-arrival-folder,
+  .workspace,
+  .case-area,
+  .complaint-area,
+  .paper-card,
+  .complaint-portrait,
+  .complaint-card,
+  .complaint-documents .material-content,
+  .materials-box .material-content,
+  .registry-dialog,
+  .city-map-dialog,
+  .response-act-dialog,
+  .reception-questions-dialog,
+  .game-over-card,
+  .day-summary-card,
+  .finish-card {
+    animation: none !important;
+    filter: none !important;
+  }
+}
+
+.shift-arrivals {
+  margin-left: 7px;
+  color: #d5b77d;
+  font: 700 7px 'IBM Plex Mono';
+  letter-spacing: .08em;
+  white-space: nowrap;
+}
+@media (max-width: 900px) {
+  .shift-arrivals { display: none; }
+}
+
+
+@media (max-width: 900px) {
+  .office-arrival-folder {
+    animation-name: office-dossier-open-mobile;
+  }
+  @keyframes office-dossier-open-mobile {
+    0% { opacity: 0; transform: translate(-50%,18px) rotate(-4deg) scale(.985); filter: blur(3px); }
+    65% { opacity: 1; filter: blur(0); }
+    100% { opacity: 1; transform: translate(-50%,0) rotate(-1.5deg) scale(1); filter: blur(0); }
+  }
+}
