@@ -143,17 +143,20 @@ type ResponseOption = { id: ResponseAct; title: string; detail: string; energyCo
 type ComplaintFollowUp = { id: string; title: string; detail: string; energyCost: number; required?: boolean; dependsOn?: string };
 type Complaint = { id: string; responseAct?: ResponseAct; responseActReason?: string; acceptedResponseActs?: ResponseAct[]; responseOptions?: ResponseOption[]; responseFollowUps?: ComplaintFollowUp[]; intakeQuestion?: { prompt: string; answer: string }; title: string; applicant: string; role: string; situation: string; request: string; correct: "accept" | "reject"; outcome: string; background: string; portrait: string; documents: Material[]; extra: Material; displayApplicant?: boolean; bribe?: boolean };
 
-const drawDailyComplaintIds = (pool: Complaint[], seenIds: string[]) => {
-  const count = Math.min(3, pool.length);
-  const unseen = pool.filter((complaint) => !seenIds.includes(complaint.id));
+const drawDailyComplaintIds = (pool: Complaint[], seenIds: string[], excludedIds: string[] = []) => {
+  const eligible = pool.filter((complaint) => !excludedIds.includes(complaint.id)).filter((complaint, index, items) => items.findIndex((candidate) => candidate.id === complaint.id) === index);
+  const count = Math.min(3, eligible.length);
+  const unseen = eligible.filter((complaint) => !seenIds.includes(complaint.id));
+  // Start a new cycle only when too few unseen items remain for a full daily batch.
+  // Carried cases are excluded and duplicate IDs are collapsed before drawing.
   const resetCycle = unseen.length < count;
-  const source = [...(resetCycle ? pool : unseen)];
+  const source = [...(resetCycle ? eligible : unseen)];
   for (let i = source.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [source[i], source[j]] = [source[j], source[i]];
   }
-  const ids = source.slice(0, count).map((complaint) => complaint.id);
-  return { ids, seenIds: resetCycle ? ids : [...seenIds, ...ids] };
+  const ids = source.slice(0, Math.min(3, source.length)).map((complaint) => complaint.id);
+  return { ids, seenIds: resetCycle ? ids : [...seenIds, ...ids].filter((id, index, all) => all.indexOf(id) === index) };
 };
 
 type ConsequenceEvent = { title: string; text: string; tone: "good" | "warn" };
@@ -207,8 +210,8 @@ PROFILE_COMPLAINTS.territorial = [
       { id: "site-inspection", title: "Акт осмотра интернет-сайта и приложение", detail: "Зафиксировать адрес, дату и время доступа, содержание страницы и ход осмотра." }
     ],
     responseFollowUps: [
-      { id: "send-to-subject", title: "Направить материалы в прокуратуру субъекта РФ", detail: "Для составления заключения по материалам осмотра.", energyCost: 0, required: true },
-      { id: "send-to-general", title: "Направить материалы в Генеральную прокуратуру РФ", detail: "После подготовки заключения — для решения вопроса о полномочиях по статье 15.3 Федерального закона № 149-ФЗ.", energyCost: 0, required: true, dependsOn: "send-to-subject" }
+      { id: "send-to-subject", title: "Направить акт осмотра и приложения в прокуратуру субъекта РФ", detail: "Прокуратура субъекта изучает материалы и готовит заключение.", energyCost: 0, required: true },
+      { id: "send-to-general", title: "После заключения направить материалы в Генеральную прокуратуру РФ", detail: "Материалы направляются только после того, как прокуратура субъекта подготовит заключение, — для решения вопроса о полномочиях по статье 15.3 Федерального закона № 149-ФЗ.", energyCost: 0, required: true, dependsOn: "send-to-subject" }
     ]
   },
   {
@@ -330,7 +333,7 @@ function MusicPlayer({ albumIndex, trackIndex, isPlaying, isOpen, onToggleOpen, 
 function GuidanceItem({ label, items, counts }: { label: string; items: string[]; counts: CountMap }) {
   const [open, setOpen] = useState(false);
   const total = items.reduce((sum, item) => sum + (counts[item] ?? 0), 0);
-  return <div className="guidance-item"><span>{label}</span><button className="guidance-help" aria-label={`Подробнее: ${label}`} aria-expanded={open} onClick={() => setOpen((value) => !value)}>?</button>{open && <div className="guidance-tooltip guidance-tooltip-open" role="tooltip"><strong>{label}</strong><ul>{items.map((item) => <li key={item}><span>{item}</span><b>{counts[item] ?? 0}</b></li>)}</ul><footer>ВСЕГО: <b>{total}</b></footer></div>}</div>;
+  return <div className="guidance-item"><span>{label}</span><button type="button" className="guidance-count-button" aria-label={`Открыть историю: ${label}, всего ${total}`} aria-expanded={open} onClick={() => setOpen(true)}><strong>{total}</strong><small>ОТКРЫТЬ</small></button>{open && <div className="guidance-records-overlay" onMouseDown={(event) => event.target === event.currentTarget && setOpen(false)}><section className="guidance-records-dialog" role="dialog" aria-modal="true" aria-label={label}><header><div><span>ЛИЧНОЕ ДЕЛО СОТРУДНИКА</span><h3>{label}</h3></div><button type="button" onClick={() => setOpen(false)} aria-label="Закрыть"><X size={18}/></button></header><ul>{items.map((item) => <li key={item}><span>{item}</span><b>{counts[item] ?? 0}</b></li>)}</ul><footer><span>ВСЕГО ЗА КАРЬЕРУ</span><strong>{total}</strong></footer></section></div>}</div>;
 }
 
 const PRELOAD_IMAGES = [OFFICE_BG, ...Object.values(PROFILE_BACKGROUNDS), ...Object.values(PROFILE_LOADING_BACKGROUNDS), ...Object.values(PROFILE_PORTRAITS), ...Object.values(PROFILE_CARD_PORTRAITS), ADMIN_MAP_SVG];
@@ -382,7 +385,7 @@ export default function Home() {
   const [registryOpen, setRegistryOpen] = useState(false);
   const [registrySearch, setRegistrySearch] = useState("");
   const [registryStatus, setRegistryStatus] = useState("all");
-  const [registryDecisions, setRegistryDecisions] = useState<Record<string, { decision: "accept" | "reject"; responseAct?: ResponseAct }>>({});
+  const [registryDecisions, setRegistryDecisions] = useState<Record<string, { decision: "accept" | "reject"; correct?: boolean; resolved?: boolean; responseAct?: ResponseAct; completedResponseFollowUps?: string[] }>>({});
   const [hoursLeft, setHoursLeft] = useState(8);
   const [dayNumber, setDayNumber] = useState(1);
   const [dayEnded, setDayEnded] = useState(false);
@@ -432,6 +435,20 @@ export default function Home() {
     risk: clampRep(value.risk + (good ? -0.25 : 1)),
   }));
 
+  const registerMeritForCorrectWork = (nextCorrectCount: number) => {
+    const reward = nextCorrectCount % 10 === 0 ? REWARDS_GUIDANCE[3]
+      : nextCorrectCount % 5 === 0 ? REWARDS_GUIDANCE[1]
+      : nextCorrectCount % 3 === 0 ? REWARDS_GUIDANCE[0]
+      : null;
+    if (!reward) return;
+    setRewardCounts((counts) => ({ ...counts, [reward]: (counts[reward] ?? 0) + 1 }));
+    setConsequenceQueue((events) => [...events, {
+      title: "Поощрение за качественную работу",
+      text: nextCorrectCount % 10 === 0 ? "За устойчивые результаты сотруднику начислена денежная премия." : nextCorrectCount % 5 === 0 ? "За пять правильных решений сотрудник награждён Почётной грамотой." : "За три правильных решения сотруднику объявлена благодарность.",
+      tone: "good"
+    }]);
+  };
+
   const registerDecisionConsequence = (good: boolean) => {
     if (good) return;
     const errorNumber = wrongDecisions + 1;
@@ -445,6 +462,7 @@ export default function Home() {
     const good = decision === current.correct;
     setScore((value) => value + (good ? 1 : 0));
     setCorrectDecisions((value) => value + (good ? 1 : 0));
+    if (good) registerMeritForCorrectWork(correctDecisions + 1);
     setTrust((value) => Math.max(0, Math.min(5, value + (good ? 0 : -1))));
     adjustReputation(good, false);
     registerDecisionConsequence(good);
@@ -578,6 +596,12 @@ export default function Home() {
   const officeCalendarDay = officeCalendarDate.getUTCDate();
   const officeCalendarMonth = officeCalendarMonths[officeCalendarDate.getUTCMonth()];
   const officeGreeting = officeTimeHour < 12 ? "Доброе утро" : officeTimeHour < 17 ? "Добрый день" : "Добрый вечер";
+  const completedReceptionCount = Object.values(registryDecisions).filter((record) => record.correct === true).length;
+  const officeArrivalMessage = completedReceptionCount === 0
+    ? "Кабинет ещё тих. На столе ждут материалы, которые предстоит рассмотреть. Осмотритесь и откройте папку, когда будете готовы."
+    : completedReceptionCount === 1
+      ? "По первой жалобе уже принято обоснованное решение. В журнале сохранён результат, а на столе ждут следующие материалы."
+      : `Работа идёт полным ходом: обоснованные решения уже приняты по ${completedReceptionCount} обращениям. Новые материалы ждут вашего внимания.`;
 
   const createCharacter = () => {
     const name = draftName.trim();
@@ -609,34 +633,29 @@ export default function Home() {
     setLoadingLocation(nextLocation);
     setRouteLoading(true);
     window.setTimeout(() => setRouteLoading(false), 720);
-    setOpenMaterial(null);
-    setReviewedMaterials([]);
-    setComplaintIndex(0);
-    setComplaintDecision(null);
-    setResponseActDecision(null);
-    setResponseActDialogClosed(false);
-    setCompletedResponseFollowUps([]);
-    setIntakeQuestionAsked(false);
-    setHoursLeft(8);
+
+    // Переключение маршрута не начинает новую смену и не сбрасывает изученные материалы,
+    // принятое решение, документы или оставшееся рабочее время.
     const hasAdvocateCarry = carriedComplaintIds.some((id) => advocateComplaints.some((item) => item.id === id));
     const nextRightsAdvocateMode = nextLocation === "reception" && prosecutorOffice === "executive" && (dailyComplaintIds.length > 0 ? rightsAdvocateMode : hasAdvocateCarry || Math.random() < 0.3);
     setRightsAdvocateMode(nextRightsAdvocateMode);
     if (nextLocation === "reception" && dailyComplaintIds.length === 0) {
       const pool = prosecutorOffice === "executive" && nextRightsAdvocateMode ? [...(PROFILE_COMPLAINTS.executive ?? []), ...advocateComplaints] : prosecutorOffice && PROFILE_COMPLAINTS[prosecutorOffice] ? PROFILE_COMPLAINTS[prosecutorOffice] : COMPLAINTS;
-      const batch = drawDailyComplaintIds(pool, seenComplaintIds);
+      const batch = drawDailyComplaintIds(pool, seenComplaintIds, carriedComplaintIds);
       setDailyComplaintIds(batch.ids);
       setSeenComplaintIds(batch.seenIds);
     }
-    setExtraRequested(false);
   };
   const switchLocation = (nextLocation: LocationId) => chooseLocation(nextLocation);
 
   const allProfileComplaints = prosecutorOffice === "executive" && rightsAdvocateMode ? [...(PROFILE_COMPLAINTS.executive ?? []), ...advocateComplaints] : prosecutorOffice && PROFILE_COMPLAINTS[prosecutorOffice] ? PROFILE_COMPLAINTS[prosecutorOffice] : COMPLAINTS;
-  const activeComplaintIds = [...carriedComplaintIds, ...dailyComplaintIds.filter((id) => !carriedComplaintIds.includes(id))];
+  const activeComplaintIds = [...carriedComplaintIds, ...dailyComplaintIds].filter((id, index, all) => all.indexOf(id) === index);
   const activeComplaints = activeComplaintIds.length > 0 ? activeComplaintIds.map((id) => allProfileComplaints.find((item) => item.id === id)).filter((item): item is Complaint => Boolean(item)) : allProfileComplaints.slice(0, 3);
   const currentComplaint = activeComplaints[complaintIndex] ?? activeComplaints[0];
+  const currentComplaintRecord = currentComplaint ? registryDecisions[currentComplaint.id] : undefined;
+  const currentComplaintResolved = Boolean(currentComplaintRecord && (currentComplaintRecord.resolved ?? currentComplaintRecord.decision === "reject"));
   const isWrittenReception = prosecutorOffice === "executive";
-  const registryRows = activeComplaints.map((item, index) => { const record=registryDecisions[item.id] ?? (index===complaintIndex && complaintDecision ? {decision:complaintDecision,responseAct:responseActDecision ?? undefined} : undefined); const status=!record ? "received" : record.decision === "reject" ? "rejected" : record.responseAct ? "verification" : "review"; return { item, index, status }; });
+  const registryRows = activeComplaints.map((item, index) => { const record=registryDecisions[item.id] ?? (index===complaintIndex && complaintDecision ? {decision:complaintDecision,responseAct:responseActDecision ?? undefined} : undefined); const resolved = Boolean(record && (record.resolved ?? record.decision === "reject")); const status=!record ? "received" : !resolved ? record.responseAct ? "verification" : "review" : record.decision === "reject" ? "rejected" : record.responseAct ? "verification" : "completed"; return { item, index, status }; });
   const cityClamp = (value: number) => Math.max(0, Math.min(100, Math.round(value)));
   const cityDistricts = [
     { id: "central", name: "Центральный", kind: "Административный центр", focus: "Муниципальное управление", concern: "Земельные распоряжения, исполнение решений и работа органов власти.", signal: "Управленческая устойчивость", score: cityClamp((reputation.leadership * .55 + reputation.quality * .45) * 20), icon: Building2, note: "Здесь сосредоточены органы управления и ключевые административные решения." },
@@ -671,6 +690,7 @@ export default function Home() {
     const statusLabel = status === "received" ? "Новое обращение"
       : status === "review" ? "На рассмотрении"
       : status === "verification" ? "Назначена проверка"
+      : status === "completed" ? "Завершено"
       : "Отказано";
     return {
       id: item.id, index, title: item.title, applicant: item.applicant,
@@ -680,10 +700,10 @@ export default function Home() {
     };
   });
   const selectedCityEvent = cityEvents.find((event) => event.id === selectedCityEventId) ?? null;
-  const cityOpenAppeals = Math.max(registryRows.filter(({ status }) => status !== "rejected").length, pendingComplaints);
+  const cityOpenAppeals = Math.max(registryRows.filter(({ status }) => status === "received" || status === "review" || status === "verification").length, pendingComplaints);
   const cityStatusLabel = (value: number) => value >= 75 ? "Устойчиво" : value >= 55 ? "Под наблюдением" : "Требует внимания";
   const filteredRegistryRows = registryRows.filter(({item,index,status}) => { const q=registrySearch.trim().toLowerCase(); const matches=!q || item.applicant.toLowerCase().includes(q) || item.title.toLowerCase().includes(q) || String(index+1).padStart(2,"0").includes(q); return matches && (registryStatus === "all" || status === registryStatus); });
-  const openRegistryComplaint = (index:number) => { setFolderOpened(false); setComplaintIndex(index); setComplaintDecision(null); setResponseActDecision(null); setResponseActDialogClosed(false); setCompletedResponseFollowUps([]); setIntakeQuestionAsked(false); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setAskedReceptionQuestions([]); setActiveReceptionQuestion(null); setReceptionQuestionsDialogOpen(false); setExtraRequested(false); setRegistryOpen(false); setLocation("reception"); };
+  const openRegistryComplaint = (index:number) => { const item = activeComplaints[index]; const record = item ? registryDecisions[item.id] : undefined; const resolved = Boolean(record && (record.resolved ?? record.decision === "reject")); setFolderOpened(true); setComplaintIndex(index); setComplaintDecision(record?.correct === false ? null : record?.decision ?? null); setResponseActDecision(record?.responseAct ?? null); setResponseActDialogClosed(resolved); setCompletedResponseFollowUps(record?.completedResponseFollowUps ?? []); setIntakeQuestionAsked(false); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setAskedReceptionQuestions([]); setActiveReceptionQuestion(null); setReceptionQuestionsDialogOpen(false); setExtraRequested(false); setRegistryOpen(false); setLocation("reception"); };
   const complaintAssetKey = location === "reception" && currentComplaint ? `${complaintIndex}|${currentComplaint.background}|${isWrittenReception ? "written" : currentComplaint.portrait}` : null;
   const [loadedComplaintAssetKey, setLoadedComplaintAssetKey] = useState<string | null>(null);
   useEffect(() => {
@@ -706,9 +726,7 @@ export default function Home() {
     : [];
   const hasReceptionDialogue = receptionQuestions.length > 0;
   const isIntakeQuestionDialogue = Boolean(currentComplaint.intakeQuestion);
-  const receptionDialogueReady = hasReceptionDialogue
-    ? askedReceptionQuestions.length >= 2 && (!isIntakeQuestionDialogue || (intakeQuestionAsked && extraRequested))
-    : !isIntakeQuestionDialogue || (intakeQuestionAsked && extraRequested);
+  const receptionDialogueReady = true; // Уточняющие вопросы помогают проверке, но не блокируют решение по жалобе.
   const responseActOptions = currentComplaint.responseOptions ?? [
     { id: "protest" as ResponseAct, title: "Протест", detail: "На противоречащий закону правовой акт." },
     { id: "representation" as ResponseAct, title: "Представление", detail: "Об устранении нарушений закона, причин и условий." }
@@ -726,7 +744,7 @@ export default function Home() {
     if (currentComplaint.id === "territorial-collective-agreement" && index === 0) setIntakeQuestionAsked(true);
   };
   const decideComplaint = (decision: "accept" | "reject") => {
-    if (complaintDecision || hoursLeft < 1 || gameOver || (decision === "accept" && hoursLeft < 1 + requiredFollowUpEnergy)) return;
+    if (complaintDecision || currentComplaintResolved || hoursLeft < 1 || gameOver || (decision === "accept" && hoursLeft < 1 + requiredFollowUpEnergy)) return;
     const remaining = Math.max(0, hoursLeft - 1);
     const good = decision === currentComplaint.correct;
     const bribeAccepted = Boolean(currentComplaint.bribe && decision === "accept");
@@ -734,8 +752,13 @@ export default function Home() {
     setComplaintDecision(decision);
     setResponseActDecision(null);
     setResponseActDialogClosed(false);
-    setRegistryDecisions((records) => ({...records,[currentComplaint.id]:{decision}}));
+    setRegistryDecisions((records) => ({...records,[currentComplaint.id]:{
+      ...records[currentComplaint.id], decision, correct: good,
+      resolved: good && (decision === "reject" || prosecutorOffice !== "territorial"),
+      responseAct: undefined, completedResponseFollowUps: []
+    }}));
     setCorrectDecisions((value) => value + (good ? 1 : 0));
+    if (good) { setRepeatComplaintIndex(null); registerMeritForCorrectWork(correctDecisions + 1); }
     adjustReputation(good, true);
     registerDecisionConsequence(good);
     if (bribeAccepted) { setGameOverReason("bribe"); setGameOver(true); }
@@ -748,16 +771,19 @@ export default function Home() {
     if (remaining === 0 && !(decision === "accept" && prosecutorOffice === "territorial")) endDay(decision, [...consequenceQueue, event], !good);
   };
   const chooseResponseAct = (act: ResponseAct) => {
-    if (responseActDecision || complaintDecision !== "accept" || prosecutorOffice !== "territorial" || gameOver) return;
+    if (responseActDecision || complaintDecision !== "accept" || prosecutorOffice !== "territorial" || currentComplaintRecord?.correct === false || gameOver) return;
     const option = responseActOptions.find((item) => item.id === act);
     const energyCost = option?.energyCost ?? 0;
     if (hoursLeft < energyCost + requiredFollowUpEnergy) return;
     if (energyCost > 0) setHoursLeft((value) => value - energyCost);
     setCompletedResponseFollowUps([]);
     setResponseActDecision(act);
-    setRegistryDecisions((records) => ({...records,[currentComplaint.id]:{decision:"accept",responseAct:act}}));
+    setRegistryDecisions((records) => ({...records,[currentComplaint.id]:{
+      ...records[currentComplaint.id], decision:"accept", correct:true, responseAct:act,
+      completedResponseFollowUps: [], resolved: requiredResponseFollowUps.length === 0
+    }}));
     setResponseActDialogClosed(false);
-    if (hoursLeft === energyCost && (currentComplaint.responseFollowUps ?? []).length === 0) endDay("accept");
+    if (hoursLeft === energyCost && (currentComplaint.responseFollowUps ?? []).length === 0) endDay("accept", undefined, false);
   };
 
   const completeResponseFollowUp = (id: string) => {
@@ -770,24 +796,32 @@ export default function Home() {
     const nextEvents = [...consequenceQueue, event];
     setConsequenceQueue(nextEvents);
     const allRequiredDone = requiredResponseFollowUps.every((item) => completedResponseFollowUps.includes(item.id) || item.id === id);
-    if (hoursLeft === action.energyCost && allRequiredDone) endDay("accept", nextEvents);
+    const nextCompletedFollowUps = [...completedResponseFollowUps, id];
+    setRegistryDecisions((records) => ({...records,[currentComplaint.id]:{
+      ...records[currentComplaint.id], decision: "accept", correct: true, responseAct: responseActDecision ?? undefined,
+      completedResponseFollowUps: nextCompletedFollowUps, resolved: allRequiredDone
+    }}));
+    if (hoursLeft === action.energyCost && allRequiredDone) endDay("accept", nextEvents, false);
   };
 
   const nextComplaint = () => {
     if (!complaintDecision || dayEnded || gameOver) return;
     if (hoursLeft === 0) { endDay(complaintDecision); return; }
-    if (prosecutorOffice === "territorial" && complaintDecision === "accept" && (!responseActDecision || !responseFollowUpsReady)) return;
+    if (prosecutorOffice === "territorial" && complaintDecision === "accept" && currentComplaintRecord?.correct !== false && (!responseActDecision || !responseFollowUpsReady)) return;
     if (complaintIndex >= activeComplaints.length - 1) endDay(complaintDecision);
     else { setFolderOpened(false); setComplaintIndex((value) => value + 1); setComplaintDecision(null); setResponseActDecision(null); setResponseActDialogClosed(false); setCompletedResponseFollowUps([]); setIntakeQuestionAsked(false); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setAskedReceptionQuestions([]); setActiveReceptionQuestion(null); setExtraRequested(false); }
   };
 
-  const endDay = (resolvedDecision?: "accept" | "reject", eventsOverride?: ConsequenceEvent[], repeatOverride = false) => {
+  const endDay = (resolvedDecision?: "accept" | "reject", eventsOverride?: ConsequenceEvent[], repeatOverride?: boolean) => {
     const resolved = resolvedDecision ?? complaintDecision;
-    const repeats = location === "reception" && (repeatComplaintIndex !== null || repeatOverride);
+    const queueIsActive = dailyComplaintIds.length > 0 || carriedComplaintIds.length > 0;
+    const acceptedButStillInProgress = resolved === "accept" && currentComplaintRecord?.correct === true && !currentComplaintResolved;
+    const repeats = repeatOverride ?? (repeatComplaintIndex !== null || acceptedButStillInProgress);
     const nextPendingStart = repeats ? (repeatComplaintIndex ?? complaintIndex) : complaintIndex + (resolved ? 1 : 0);
-    const nextCarry = location === "reception" ? activeComplaints.slice(Math.max(0, nextPendingStart)).map((item) => item.id) : carriedComplaintIds;
+    const shouldCarryQueue = location === "reception" || queueIsActive;
+    const nextCarry = shouldCarryQueue ? activeComplaints.slice(Math.max(0, nextPendingStart)).map((item) => item.id) : carriedComplaintIds;
     const unresolved = nextCarry.length;
-    if (location === "reception") setCarriedComplaintIds(nextCarry);
+    if (shouldCarryQueue) setCarriedComplaintIds(nextCarry);
     setPendingComplaints(unresolved);
     if (resolved && unresolved > 0 && !repeats) {
       setComplaintIndex((value) => value + 1);
@@ -811,7 +845,7 @@ export default function Home() {
     const hasAdvocateCarry = carriedComplaintIds.some((id) => advocateComplaints.some((item) => item.id === id));
     const nextRightsAdvocateMode = prosecutorOffice === "executive" && (hasAdvocateCarry || Math.random() < 0.3);
     const pool = prosecutorOffice === "executive" && nextRightsAdvocateMode ? [...(PROFILE_COMPLAINTS.executive ?? []), ...advocateComplaints] : prosecutorOffice && PROFILE_COMPLAINTS[prosecutorOffice] ? PROFILE_COMPLAINTS[prosecutorOffice] : COMPLAINTS;
-    const batch = drawDailyComplaintIds(pool, seenComplaintIds);
+    const batch = drawDailyComplaintIds(pool, seenComplaintIds, carriedComplaintIds);
     setDailyComplaintIds(batch.ids);
     setSeenComplaintIds(batch.seenIds);
     setPendingComplaints(carriedComplaintIds.length);
@@ -1060,7 +1094,7 @@ export default function Home() {
         <button type="button" className="save-game-icon" onClick={saveGame} title={saveNotice === "saved" ? "Игра сохранена" : saveNotice === "error" ? "Ошибка сохранения" : "Сохранить игру"} aria-label="Сохранить игру">{saveNotice === "saved" ? <Check size={17} /> : <Save size={17} />}</button><button type="button" className="menu-button top-menu-button top-menu-icon" onClick={returnToMainMenu} title="Главное меню" aria-label="Главное меню"><HomeIcon size={18} /></button><div className={`save-notice ${saveNotice ?? ""}`} role="status" aria-live="polite">{saveNotice === "saved" ? "ИГРА СОХРАНЕНА" : saveNotice === "error" ? "НЕ УДАЛОСЬ СОХРАНИТЬ" : ""}</div>
       </header>
 
-      {registryOpen && <div className="registry-overlay"><section className="registry-dialog" role="dialog" aria-modal="true" aria-labelledby="registry-title"><button className="registry-close" onClick={() => setRegistryOpen(false)} aria-label="Закрыть">×</button><div className="registry-kicker">КАНЦЕЛЯРИЯ · ТЕРРИТОРИАЛЬНАЯ ПРОКУРАТУРА</div><h2 id="registry-title">Журнал регистрации обращений</h2><p className="registry-subtitle">Сегодня поступило: {dailyComplaintIds.length} новых · Перенесено: {carriedComplaintIds.length}</p><div className="registry-toolbar"><input value={registrySearch} onChange={(e)=>setRegistrySearch(e.target.value)} placeholder="Поиск по заявителю, теме или номеру"/><select value={registryStatus} onChange={(e)=>setRegistryStatus(e.target.value)}><option value="all">Все статусы</option><option value="received">Поступило</option><option value="review">На рассмотрении</option><option value="verification">Назначена проверка</option><option value="rejected">Отказано</option></select></div><div className="registry-table-wrap"><table className="registry-table"><thead><tr><th>Входящий №</th><th>Дата</th><th>Заявитель</th><th>Предмет обращения</th><th>Статус</th><th></th></tr></thead><tbody>{filteredRegistryRows.map(({item,index,status})=><tr key={item.id} className={index===complaintIndex?"current":""}><td>{String(index+1).padStart(2,"0")}-2026</td><td>17.09.2026</td><td>{item.applicant}</td><td>{item.title}</td><td><span className={"registry-status "+status}>{status==="received"?"Поступило":status==="review"?"На рассмотрении":status==="verification"?"Назначена проверка":"Отказано"}</span></td><td><button onClick={()=>openRegistryComplaint(index)}>Открыть</button></td></tr>)}</tbody></table>{filteredRegistryRows.length===0&&<div className="registry-empty">По заданным условиям обращений не найдено.</div>}</div><div className="registry-footer"><span>Всего: {registryRows.length} · Поступило: {registryRows.filter(x=>x.status==="received").length} · На рассмотрении: {registryRows.filter(x=>x.status==="review").length} · Отказано: {registryRows.filter(x=>x.status==="rejected").length}</span><button onClick={()=>setRegistryOpen(false)}>Закрыть журнал</button></div></section></div>}
+      {registryOpen && <div className="registry-overlay"><section className="registry-dialog" role="dialog" aria-modal="true" aria-labelledby="registry-title"><button className="registry-close" onClick={() => setRegistryOpen(false)} aria-label="Закрыть">×</button><div className="registry-kicker">КАНЦЕЛЯРИЯ · ТЕРРИТОРИАЛЬНАЯ ПРОКУРАТУРА</div><h2 id="registry-title">Журнал регистрации обращений</h2><p className="registry-subtitle">Сегодня поступило: {dailyComplaintIds.length} новых · Перенесено: {carriedComplaintIds.length}</p><div className="registry-toolbar"><input value={registrySearch} onChange={(e)=>setRegistrySearch(e.target.value)} placeholder="Поиск по заявителю, теме или номеру"/><select value={registryStatus} onChange={(e)=>setRegistryStatus(e.target.value)}><option value="all">Все статусы</option><option value="received">Поступило</option><option value="review">На рассмотрении</option><option value="verification">Назначена проверка</option><option value="completed">Завершено</option><option value="rejected">Отказано</option></select></div><div className="registry-table-wrap"><table className="registry-table"><thead><tr><th>Входящий №</th><th>Дата</th><th>Заявитель</th><th>Предмет обращения</th><th>Статус</th><th></th></tr></thead><tbody>{filteredRegistryRows.map(({item,index,status})=><tr key={item.id} className={index===complaintIndex?"current":""}><td>{String(index+1).padStart(2,"0")}-2026</td><td>17.09.2026</td><td>{item.applicant}</td><td>{item.title}</td><td><span className={"registry-status "+status}>{status==="received"?"Поступило":status==="review"?"На рассмотрении":status==="verification"?"Назначена проверка":status==="completed"?"Завершено":"Отказано"}</span></td><td><button onClick={()=>openRegistryComplaint(index)}>Открыть</button></td></tr>)}</tbody></table>{filteredRegistryRows.length===0&&<div className="registry-empty">По заданным условиям обращений не найдено.</div>}</div><div className="registry-footer"><span>Всего: {registryRows.length} · Поступило: {registryRows.filter(x=>x.status==="received").length} · На рассмотрении: {registryRows.filter(x=>x.status==="review").length} · Проверки: {registryRows.filter(x=>x.status==="verification").length} · Завершено: {registryRows.filter(x=>x.status==="completed").length} · Отказано: {registryRows.filter(x=>x.status==="rejected").length}</span><button onClick={()=>setRegistryOpen(false)}>Закрыть журнал</button></div></section></div>}
       {cityMapOpen && <div className="city-map-overlay" role="dialog" aria-modal="true" aria-labelledby="city-map-title">
         <section className="city-map-dialog">
           <header className="city-map-heading">
@@ -1120,7 +1154,7 @@ export default function Home() {
         </section>
       </div>}
       {!folderOpened ? <section className="office-arrival-screen" aria-label="Рабочий кабинет">
-        <div className="office-arrival-copy"><span className="office-arrival-kicker">РАБОЧИЙ ДЕНЬ · {officeCalendarDay} {officeCalendarMonth} 2026</span><h2>{officeGreeting},<br /><em>{character.name}.</em></h2><p>Кабинет ещё тих. На столе ждут материалы, которые предстоит рассмотреть. Осмотритесь и откройте папку, когда будете готовы.</p><div className="office-arrival-status"><span className="live-dot" /> {location === "reception" ? "ПРИЁМНАЯ ГОТОВА К РАБОТЕ" : "МАТЕРИАЛЫ ПРОВЕРКИ ПОДГОТОВЛЕНЫ"}</div>{location === "reception" && <div className="office-arrival-incoming"><span>НОВЫЕ ЗАЯВЛЕНИЯ</span><strong>{dailyComplaintIds.length}</strong><small>сегодня</small>{carriedComplaintIds.length > 0 && <em>+{carriedComplaintIds.length} перенесено</em>}</div>}</div>
+        <div className="office-arrival-copy"><span className="office-arrival-kicker">РАБОЧИЙ ДЕНЬ · {officeCalendarDay} {officeCalendarMonth} 2026</span><h2>{officeGreeting},<br /><em>{character.name}.</em></h2><p>{officeArrivalMessage}</p><div className="office-arrival-status"><span className="live-dot" /> {location === "reception" ? "ПРИЁМНАЯ ГОТОВА К РАБОТЕ" : "МАТЕРИАЛЫ ПРОВЕРКИ ПОДГОТОВЛЕНЫ"}</div>{location === "reception" && <div className="office-arrival-incoming"><span>НОВЫЕ ЗАЯВЛЕНИЯ</span><strong>{dailyComplaintIds.length}</strong><small>сегодня</small>{carriedComplaintIds.length > 0 && <em>+{carriedComplaintIds.length} перенесено</em>}</div>}</div>
         <button type="button" className="office-arrival-folder" onClick={() => setFolderOpened(true)} aria-label="Открыть папку с входящими материалами"><span className="office-arrival-folder-tab" /><span className="office-arrival-folder-head"><span>ВХОДЯЩИЕ МАТЕРИАЛЫ</span><small>КАНЦЕЛЯРИЯ · 2026</small></span><span className="office-arrival-folder-title">{location === "reception" ? "Обращение гражданина" : "Материалы проверки"}</span><span className="office-arrival-folder-number">№ {String(location === "reception" ? complaintIndex + 1 : caseIndex + 1).padStart(3,"0")}</span><span className="office-arrival-folder-action">ОТКРЫТЬ ПАПКУ <ChevronRight size={15} /></span></button>
         <div className="office-arrival-bottom"><span>ПРИЁМНАЯ № 07</span><span>НАЖМИТЕ НА ПАПКУ, ЧТОБЫ НАЧАТЬ РАБОТУ</span><span>СМЕНА {dayNumber} · {officeTimeHour}:00</span></div>
         <button type="button" className={`office-drawer-trigger ${officeDrawerOpen ? "active" : ""}`} onClick={() => setOfficeDrawerOpen((value) => !value)} aria-expanded={officeDrawerOpen}><span className="office-drawer-handle" /><span>ЯЩИК СТОЛА</span><ChevronRight size={13} /></button>
@@ -1135,7 +1169,7 @@ export default function Home() {
 
         {location === "reception" ? <section className={`complaint-area ${isWrittenReception ? "written-complaints-mode" : ""}`} style={{ backgroundImage: `linear-gradient(90deg, rgba(7,18,20,.15), rgba(7,18,20,.62)), url(${currentComplaint.background})` }}>
           <div className="complaint-meta"><span>{isWrittenReception ? "ОТДЕЛ ПИСЬМЕННЫХ ОБРАЩЕНИЙ" : "ПРИЁМНАЯ ГРАЖДАН"} · ОБРАЩЕНИЕ {String(complaintIndex + 1).padStart(2, "0")} / {activeComplaints.length}</span><span>{isWrittenReception ? "ТОЛЬКО ПИСЬМЕННАЯ ЖАЛОБА" : "ЛИЧНЫЙ ПРИЁМ"} · ОСТАЛОСЬ {hoursLeft} ЧАС.</span></div>
-          <div className="complaint-layout">{isWrittenReception ? <div className="written-complaint-stamp" aria-label="Письменная жалоба"><FileText size={28} /><span>ПИСЬМЕННАЯ<br />ЖАЛОБА</span><small>ЗАЯВИТЕЛЬ НЕ ПРИСУТСТВУЕТ</small></div> : <div className="complaint-portrait"><img src={currentComplaint.portrait} alt="Обезличенный портрет заявителя" /><div><span>{currentComplaint.applicant}</span><b>{currentComplaint.role}</b></div></div>}<article className="complaint-card"><div className="eyebrow"><MessageSquare size={14} /> {isWrittenReception ? "ТЕКСТ ПИСЬМЕННОГО ОБРАЩЕНИЯ" : "РАССКАЗ ЗАЯВИТЕЛЯ"}</div><h2>{currentComplaint.title}</h2><p className="complaint-speech">{isWrittenReception ? currentComplaint.situation : `«${currentComplaint.situation}»`}</p>{hasReceptionDialogue && <button type="button" className="reception-questions-launch" onClick={() => setReceptionQuestionsDialogOpen(true)}><MessageSquare size={16} /><span><b>Задать уточняющие вопросы</b><small>Задано {askedReceptionQuestions.length} из {receptionQuestions.length} · минимум 2 для решения</small></span><ChevronRight size={17} /></button>}{hasReceptionDialogue && receptionQuestionsDialogOpen && <div className="reception-questions-overlay"><section className="reception-questions-dialog" role="dialog" aria-modal="true" aria-labelledby="reception-questions-title"><button type="button" className="reception-questions-close" aria-label="Закрыть" onClick={() => setReceptionQuestionsDialogOpen(false)}>×</button><div className="reception-questions-mark"><MessageSquare size={24}/></div><div className="reception-dialogue-heading"><span id="reception-questions-title">Уточняющие вопросы прокурора</span><small>Выберите вопросы, чтобы уточнить обстоятельства обращения. Задано {askedReceptionQuestions.length} из {receptionQuestions.length}.</small></div><div className="reception-question-list">{receptionQuestions.map((question,index)=><button key={question.prompt} type="button" className={`reception-question ${activeReceptionQuestion===index?"active":""} ${askedReceptionQuestions.includes(index)?"asked":""}`} onClick={()=>askReceptionQuestion(index)}><span>{String(index+1).padStart(2,"0")}</span>{question.prompt}{askedReceptionQuestions.includes(index)&&<Check size={14}/>}</button>)}</div>{activeReceptionQuestion!==null&&<div className="reception-answer" aria-live="polite"><span>ОТВЕТ ЗАЯВИТЕЛЯ</span><p>«{receptionQuestions[activeReceptionQuestion].answer}»</p><div className="reception-finding"><strong>ЗАМЕТКА ПО ДЕЛУ</strong><p>{receptionQuestions[activeReceptionQuestion].finding}</p></div></div>}<div className="reception-questions-footer"><span>{receptionDialogueReady?"Достаточно сведений для принятия решения":"Для продолжения задайте минимум два вопроса"}</span><button type="button" className="response-act-continue" onClick={()=>setReceptionQuestionsDialogOpen(false)}>Вернуться к обращению <ChevronRight size={15}/></button></div></section></div>}{isIntakeQuestionDialogue && !hasReceptionDialogue && <div className="intake-question-card"><span>УТОЧНЕНИЕ ПРОКУРОРА</span><button type="button" onClick={() => setIntakeQuestionAsked(true)} disabled={intakeQuestionAsked || !!complaintDecision}><MessageSquare size={15}/>{intakeQuestionAsked ? "Вопрос задан" : currentComplaint.intakeQuestion?.prompt}</button>{intakeQuestionAsked && <p>Заявитель отвечает: «{currentComplaint.intakeQuestion?.answer}» Теперь можно запросить коллективный договор ООО «Завод».</p>}</div>}<div className="complaint-request"><span>ПРОСЬБА</span><p>{currentComplaint.request}</p></div><div className="complaint-documents"><div className="evidence-label"><span>ЗАПРОСИТЬ ДОКУМЕНТЫ</span><small>ИЗУЧЕНО: {reviewedComplaintDocs.length}/{complaintDocuments.length}</small></div><div className="material-tabs">{complaintDocuments.map((document, index) => <button key={document.label} className={reviewedComplaintDocs.includes(index) ? "reviewed" : ""} onClick={() => requestComplaintDocument(index)}><FileText size={13} /> {document.label}{reviewedComplaintDocs.includes(index) && <Check size={12} />}</button>)}</div>{openComplaintDoc !== null && <div className="material-content"><span>{complaintDocuments[openComplaintDoc].label}</span><p>{complaintDocuments[openComplaintDoc].text}</p></div>}</div><button className="extra-request" disabled={extraRequested || hoursLeft < 2 || !!complaintDecision || (isIntakeQuestionDialogue && !intakeQuestionAsked)} onClick={requestExtraMaterial}><FileText size={14} /><span>{extraRequested ? (currentComplaint.intakeQuestion ? "Коллективный договор получен" : "Дополнительный материал запрошен") : isIntakeQuestionDialogue ? (intakeQuestionAsked ? "Запросить коллективный договор" : "Сначала уточните организацию") : "Запросить дополнительный материал"}</span><small>{extraRequested ? "Документ добавлен в папку" : "−2 часа · ответ из ведомства"}</small></button>{complaintDecision ? <div className={`complaint-result ${complaintDecision === currentComplaint.correct ? "good" : "bad"}`}><strong>{complaintDecision === currentComplaint.correct ? "РЕШЕНИЕ ОБОСНОВАНО" : "ТРЕБУЕТСЯ ВНИМАТЕЛЬНОСТЬ"}</strong><p>{currentComplaint.outcome}</p></div> : <div className="complaint-actions"><button className="complaint-action reject" disabled={reviewedComplaintDocs.length < complaintDocuments.length || hoursLeft < 1 || !receptionDialogueReady} onClick={() => decideComplaint("reject")}><X size={18} /><span><b>Отказать</b><small>{reviewedComplaintDocs.length < complaintDocuments.length ? "Сначала изучите документы" : !receptionDialogueReady ? (isIntakeQuestionDialogue ? "Уточните организацию и запросите договор" : "Задайте минимум два вопроса") : hoursLeft < 1 ? "Рабочий день завершён" : "−1 час · недостаточно оснований"}</small></span></button><button className="complaint-action accept" disabled={reviewedComplaintDocs.length < complaintDocuments.length || hoursLeft < 1 + requiredFollowUpEnergy || !receptionDialogueReady} onClick={() => decideComplaint("accept")}><Check size={18} /><span><b>Принять жалобу</b><small>{reviewedComplaintDocs.length < complaintDocuments.length ? "Сначала изучите документы" : !receptionDialogueReady ? (isIntakeQuestionDialogue ? "Уточните организацию и запросите договор" : "Задайте минимум два вопроса") : hoursLeft < 1 + requiredFollowUpEnergy ? "Недостаточно времени для обязательных действий" : "−1 час · направить на проверку"}</small></span></button></div>}{complaintDecision === "accept" && prosecutorOffice === "territorial" && !responseActDialogClosed && <div className="response-act-overlay"><section className="response-act-dialog" role="dialog" aria-modal="true" aria-labelledby="response-act-title"><div className="response-act-dialog-mark"><Scale size={24} /></div><div className="response-act-heading"><span id="response-act-title">Выбор акта прокурорского реагирования</span><small>Жалоба принята к рассмотрению. Определите надлежащий акт и выполните необходимые последующие действия.</small></div><p className="response-act-legal-note">Выбор оценивается с учётом характера установленного нарушения и материалов обращения.</p>{!responseActDecision ? <div className="response-act-options">{responseActOptions.map((option) => <button key={option.id} className="response-act-option" disabled={hoursLeft < (option.energyCost ?? 0) + requiredFollowUpEnergy} onClick={() => chooseResponseAct(option.id)}><b>{option.title}</b><small>{option.detail}{option.energyCost ? ` · −${option.energyCost} часа` : ""}</small></button>)}</div> : <div className={`response-act-feedback ${responseActIsCorrect ? "good" : "bad"}`}><strong>{responseActIsCorrect ? "ВЫБОР СООТВЕТСТВУЕТ СЦЕНАРИЮ" : "ПРОВЕРЬТЕ ВЫБРАННОЕ РЕШЕНИЕ"}</strong><p>{currentComplaint.responseActReason}</p>{(currentComplaint.responseFollowUps ?? []).length > 0 && <div className="response-followups"><span>ПОСЛЕДУЮЩИЕ ДЕЙСТВИЯ</span>{currentComplaint.responseFollowUps?.map((action) => { const done = completedResponseFollowUps.includes(action.id); const waiting = Boolean(action.dependsOn && !completedResponseFollowUps.includes(action.dependsOn)); return <button key={action.id} type="button" className={`response-followup ${done ? "done" : ""}`} disabled={done || waiting || hoursLeft < action.energyCost} onClick={() => completeResponseFollowUp(action.id)}><span><b>{action.title}</b><small>{action.detail}</small><em>{waiting ? "Сначала выполните предыдущий этап" : done ? "Выполнено" : action.energyCost ? `−${action.energyCost} часа смены` : "Без затрат времени"}{action.required ? " · обязательно" : " · дополнительно"}</em></span><strong>{done ? "✓" : waiting ? "…" : "→"}</strong></button>; })}</div>}<button className="response-act-continue" disabled={!responseFollowUpsReady} onClick={() => setResponseActDialogClosed(true)}>{responseFollowUpsReady ? "Продолжить" : "Выполните обязательные действия"} <ChevronRight size={15} /></button></div>}</section></div>}{complaintDecision && (prosecutorOffice !== "territorial" || complaintDecision !== "accept" || (responseActDecision && responseFollowUpsReady)) && <button className="next-button" onClick={nextComplaint}>{complaintIndex === activeComplaints.length - 1 ? "Завершить день" : "Следующее заявление"} <ChevronRight size={17} /></button>}</article></div>
+          <div className="complaint-layout">{isWrittenReception ? <div className="written-complaint-stamp" aria-label="Письменная жалоба"><FileText size={28} /><span>ПИСЬМЕННАЯ<br />ЖАЛОБА</span><small>ЗАЯВИТЕЛЬ НЕ ПРИСУТСТВУЕТ</small></div> : <div className="complaint-portrait"><img src={currentComplaint.portrait} alt="Обезличенный портрет заявителя" /><div><span>{currentComplaint.applicant}</span><b>{currentComplaint.role}</b></div></div>}<article className="complaint-card"><div className="eyebrow"><MessageSquare size={14} /> {isWrittenReception ? "ТЕКСТ ПИСЬМЕННОГО ОБРАЩЕНИЯ" : "РАССКАЗ ЗАЯВИТЕЛЯ"}</div><h2>{currentComplaint.title}</h2><p className="complaint-speech">{isWrittenReception ? currentComplaint.situation : `«${currentComplaint.situation}»`}</p>{hasReceptionDialogue && <button type="button" className="reception-questions-launch" onClick={() => setReceptionQuestionsDialogOpen(true)}><MessageSquare size={16} /><span><b>Задать уточняющие вопросы</b><small>Задано {askedReceptionQuestions.length} из {receptionQuestions.length} · вопросы необязательны</small></span><ChevronRight size={17} /></button>}{hasReceptionDialogue && receptionQuestionsDialogOpen && <div className="reception-questions-overlay"><section className="reception-questions-dialog" role="dialog" aria-modal="true" aria-labelledby="reception-questions-title"><button type="button" className="reception-questions-close" aria-label="Закрыть" onClick={() => setReceptionQuestionsDialogOpen(false)}>×</button><div className="reception-questions-mark"><MessageSquare size={24}/></div><div className="reception-dialogue-heading"><span id="reception-questions-title">Уточняющие вопросы прокурора</span><small>Выберите вопросы, чтобы уточнить обстоятельства обращения. Задано {askedReceptionQuestions.length} из {receptionQuestions.length}.</small></div><div className="reception-question-list">{receptionQuestions.map((question,index)=><button key={question.prompt} type="button" className={`reception-question ${activeReceptionQuestion===index?"active":""} ${askedReceptionQuestions.includes(index)?"asked":""}`} onClick={()=>askReceptionQuestion(index)}><span>{String(index+1).padStart(2,"0")}</span>{question.prompt}{askedReceptionQuestions.includes(index)&&<Check size={14}/>}</button>)}</div>{activeReceptionQuestion!==null&&<div className="reception-answer" aria-live="polite"><span>ОТВЕТ ЗАЯВИТЕЛЯ</span><p>«{receptionQuestions[activeReceptionQuestion].answer}»</p><div className="reception-finding"><strong>ЗАМЕТКА ПО ДЕЛУ</strong><p>{receptionQuestions[activeReceptionQuestion].finding}</p></div></div>}<div className="reception-questions-footer"><span>{askedReceptionQuestions.length ? "Уточнения добавлены к материалам дела" : "Можно принять решение и без уточняющих вопросов"}</span><button type="button" className="response-act-continue" onClick={()=>setReceptionQuestionsDialogOpen(false)}>Вернуться к обращению <ChevronRight size={15}/></button></div></section></div>}{isIntakeQuestionDialogue && !hasReceptionDialogue && <div className="intake-question-card"><span>УТОЧНЕНИЕ ПРОКУРОРА</span><button type="button" onClick={() => setIntakeQuestionAsked(true)} disabled={intakeQuestionAsked || !!complaintDecision}><MessageSquare size={15}/>{intakeQuestionAsked ? "Вопрос задан" : currentComplaint.intakeQuestion?.prompt}</button>{intakeQuestionAsked && <p>Заявитель отвечает: «{currentComplaint.intakeQuestion?.answer}» Теперь можно запросить коллективный договор ООО «Завод».</p>}</div>}<div className="complaint-request"><span>ПРОСЬБА</span><p>{currentComplaint.request}</p></div><div className="complaint-documents"><div className="evidence-label"><span>ЗАПРОСИТЬ ДОКУМЕНТЫ</span><small>ИЗУЧЕНО: {reviewedComplaintDocs.length}/{complaintDocuments.length}</small></div><div className="material-tabs">{complaintDocuments.map((document, index) => <button key={document.label} className={reviewedComplaintDocs.includes(index) ? "reviewed" : ""} onClick={() => requestComplaintDocument(index)}><FileText size={13} /> {document.label}{reviewedComplaintDocs.includes(index) && <Check size={12} />}</button>)}</div>{openComplaintDoc !== null && <div className="material-content"><span>{complaintDocuments[openComplaintDoc].label}</span><p>{complaintDocuments[openComplaintDoc].text}</p></div>}</div><button className="extra-request" disabled={extraRequested || hoursLeft < 2 || !!complaintDecision} onClick={requestExtraMaterial}><FileText size={14} /><span>{extraRequested ? (currentComplaint.id === "territorial-collective-agreement" ? "Коллективный договор получен" : "Дополнительный материал запрошен") : currentComplaint.id === "territorial-collective-agreement" ? "Запросить коллективный договор" : "Запросить дополнительный материал"}</span><small>{extraRequested ? "Документ добавлен в папку" : "−2 часа · ответ из ведомства"}</small></button>{complaintDecision ? <div className={`complaint-result ${complaintDecision === currentComplaint.correct ? "good" : "bad"}`}><strong>{complaintDecision === currentComplaint.correct ? "РЕШЕНИЕ ОБОСНОВАНО" : "ТРЕБУЕТСЯ ВНИМАТЕЛЬНОСТЬ"}</strong><p>{currentComplaint.outcome}</p></div> : <div className="complaint-actions"><button className="complaint-action reject" disabled={reviewedComplaintDocs.length < complaintDocuments.length || hoursLeft < 1 || !receptionDialogueReady} onClick={() => decideComplaint("reject")}><X size={18} /><span><b>Отказать</b><small>{reviewedComplaintDocs.length < complaintDocuments.length ? "Сначала изучите документы" : !receptionDialogueReady ? (isIntakeQuestionDialogue ? "Уточните организацию и запросите договор" : "Задайте минимум два вопроса") : hoursLeft < 1 ? "Рабочий день завершён" : "−1 час · недостаточно оснований"}</small></span></button><button className="complaint-action accept" disabled={reviewedComplaintDocs.length < complaintDocuments.length || hoursLeft < 1 + requiredFollowUpEnergy || !receptionDialogueReady} onClick={() => decideComplaint("accept")}><Check size={18} /><span><b>Принять жалобу</b><small>{reviewedComplaintDocs.length < complaintDocuments.length ? "Сначала изучите документы" : !receptionDialogueReady ? (isIntakeQuestionDialogue ? "Уточните организацию и запросите договор" : "Задайте минимум два вопроса") : hoursLeft < 1 + requiredFollowUpEnergy ? "Недостаточно времени для обязательных действий" : "−1 час · направить на проверку"}</small></span></button></div>}{complaintDecision === "accept" && prosecutorOffice === "territorial" && currentComplaintRecord?.correct !== false && !responseActDialogClosed && <div className="response-act-overlay"><section className="response-act-dialog" role="dialog" aria-modal="true" aria-labelledby="response-act-title"><div className="response-act-dialog-mark"><Scale size={24} /></div><div className="response-act-heading"><span id="response-act-title">Выбор акта прокурорского реагирования</span><small>Жалоба принята к рассмотрению. Определите надлежащий акт и выполните необходимые последующие действия.</small></div><p className="response-act-legal-note">Выбор оценивается с учётом характера установленного нарушения и материалов обращения.</p>{!responseActDecision ? <div className="response-act-options">{responseActOptions.map((option) => <button key={option.id} className="response-act-option" disabled={hoursLeft < (option.energyCost ?? 0) + requiredFollowUpEnergy} onClick={() => chooseResponseAct(option.id)}><b>{option.title}</b><small>{option.detail}{option.energyCost ? ` · −${option.energyCost} часа` : ""}</small></button>)}</div> : <div className={`response-act-feedback ${responseActIsCorrect ? "good" : "bad"}`}><strong>{responseActIsCorrect ? "ВЫБОР СООТВЕТСТВУЕТ СЦЕНАРИЮ" : "ПРОВЕРЬТЕ ВЫБРАННОЕ РЕШЕНИЕ"}</strong><p>{currentComplaint.responseActReason}</p>{(currentComplaint.responseFollowUps ?? []).length > 0 && <div className="response-followups"><span>ПОСЛЕДУЮЩИЕ ДЕЙСТВИЯ</span>{currentComplaint.responseFollowUps?.map((action) => { const done = completedResponseFollowUps.includes(action.id); const waiting = Boolean(action.dependsOn && !completedResponseFollowUps.includes(action.dependsOn)); return <button key={action.id} type="button" className={`response-followup ${done ? "done" : ""}`} disabled={done || waiting || hoursLeft < action.energyCost} onClick={() => completeResponseFollowUp(action.id)}><span><b>{action.title}</b><small>{action.detail}</small><em>{waiting ? "Сначала выполните предыдущий этап" : done ? "Выполнено" : action.energyCost ? `−${action.energyCost} часа смены` : "Без затрат времени"}{action.required ? " · обязательно" : " · дополнительно"}</em></span><strong>{done ? "✓" : waiting ? "…" : "→"}</strong></button>; })}</div>}<button className="response-act-continue" disabled={!responseFollowUpsReady} onClick={() => setResponseActDialogClosed(true)}>{responseFollowUpsReady ? "Продолжить" : "Выполните обязательные действия"} <ChevronRight size={15} /></button></div>}</section></div>}{complaintDecision && (prosecutorOffice !== "territorial" || complaintDecision !== "accept" || currentComplaintRecord?.correct === false || (responseActDecision && responseFollowUpsReady)) && <button className="next-button" onClick={nextComplaint}>{complaintIndex === activeComplaints.length - 1 ? "Завершить день" : "Следующее заявление"} <ChevronRight size={17} /></button>}</article></div>
         </section> : <section className="case-area">
           <div className="case-meta"><span>МАТЕРИАЛ № {current?.number ?? "—"}</span><span>ДЕЛО {String(Math.min(caseIndex + 1, activeCases.length)).padStart(2, "0")} / {activeCases.length}</span></div>
           <div className="progress-track"><div style={{ width: `${(progress / activeCases.length) * 100}%` }} /></div>
