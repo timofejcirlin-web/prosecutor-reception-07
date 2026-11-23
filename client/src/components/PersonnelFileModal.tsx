@@ -100,7 +100,9 @@ export function PersonnelFileModal(props: Props) {
               <span className="personnel-file-kicker">КАДРОВОЕ ПРОИЗВОДСТВО · АРХИВ № 07</span>
               <h2 id="personnel-file-title">Личное дело сотрудника</h2>
               <p>Сведения о прохождении службы и результатах работы</p>
+              <div className="personnel-file-header-meta"><span>ЭКЗЕМПЛЯР № 01</span><span>ВЕДЁТСЯ В ЭЛЕКТРОННОМ АРХИВЕ</span></div>
             </div>
+            <div className="personnel-file-header-seal" aria-hidden="true"><span>КАДРОВАЯ</span><b>СЛУЖБА</b><i>·</i></div>
             <button type="button" className="personnel-file-close" onClick={props.onClose} aria-label="Закрыть личное дело"><X size={19} /></button>
           </header>
 
@@ -113,7 +115,7 @@ export function PersonnelFileModal(props: Props) {
             })}
           </nav>
 
-          <div className="personnel-file-content">
+          <div className="personnel-file-content" key={tab}>
             {tab === "overview" && <>
               <div className="personnel-file-page-heading"><span>РАЗДЕЛ I · ПЕРСОНАЛЬНЫЕ ДАННЫЕ</span><b>ЛИСТ 01</b></div>
               <div className="personnel-file-intro">
