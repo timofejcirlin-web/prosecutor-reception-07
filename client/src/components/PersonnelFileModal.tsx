@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Award, BookOpen, BriefcaseBusiness, CalendarDays, ChartNoAxesCombined, FileText, ShieldAlert, ShieldCheck, UserRound, X } from "lucide-react";
+import { Award, BookOpen, Briefcase, CalendarDays, ChartLine, FileText, ShieldAlert, ShieldCheck, UserRound, X } from "lucide-react";
 import { PERSONNEL_PORTRAIT } from "../assets/personnelPortrait";
 
 type PersonnelEvent = { title: string; text: string; tone: "good" | "warn" };
@@ -28,10 +28,10 @@ type Tab = "overview" | "service" | "awards" | "discipline" | "attestation";
 
 const tabs: { id: Tab; label: string; icon: typeof UserRound }[] = [
   { id: "overview", label: "Сведения", icon: UserRound },
-  { id: "service", label: "Служба", icon: BriefcaseBusiness },
+  { id: "service", label: "Служба", icon: Briefcase },
   { id: "awards", label: "Поощрения", icon: Award },
   { id: "discipline", label: "Взыскания", icon: ShieldAlert },
-  { id: "attestation", label: "Аттестация", icon: ChartNoAxesCombined },
+  { id: "attestation", label: "Аттестация", icon: ChartLine },
 ];
 
 const countLabel = (value: number) => new Intl.NumberFormat("ru-RU").format(value);
@@ -142,6 +142,7 @@ export function PersonnelFileModal(props: Props) {
                 <div><span>ДЕНЬ СЛУЖБЫ</span><strong>{countLabel(props.dayNumber)}</strong></div>
                 <div><span>РЕШЕНИЯ</span><strong>{countLabel(completed)}</strong></div>
                 <div><span>ЗАПИСИ В ЖУРНАЛЕ</span><strong>{countLabel(props.registeredCases)}</strong></div>
+                <div><span>ДОВЕРИЕ</span><strong>{props.trust}/5</strong></div>
               </div>
               <div className="personnel-file-decision-bars">
                 <div><span>Обоснованные решения</span><b>{props.correctDecisions}</b></div>
