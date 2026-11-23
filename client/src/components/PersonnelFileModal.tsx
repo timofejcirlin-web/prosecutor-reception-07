@@ -46,7 +46,7 @@ export function PersonnelFileModal(props: Props) {
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [props.open, props.onClose]);
+  }, [props.open]);
 
   if (!props.open) return null;
 
