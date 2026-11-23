@@ -94,10 +94,7 @@ export function PersonnelFileModal(props: Props) {
   const accuracy = completed ? Math.round((props.correctDecisions / completed) * 100) : 0;
   const status = props.serviceEnded ? "СЛУЖБА ПРЕКРАЩЕНА" : "ПРОХОЖДЕНИЕ СЛУЖБЫ";
   const facts = [
-    ["Фамилия, имя", props.name || "Не указано"],
     ["Должность", "Помощник прокурора"],
-    ["Классный чин", props.rank],
-    ["Место службы", props.office],
     ["Субъект Российской Федерации", props.region || "Не указан"],
     ["Текущий день службы", String(props.dayNumber)],
   ];
@@ -105,32 +102,7 @@ export function PersonnelFileModal(props: Props) {
   return (
     <div className="personnel-file-overlay" onMouseDown={(event) => event.target === event.currentTarget && props.onClose()}>
       <section className="personnel-file-window" role="dialog" aria-modal="true" aria-labelledby="personnel-file-title">
-        <aside className="personnel-file-cover">
-          <div className="personnel-file-cover-top">
-            <span>ПРОКУРАТУРА</span>
-            <span>КАДРОВАЯ СЛУЖБА</span>
-          </div>
-          <div className="personnel-file-cover-mark">П</div>
-          <div className="personnel-file-photo-frame">
-            <img src={PERSONNEL_PORTRAIT} alt="Служебный портрет сотрудника прокуратуры" />
-            <span>ЛИЧНОЕ ДЕЛО</span>
-          </div>
-          <div className="personnel-file-cover-name">
-            <span>СОТРУДНИК</span>
-            <strong>{props.name || "Имя не указано"}</strong>
-            <em>{props.rank}</em>
-          </div>
-          <div className="personnel-file-cover-rule" />
-          <div className="personnel-file-cover-meta">
-            <span>УЧЁТНЫЙ НОМЕР</span>
-            <b>ПР-07 / {String(props.dayNumber).padStart(3, "0")}</b>
-            <span>СЛУЖЕБНЫЙ ЭКЗЕМПЛЯР</span>
-          </div>
-          <div className="personnel-file-cover-bottom">
-            <span>ДОКУМЕНТЫ · СЛУЖБА · АТТЕСТАЦИЯ</span>
-            <span>АРХИВ № 07</span>
-          </div>
-        </aside>
+
 
         <div className="personnel-file-paper">
           <header className="personnel-file-header">
