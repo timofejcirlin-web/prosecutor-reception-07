@@ -1,12 +1,24 @@
 import { useEffect, useState } from "react";
-import { Award, BookOpen, Briefcase, CalendarDays, ChartLine, FileText, ShieldAlert, ShieldCheck, UserRound, X } from "lucide-react";
+import { Archive, Award, BookOpen, Briefcase, CalendarDays, ChartLine, FileText, History, ShieldAlert, ShieldCheck, UserRound, X } from "lucide-react";
 import { PERSONNEL_PORTRAIT } from "../assets/personnelPortrait";
 
 type PersonnelEvent = { title: string; text: string; tone: "good" | "warn" };
+type ArchiveEntry = {
+  id: string;
+  number: string;
+  kind: "service" | "case" | "award" | "discipline" | "daily";
+  documentType: string;
+  title: string;
+  body: string;
+  day: number;
+  createdAt: string;
+};
+type ArchiveFilter = "all" | ArchiveEntry["kind"];
 type Reputation = { quality: number; leadership: number; citizens: number; risk: number };
 type Props = {
   open: boolean;
   onClose: () => void;
+  archiveEntries: ArchiveEntry[];
   name: string;
   office: string;
   region: string;
@@ -24,11 +36,13 @@ type Props = {
   serviceEnded: boolean;
 };
 
-type Tab = "overview" | "service" | "awards" | "discipline" | "attestation";
+type Tab = "overview" | "service" | "timeline" | "archive" | "awards" | "discipline" | "attestation";
 
 const tabs: { id: Tab; label: string; icon: typeof UserRound }[] = [
   { id: "overview", label: "Сведения", icon: UserRound },
   { id: "service", label: "Служба", icon: Briefcase },
+  { id: "timeline", label: "Хронология", icon: History },
+  { id: "archive", label: "Архив", icon: Archive },
   { id: "awards", label: "Поощрения", icon: Award },
   { id: "discipline", label: "Взыскания", icon: ShieldAlert },
   { id: "attestation", label: "Аттестация", icon: ChartLine },
@@ -38,6 +52,8 @@ const countLabel = (value: number) => new Intl.NumberFormat("ru-RU").format(valu
 
 export function PersonnelFileModal(props: Props) {
   const [tab, setTab] = useState<Tab>("overview");
+  const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>("all");
+  const [openedDocumentId, setOpenedDocumentId] = useState<string | null>(null);
   useEffect(() => {
     if (!props.open) return;
     setTab("overview");
@@ -53,6 +69,26 @@ export function PersonnelFileModal(props: Props) {
   const awards = Object.entries(props.rewardCounts).filter(([, count]) => count > 0);
   const sanctions = Object.entries(props.disciplineCounts).filter(([, count]) => count > 0);
   const completed = props.correctDecisions + props.wrongDecisions;
+  const sortedArchive = [...props.archiveEntries].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const chronologicalEntries = [...props.archiveEntries].sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+  const filteredArchive = sortedArchive.filter((entry) => archiveFilter === "all" || entry.kind === archiveFilter);
+  const openedDocument = props.archiveEntries.find((entry) => entry.id === openedDocumentId) ?? null;
+  const archiveKindLabels: Record<ArchiveEntry["kind"], string> = {
+    service: "Кадровые документы",
+    case: "Служебные записи",
+    award: "Поощрения",
+    discipline: "Дисциплинарные документы",
+    daily: "Сводки дней",
+  };
+  const formatArchiveDate = (value: string) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "Дата не указана";
+    return date.toLocaleDateString("ru-RU", { day: "2-digit", month: "long", year: "numeric" });
+  };
+  const formatArchiveTime = (value: string) => {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "" : date.toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+  };
   const accuracy = completed ? Math.round((props.correctDecisions / completed) * 100) : 0;
   const status = props.serviceEnded ? "СЛУЖБА ПРЕКРАЩЕНА" : "ПРОХОЖДЕНИЕ СЛУЖБЫ";
   const facts = [
@@ -158,6 +194,65 @@ export function PersonnelFileModal(props: Props) {
               </div>
             </>}
 
+            {tab === "timeline" && <>
+              <div className="personnel-file-page-heading"><span>РАЗДЕЛ III · ХРОНОЛОГИЯ СЛУЖБЫ</span><b>ЛИСТ 03</b></div>
+              <h3 className="personnel-file-section-title">История прохождения службы</h3>
+              <p className="personnel-file-section-copy">Последовательность событий, автоматически зафиксированных в игровом сохранении. События показаны в обратном хронологическом порядке.</p>
+              <div className="personnel-file-timeline-summary">
+                <div><strong>{countLabel(props.archiveEntries.length)}</strong><span>ЗАПИСЕЙ В ХРОНОЛОГИИ</span></div>
+                <div><strong>{countLabel(new Set(props.archiveEntries.map((entry) => entry.day)).size)}</strong><span>ДНЕЙ С ЗАПИСЯМИ</span></div>
+              </div>
+              {sortedArchive.length ? <div className="personnel-file-timeline">
+                {sortedArchive.map((entry) => <button type="button" className={`personnel-file-timeline-entry ${entry.kind}`} key={entry.id} onClick={() => { setOpenedDocumentId(entry.id); setTab("archive"); }}>
+                  <span className="personnel-file-timeline-dot" />
+                  <span className="personnel-file-timeline-date">ДЕНЬ {String(entry.day).padStart(2, "0")} · {formatArchiveDate(entry.createdAt)}</span>
+                  <strong>{entry.title}</strong>
+                  <span className="personnel-file-timeline-kind">{archiveKindLabels[entry.kind]} · {entry.number}</span>
+                </button>)}
+              </div> : <div className="personnel-file-empty large"><History size={25}/><strong>Хронология пока пуста</strong><span>Первая запись о начале службы появится после создания игрового профиля.</span></div>}
+            </>}
+
+            {tab === "archive" && <>
+              <div className="personnel-file-page-heading"><span>РАЗДЕЛ IV · АРХИВ ДОКУМЕНТОВ</span><b>ЛИСТ 04</b></div>
+              {openedDocument ? <>
+                <button type="button" className="personnel-file-back" onClick={() => setOpenedDocumentId(null)}>← Вернуться к архиву</button>
+                <article className="personnel-file-document">
+                  <div className="personnel-file-document-top"><span>ПРОКУРАТУРА · КАДРОВОЕ ПРОИЗВОДСТВО</span><span>ЭЛЕКТРОННЫЙ ЭКЗЕМПЛЯР</span></div>
+                  <div className="personnel-file-document-rule"/>
+                  <p className="personnel-file-document-type">{openedDocument.documentType}</p>
+                  <h3>{openedDocument.title}</h3>
+                  <div className="personnel-file-document-meta"><span>Регистрационный номер</span><b>{openedDocument.number}</b></div>
+                  <div className="personnel-file-document-meta"><span>Дата формирования</span><b>{formatArchiveDate(openedDocument.createdAt)} · {formatArchiveTime(openedDocument.createdAt)}</b></div>
+                  <div className="personnel-file-document-meta"><span>Игровой день</span><b>№ {openedDocument.day}</b></div>
+                  <div className="personnel-file-document-body">{openedDocument.body}</div>
+                  <div className="personnel-file-document-sign"><span>Сформировано игровой системой</span><b>ЛИЧНОЕ ДЕЛО · № 07</b></div>
+                  <div className="personnel-file-document-stamp"><span>АРХИВНАЯ</span><b>ЗАПИСЬ</b><i>·</i></div>
+                  <p className="personnel-file-document-footnote">Игровой документ. Не является официальным актом прокуратуры Российской Федерации.</p>
+                </article>
+              </> : <>
+                <h3 className="personnel-file-section-title">Документы личного дела</h3>
+                <p className="personnel-file-section-copy">Каждая запись формируется на основании действий в игре и сохраняется вместе с игровым прогрессом.</p>
+                <div className="personnel-file-archive-summary"><Archive size={19}/><strong>{countLabel(props.archiveEntries.length)}</strong><span>ДОКУМЕНТОВ В АРХИВЕ</span></div>
+                <div className="personnel-file-archive-filters">
+                  {([
+                    ["all", "Все"],
+                    ["service", "Кадровые"],
+                    ["case", "Служебные"],
+                    ["award", "Поощрения"],
+                    ["discipline", "Взыскания"],
+                    ["daily", "Сводки"],
+                  ] as [ArchiveFilter, string][]).map(([value, label]) => <button type="button" key={value} className={archiveFilter === value ? "active" : ""} onClick={() => setArchiveFilter(value)}>{label}</button>)}
+                </div>
+                {filteredArchive.length ? <div className="personnel-file-archive-list">
+                  {filteredArchive.map((entry) => <button type="button" className={`personnel-file-archive-item ${entry.kind}`} key={entry.id} onClick={() => setOpenedDocumentId(entry.id)}>
+                    <span className="personnel-file-archive-icon">{entry.kind === "award" ? <Award size={17}/> : entry.kind === "discipline" ? <ShieldAlert size={17}/> : entry.kind === "daily" ? <CalendarDays size={17}/> : entry.kind === "service" ? <Briefcase size={17}/> : <FileText size={17}/>}</span>
+                    <span className="personnel-file-archive-main"><b>{entry.title}</b><small>{entry.documentType} · День {entry.day}</small></span>
+                    <span className="personnel-file-archive-number">{entry.number}<small>{formatArchiveDate(entry.createdAt)}</small></span>
+                  </button>)}
+                </div> : <div className="personnel-file-empty large"><Archive size={25}/><strong>Документы не найдены</strong><span>{props.archiveEntries.length ? "Для выбранной категории записей пока нет." : "Документы будут добавляться сюда по мере прохождения игры."}</span></div>}
+              </>}
+            </>}
+
             {tab === "awards" && <>
               <div className="personnel-file-page-heading"><span>РАЗДЕЛ III · ПООЩРЕНИЯ</span><b>ЛИСТ 03</b></div>
               <h3 className="personnel-file-section-title">Поощрения и награды</h3>
@@ -192,7 +287,7 @@ export function PersonnelFileModal(props: Props) {
 
           <footer className="personnel-file-footer">
             <span>ПРОКУРАТУРА · СЛУЖЕБНОЕ ДЕЛО № 07</span>
-            <span>ЛИСТ {tabs.findIndex((item) => item.id === tab) + 1} / 05</span>
+            <span>ЛИСТ {tabs.findIndex((item) => item.id === tab) + 1} / 07</span>
             <button type="button" onClick={props.onClose}>Закрыть дело</button>
           </footer>
         </div>
