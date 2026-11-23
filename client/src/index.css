@@ -3778,3 +3778,185 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
   .personnel-file-footer { padding:11px 13px; }
   .personnel-file-footer > span:first-child { display:none; }
 }
+
+
+/* ── Archival refinement · stage one ─────────────────────────────── */
+.personnel-file-window {
+  position:relative;
+  border-radius:3px 5px 5px 3px;
+  background:linear-gradient(90deg,#d5c5a7 0 8px,#e8dfcc 8px 100%);
+  box-shadow:0 38px 120px rgba(0,0,0,.72),0 4px 0 rgba(255,255,255,.08) inset,0 0 0 1px rgba(245,225,185,.16);
+}
+.personnel-file-cover {
+  background:
+    radial-gradient(ellipse at 50% 28%,rgba(144,157,106,.22),transparent 47%),
+    radial-gradient(ellipse at 50% 110%,rgba(0,0,0,.46),transparent 52%),
+    repeating-linear-gradient(93deg,rgba(255,255,255,.018) 0 1px,transparent 1px 3px),
+    linear-gradient(145deg,#233d34 0%,#142a23 48%,#0a1b17 100%);
+  box-shadow:inset -9px 0 15px rgba(0,0,0,.22),inset 2px 0 0 rgba(224,195,137,.11);
+}
+.personnel-file-cover::before {
+  inset:12px;
+  border:1px solid rgba(203,171,112,.42);
+  box-shadow:inset 0 0 0 3px rgba(203,171,112,.045),0 0 22px rgba(0,0,0,.10);
+}
+.personnel-file-cover::after {
+  opacity:.24;
+  background:
+    repeating-linear-gradient(0deg,transparent 0 3px,rgba(232,219,190,.045) 4px,transparent 5px),
+    repeating-linear-gradient(90deg,transparent 0 7px,rgba(0,0,0,.055) 8px,transparent 9px);
+}
+.personnel-file-cover-mark {
+  position:relative;
+  width:54px;height:54px;
+  color:#e3c78d;
+  border-color:rgba(225,190,125,.9);
+  background:linear-gradient(145deg,rgba(222,190,130,.10),rgba(0,0,0,.12));
+  text-shadow:0 1px 0 #594528,0 0 13px rgba(220,181,109,.25);
+  box-shadow:0 0 0 4px rgba(198,155,97,.07),inset 0 0 0 3px rgba(198,155,97,.09),0 4px 13px rgba(0,0,0,.22);
+}
+.personnel-file-photo-frame {
+  padding:7px;
+  border:1px solid #d3b477;
+  background:linear-gradient(135deg,#e7d7b5,#a88b5d);
+  box-shadow:0 15px 31px rgba(0,0,0,.43),0 0 0 3px rgba(206,170,106,.09);
+}
+.personnel-file-photo-frame::before {
+  content:"";position:absolute;z-index:1;inset:3px;
+  border:1px solid rgba(255,245,218,.3);pointer-events:none;
+}
+.personnel-file-photo-frame img {
+  filter:saturate(.68) contrast(1.08) brightness(.9);
+}
+.personnel-file-cover-name strong {
+  color:#f6ead2;
+  text-shadow:0 1px 0 rgba(0,0,0,.55),0 0 14px rgba(215,182,119,.12);
+}
+.personnel-file-cover-rule {
+  height:2px;
+  background:linear-gradient(90deg,transparent,rgba(214,181,117,.9),rgba(255,230,176,.5),rgba(214,181,117,.9),transparent);
+}
+.personnel-file-paper {
+  position:relative;
+  isolation:isolate;
+  background-color:#e9dfcc;
+  background-image:
+    radial-gradient(ellipse at 82% 3%,rgba(172,144,100,.13),transparent 36%),
+    radial-gradient(ellipse at 8% 95%,rgba(157,126,79,.09),transparent 38%),
+    repeating-linear-gradient(0deg,rgba(111,91,57,.022) 0 1px,transparent 1px 4px),
+    linear-gradient(135deg,#f1eadb 0%,#e9dfcc 48%,#e4d8c1 100%);
+}
+.personnel-file-paper::before {
+  content:"";position:absolute;z-index:0;inset:9px;pointer-events:none;
+  border:1px solid rgba(139,106,65,.12);
+  box-shadow:inset 0 0 0 3px rgba(139,106,65,.035);
+}
+.personnel-file-paper > * { position:relative;z-index:1; }
+.personnel-file-header {
+  position:relative;
+  padding-bottom:20px;
+  background:linear-gradient(90deg,rgba(255,255,255,.18),transparent 70%);
+}
+.personnel-file-header::after {
+  content:"";position:absolute;left:34px;right:34px;bottom:-1px;height:2px;
+  background:linear-gradient(90deg,rgba(157,119,65,.08),rgba(157,119,65,.42),rgba(157,119,65,.08));
+}
+.personnel-file-header-meta {
+  display:flex;flex-wrap:wrap;gap:7px 14px;margin-top:11px;
+  color:#a18b67;font:7px 'IBM Plex Mono';letter-spacing:.10em;
+}
+.personnel-file-header-seal {
+  flex:0 0 74px;width:74px;height:74px;display:flex;align-items:center;justify-content:center;flex-direction:column;
+  border:1px solid rgba(145,64,49,.64);border-radius:50%;color:rgba(145,64,49,.82);
+  transform:rotate(11deg);opacity:.76;
+  box-shadow:inset 0 0 0 3px rgba(145,64,49,.08),inset 0 0 0 5px rgba(145,64,49,.2);
+  font:700 7px 'IBM Plex Mono';letter-spacing:.08em;
+}
+.personnel-file-header-seal b {font-size:8px;letter-spacing:.13em}
+.personnel-file-header-seal i {font-style:normal;font-size:14px;line-height:10px}
+.personnel-file-tabs {
+  background:linear-gradient(180deg,rgba(151,124,83,.10),rgba(151,124,83,.025));
+  box-shadow:0 2px 5px rgba(80,58,31,.04);
+}
+.personnel-file-tabs button {position:relative}
+.personnel-file-tabs button.active::after {
+  content:"";position:absolute;left:12px;right:12px;bottom:-2px;height:2px;
+  background:linear-gradient(90deg,transparent,#b4935d,transparent);
+}
+.personnel-file-content {
+  background-image:linear-gradient(90deg,rgba(121,91,53,.025),transparent 14px,transparent calc(100% - 14px),rgba(121,91,53,.025));
+  transform-origin:12% 50%;
+  animation:personnel-page-turn .26s cubic-bezier(.2,.72,.22,1) both;
+}
+.personnel-file-page-heading {
+  position:relative;
+  min-height:27px;
+  background:linear-gradient(90deg,rgba(160,128,80,.055),transparent 75%);
+}
+.personnel-file-page-heading::after {
+  content:"КАДРОВАЯ СЛУЖБА";
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:23px;padding:0 8px;margin-left:auto;
+  color:rgba(144,67,49,.72);
+  border:1px solid rgba(144,67,49,.42);
+  outline:1px solid rgba(144,67,49,.12);outline-offset:-4px;
+  font:700 6px 'IBM Plex Mono';letter-spacing:.12em;
+  transform:rotate(-5deg);
+}
+.personnel-file-intro {
+  position:relative;
+  margin-top:5px;
+  padding:25px 18px 22px;
+  background:linear-gradient(105deg,rgba(255,255,255,.35),rgba(255,255,255,.10));
+  border:1px solid rgba(143,112,70,.18);
+  box-shadow:0 3px 10px rgba(76,56,31,.045),inset 0 1px rgba(255,255,255,.35);
+}
+.personnel-file-intro::after {
+  content:"УЧЁТНЫЙ ЛИСТ · 01";
+  position:absolute;right:12px;top:9px;
+  color:rgba(135,112,77,.52);font:6px 'IBM Plex Mono';letter-spacing:.11em;
+}
+.personnel-file-avatar {
+  position:relative;
+  border:1px solid #b49765;
+  box-shadow:0 4px 12px rgba(60,42,20,.16),0 0 0 3px rgba(255,255,255,.26);
+}
+.personnel-file-avatar::after {
+  content:"";position:absolute;inset:3px;border:1px solid rgba(255,245,218,.38);pointer-events:none;
+}
+.personnel-file-note {
+  position:relative;
+  background:linear-gradient(110deg,rgba(105,130,98,.13),rgba(255,255,255,.18));
+  box-shadow:0 2px 8px rgba(69,91,66,.05);
+}
+.personnel-file-footer {
+  background:linear-gradient(180deg,rgba(255,255,255,.12),rgba(130,102,64,.055));
+}
+.personnel-file-footer button {
+  box-shadow:inset 0 1px rgba(255,255,255,.14),0 2px 5px rgba(31,52,39,.12);
+  transition:transform .16s,background .16s,box-shadow .16s;
+}
+.personnel-file-footer button:hover {transform:translateY(-1px);box-shadow:0 4px 9px rgba(31,52,39,.18)}
+@keyframes personnel-page-turn {
+  from {opacity:0;transform:perspective(900px) rotateY(-2deg) translateX(7px)}
+  to {opacity:1;transform:perspective(900px) rotateY(0) translateX(0)}
+}
+@keyframes personnel-cover-glow {
+  0%,100% {filter:drop-shadow(0 0 0 rgba(212,177,111,0))}
+  50% {filter:drop-shadow(0 0 8px rgba(212,177,111,.10))}
+}
+.personnel-file-cover-mark {animation:personnel-cover-glow 5s ease-in-out infinite}
+@media (prefers-reduced-motion: reduce) {
+  .personnel-file-overlay,.personnel-file-window,.personnel-file-content,.personnel-file-cover-mark {animation:none!important}
+}
+@media (max-width:900px) {
+  .personnel-file-header-seal {width:61px;height:61px;flex-basis:61px}
+  .personnel-file-header-meta {font-size:6px}
+}
+@media (max-width:680px) {
+  .personnel-file-header-seal {display:none}
+  .personnel-file-header::after {left:16px;right:16px}
+  .personnel-file-intro {padding:20px 10px 18px}
+  .personnel-file-intro::after {font-size:5px;right:8px}
+  .personnel-file-page-heading::after {font-size:5px;letter-spacing:.06em;padding:0 5px}
+}
