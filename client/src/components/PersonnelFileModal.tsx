@@ -57,6 +57,8 @@ export function PersonnelFileModal(props: Props) {
   useEffect(() => {
     if (!props.open) return;
     setTab("overview");
+    setOpenedDocumentId(null);
+    setArchiveFilter("all");
     const handleKey = (event: KeyboardEvent) => {
       if (event.key === "Escape") props.onClose();
     };
