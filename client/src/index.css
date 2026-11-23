@@ -4079,3 +4079,32 @@ html, body, #root { width: 100%; min-width: 100%; min-height: 100%; height: 100%
   .personnel-file-document h3 {font-size:21px}
   .personnel-file-document-stamp {right:20px;bottom:74px;width:68px;height:68px}
 }
+
+
+/* Personnel dossier simplification: one unified document canvas, no duplicate cover rail. */
+.personnel-file-window {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  width:min(1160px,calc(100vw - 48px));
+  background:#e8dfcc;
+}
+.personnel-file-paper {
+  width:100%;
+  min-width:0;
+}
+@media (max-width:900px) {
+  .personnel-file-window {
+    grid-template-columns:minmax(0,1fr);
+    width:calc(100vw - 26px);
+    height:calc(100dvh - 26px);
+  }
+}
+@media (max-width:680px) {
+  .personnel-file-window {
+    grid-template-columns:minmax(0,1fr);
+    grid-template-rows:minmax(0,1fr);
+    width:calc(100vw - 14px);
+    height:calc(100dvh - 14px);
+  }
+  .personnel-file-paper { min-height:0; }
+}
