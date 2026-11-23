@@ -161,6 +161,17 @@ const drawDailyComplaintIds = (pool: Complaint[], seenIds: string[], excludedIds
 };
 
 type ConsequenceEvent = { title: string; text: string; tone: "good" | "warn" };
+type PersonnelArchiveKind = "service" | "case" | "award" | "discipline" | "daily";
+type PersonnelArchiveEntry = {
+  id: string;
+  number: string;
+  kind: PersonnelArchiveKind;
+  documentType: string;
+  title: string;
+  body: string;
+  day: number;
+  createdAt: string;
+};
 const COMPLAINTS: Complaint[] = [
   { id: "housing", title: "Аварийное жильё", applicant: "Заявительница 01", role: "жительница района N", situation: "Я живу в доме, который признали аварийным ещё несколько лет назад. Дом должны были расселить, но решение постоянно откладывают. Прошу проверить мои жилищные права и помочь добиться безопасного жилья.", request: "Проверить, почему расселение не проводится, и принять меры для восстановления жилищных прав.", correct: "accept", outcome: "Жалоба принята: обстоятельства конкретны, есть указание на аварийный статус дома и длительное бездействие. Материал направляется на проверку.", background: "/manus-storage/complaint-housing-bg_9b956f3f.png", portrait: "/manus-storage/complaint-housing-portrait_88fe0823.png", documents: [{ label: "Решение комиссии", text: "Дом признан аварийным и подлежащим сносу. В выписке указана дата решения и состав комиссии." }, { label: "Ответ администрации", text: "В ответе говорится, что переселение запланировано, но конкретный срок предоставления жилья не указан." }, { label: "Сведения о доме", text: "Акт осмотра фиксирует неисправности конструкций, промерзание стен и жалобы жильцов на условия проживания." }], extra: { label: "План переселения", text: "Запрошенный план показывает, что срок переселения переносился дважды из-за отсутствия подготовленного жилого фонда." } },
   { id: "wage", title: "Задержка зарплаты", applicant: "Заявитель 02", role: "работник коммерческой организации", situation: "Мне не выплатили зарплату за несколько месяцев и не начислили компенсацию за задержку. Я обращался к руководству, но ответа не получил. Прошу проверить расчёты и добиться выплаты причитающихся сумм.", request: "Проверить задолженность, расчётные листки и соблюдение трудовых прав.", correct: "accept", outcome: "Жалоба принята: указан период, характер нарушения и требование о выплате. Материал направляется в трудовую проверку.", background: "/manus-storage/complaint-wage-bg_1214be84.png", portrait: "/manus-storage/complaint-wage-portrait_789f9519.png", documents: [{ label: "Расчётный листок", text: "За три расчётных периода начисления отражены, но фактическая выплата отсутствует. Сумма задолженности превышает 80 000 рублей." }, { label: "Табель", text: "В табеле отмечены полные смены. Данные совпадают с графиком, который работник приложил к обращению." }, { label: "Переписка", text: "На обращение к работодателю получен короткий ответ: «Выплата будет после закрытия месяца». Дата выплаты не указана." }], extra: { label: "Банковская выписка", text: "Выписка подтверждает отсутствие перечислений от работодателя за указанные расчётные периоды." } },
@@ -394,6 +405,7 @@ export default function Home() {
   const [repeatComplaintIndex, setRepeatComplaintIndex] = useState<number | null>(null);
   const [consequenceQueue, setConsequenceQueue] = useState<ConsequenceEvent[]>([]);
   const [dayConsequences, setDayConsequences] = useState<ConsequenceEvent[]>([]);
+  const [personnelArchiveEntries, setPersonnelArchiveEntries] = useState<PersonnelArchiveEntry[]>([]);
   const [extraRequested, setExtraRequested] = useState(false);
   const [score, setScore] = useState(0);
   const [correctDecisions, setCorrectDecisions] = useState(0);
@@ -430,6 +442,20 @@ export default function Home() {
   const canDecide = reviewedMaterials.length === activeMaterials.length;
   const clampRep = (value: number) => Math.max(0, Math.min(5, value));
   const reputationLabel = useMemo(() => reputation.risk >= 4 ? "На контроле" : reputation.quality >= 4 && reputation.leadership >= 4 ? "Укрепляется" : "Формируется", [reputation]);
+  const recordPersonnelDocument = (kind: PersonnelArchiveKind, title: string, body: string, documentType: string) => {
+    const createdAt = new Date().toISOString();
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    setPersonnelArchiveEntries((entries) => [...entries, {
+      id,
+      number: `ЛД-${String(dayNumber).padStart(3, "0")}-${String(entries.length + 1).padStart(4, "0")}`,
+      kind,
+      documentType,
+      title,
+      body,
+      day: dayNumber,
+      createdAt,
+    }]);
+  };
   const adjustReputation = (good: boolean, citizenFacing: boolean) => setReputation((value) => ({
     quality: clampRep(value.quality + (good ? 1 : -1)),
     leadership: clampRep(value.leadership + (good ? 1 : -1)),
@@ -444,11 +470,17 @@ export default function Home() {
       : null;
     if (!reward) return;
     setRewardCounts((counts) => ({ ...counts, [reward]: (counts[reward] ?? 0) + 1 }));
+    const rewardReason = nextCorrectCount % 10 === 0
+      ? "За десять правильных решений сотруднику начислена денежная премия."
+      : nextCorrectCount % 5 === 0
+        ? "За пять правильных решений сотрудник награждён Почётной грамотой."
+        : "За три правильных решения сотруднику объявлена благодарность.";
     setConsequenceQueue((events) => [...events, {
       title: "Поощрение за качественную работу",
-      text: nextCorrectCount % 10 === 0 ? "За устойчивые результаты сотруднику начислена денежная премия." : nextCorrectCount % 5 === 0 ? "За пять правильных решений сотрудник награждён Почётной грамотой." : "За три правильных решения сотруднику объявлена благодарность.",
+      text: rewardReason,
       tone: "good"
     }]);
+    recordPersonnelDocument("award", "Приказ о поощрении", `${rewardReason} Вид поощрения: ${reward}. Основание: достижение порогового показателя в ${nextCorrectCount} правильных решений.`, "Приказ о поощрении");
   };
 
   const registerDecisionConsequence = (good: boolean) => {
@@ -457,6 +489,7 @@ export default function Home() {
     setWrongDecisions(errorNumber);
     const penalty = errorNumber === 1 ? DISCIPLINE_GUIDANCE[0] : errorNumber === 2 ? [DISCIPLINE_GUIDANCE[0], DISCIPLINE_GUIDANCE[1], DISCIPLINE_GUIDANCE[2]][Math.floor(Math.random() * 3)] : errorNumber === 3 ? DISCIPLINE_GUIDANCE[6] : DISCIPLINE_GUIDANCE[7];
     setDisciplineCounts((counts) => ({ ...counts, [penalty]: (counts[penalty] ?? 0) + 1 }));
+    recordPersonnelDocument("discipline", "Запись о дисциплинарном взыскании", `По итогам ${errorNumber}-го ошибочного решения зарегистрировано взыскание: ${penalty}. Запись сформирована игровой системой на основании результата служебного действия.`, "Дисциплинарный документ");
     if (errorNumber >= 4) { setGameOverReason("discipline"); setGameOver(true); }
   };
   const decide = (decision: Decision) => {
@@ -468,6 +501,12 @@ export default function Home() {
     setTrust((value) => Math.max(0, Math.min(5, value + (good ? 0 : -1))));
     adjustReputation(good, false);
     registerDecisionConsequence(good);
+    recordPersonnelDocument(
+      "case",
+      `Результат рассмотрения материала: ${current.title}`,
+      `Принятое решение: ${decision === "prosecute" ? "направить материалы для привлечения к ответственности" : "отказать в привлечении к ответственности"}. Оценка игрового сценария: ${good ? "решение соответствует установленным обстоятельствам" : "решение не соответствует установленным обстоятельствам"}. ${current.explanation}`,
+      "Служебная запись по материалу"
+    );
     setFeedback({ good, text: current.explanation, decision });
   };
 
@@ -482,7 +521,7 @@ export default function Home() {
     setReviewedMaterials((items) => items.includes(index) ? items : [...items, index]);
   };
 
-  const restart = () => { setDayNumber(1); setDayEnded(false); setPendingComplaints(0); setDailyComplaintIds([]); setSeenComplaintIds([]); setCarriedComplaintIds([]); setRepeatComplaintIndex(null); setConsequenceQueue([]); setDayConsequences([]); setRightsAdvocateMode(false); setOnboardingStep("intro"); setRegion(null); setProsecutorOffice(null); setProsecutorModalOpen(false); setMilitaryNoticeOpen(false); setCharacter(null); setDraftName(""); setLocation(null); setCaseIndex(0); setComplaintIndex(0); setComplaintDecision(null); setScore(0); setCorrectDecisions(0); setTrust(3); setReputation({ quality: 3, leadership: 3, citizens: 3, risk: 1 }); setFeedback(null); setFinished(false); setGameOver(false); setGameOverReason("discipline"); setWrongDecisions(0); setRewardCounts(emptyCounts(REWARDS_GUIDANCE)); setDisciplineCounts(emptyCounts(DISCIPLINE_GUIDANCE)); setOpenMaterial(null); setReviewedMaterials([]); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setHoursLeft(8); setExtraRequested(false); };
+  const restart = () => { setDayNumber(1); setDayEnded(false); setPendingComplaints(0); setDailyComplaintIds([]); setSeenComplaintIds([]); setCarriedComplaintIds([]); setRepeatComplaintIndex(null); setConsequenceQueue([]); setDayConsequences([]); setRightsAdvocateMode(false); setOnboardingStep("intro"); setRegion(null); setProsecutorOffice(null); setProsecutorModalOpen(false); setMilitaryNoticeOpen(false); setCharacter(null); setDraftName(""); setLocation(null); setCaseIndex(0); setComplaintIndex(0); setComplaintDecision(null); setScore(0); setCorrectDecisions(0); setTrust(3); setReputation({ quality: 3, leadership: 3, citizens: 3, risk: 1 }); setFeedback(null); setFinished(false); setGameOver(false); setGameOverReason("discipline"); setWrongDecisions(0); setRewardCounts(emptyCounts(REWARDS_GUIDANCE)); setDisciplineCounts(emptyCounts(DISCIPLINE_GUIDANCE)); setPersonnelArchiveEntries([]); setOpenMaterial(null); setReviewedMaterials([]); setOpenComplaintDoc(null); setReviewedComplaintDocs([]); setHoursLeft(8); setExtraRequested(false); };
   const saveGame = () => {
     try {
       const state = {
@@ -492,7 +531,7 @@ export default function Home() {
         reviewedComplaintDocs, askedReceptionQuestions, activeReceptionQuestion, registryDecisions, hoursLeft, dayNumber,
         dayEnded, pendingComplaints, repeatComplaintIndex, consequenceQueue, dayConsequences, extraRequested, score,
         correctDecisions, trust, reputation, feedback, finished, gameOver, gameOverReason, wrongDecisions,
-        rewardCounts, disciplineCounts, folderOpened, selectedCityDistrictId, selectedCityEventId, openMaterial, reviewedMaterials
+        rewardCounts, disciplineCounts, personnelArchiveEntries, folderOpened, selectedCityDistrictId, selectedCityEventId, openMaterial, reviewedMaterials
       };
       window.localStorage.setItem(GAME_SAVE_KEY, JSON.stringify({ version: 1, savedAt: new Date().toISOString(), state }));
       setSavedGameAvailable(true);
@@ -553,6 +592,7 @@ export default function Home() {
     setWrongDecisions(getSaved("wrongDecisions", 0));
     setRewardCounts(getSaved("rewardCounts", emptyCounts(REWARDS_GUIDANCE)));
     setDisciplineCounts(getSaved("disciplineCounts", emptyCounts(DISCIPLINE_GUIDANCE)));
+    setPersonnelArchiveEntries(getSaved<PersonnelArchiveEntry[]>("personnelArchiveEntries", []));
     setFolderOpened(getSaved("folderOpened", false));
     setSelectedCityDistrictId(getSaved("selectedCityDistrictId", "central"));
     setSelectedCityEventId(getSaved<string | null>("selectedCityEventId", null));
@@ -609,6 +649,13 @@ export default function Home() {
     const name = draftName.trim();
     if (!name) return;
     setCharacter({ name, gender: draftGender });
+    const officeTitle = PROSECUTOR_OFFICES.find((office) => office.id === prosecutorOffice)?.title ?? "Прокуратура";
+    recordPersonnelDocument(
+      "service",
+      "Лист первичного кадрового учёта",
+      `Сформирован игровой профиль сотрудника ${name}. Место службы: ${officeTitle}. Регион: ${region ?? "не указан"}. Начало учёта — первый день службы.`,
+      "Лист первичного кадрового учёта"
+    );
   };
 
   const toggleFullscreen = async () => {
@@ -759,6 +806,12 @@ export default function Home() {
       resolved: good && (decision === "reject" || prosecutorOffice !== "territorial"),
       responseAct: undefined, completedResponseFollowUps: []
     }}));
+    recordPersonnelDocument(
+      "case",
+      `Решение по обращению «${currentComplaint.title}»`,
+      `Обращение: ${currentComplaint.title}. Заявитель: ${currentComplaint.applicant}. Принято решение: ${decision === "accept" ? "принять к рассмотрению" : "отказать в принятии"}. Оценка сценария: ${good ? "обоснованное решение" : "необоснованное решение"}. ${currentComplaint.outcome}`,
+      "Служебная запись по обращению"
+    );
     setCorrectDecisions((value) => value + (good ? 1 : 0));
     if (good) { setRepeatComplaintIndex(null); registerMeritForCorrectWork(correctDecisions + 1); }
     adjustReputation(good, true);
@@ -784,6 +837,7 @@ export default function Home() {
       ...records[currentComplaint.id], decision:"accept", correct:true, responseAct:act,
       completedResponseFollowUps: [], resolved: requiredResponseFollowUps.length === 0
     }}));
+    recordPersonnelDocument("case", "Запись о мере прокурорского реагирования", `По обращению «${currentComplaint.title}» выбрана мера: ${option?.title ?? act}. Основание: ${option?.detail ?? "мера выбрана в рамках игрового сценария"}.`, "Служебная запись о реагировании");
     setResponseActDialogClosed(false);
     if (hoursLeft === energyCost && (currentComplaint.responseFollowUps ?? []).length === 0) endDay("accept", undefined, false);
   };
@@ -794,6 +848,7 @@ export default function Home() {
     if (action.dependsOn && !completedResponseFollowUps.includes(action.dependsOn)) return;
     if (action.energyCost > 0) setHoursLeft((value) => value - action.energyCost);
     setCompletedResponseFollowUps((items) => [...items, id]);
+    recordPersonnelDocument("case", action.title, `По обращению «${currentComplaint.title}» выполнено действие: ${action.detail}`, "Запись о выполненном действии");
     const event = { title: action.title, text: action.detail, tone: "good" as const };
     const nextEvents = [...consequenceQueue, event];
     setConsequenceQueue(nextEvents);
@@ -815,6 +870,7 @@ export default function Home() {
   };
 
   const endDay = (resolvedDecision?: "accept" | "reject", eventsOverride?: ConsequenceEvent[], repeatOverride?: boolean) => {
+    if (dayEnded) return;
     const resolved = resolvedDecision ?? complaintDecision;
     const queueIsActive = dailyComplaintIds.length > 0 || carriedComplaintIds.length > 0;
     const acceptedButStillInProgress = resolved === "accept" && currentComplaintRecord?.correct === true && !currentComplaintResolved;
@@ -840,6 +896,12 @@ export default function Home() {
     }
     setHoursLeft(0);
     setDayConsequences(eventsOverride ?? consequenceQueue);
+    recordPersonnelDocument(
+      "daily",
+      `Сводка служебного дня № ${dayNumber}`,
+      `Рабочий день завершён. Неоконченные обращения, перенесённые на следующий день: ${unresolved}. Правильных решений за весь период службы: ${correctDecisions}. Ошибочных решений за весь период службы: ${wrongDecisions}. В реестр внесены текущие результаты и кадровые события.`,
+      "Сводка служебного дня"
+    );
     setDayEnded(true);
   };
 
@@ -1202,7 +1264,7 @@ export default function Home() {
       </section>}
 
       {folderOpened && <footer className="footerbar"><div></div><div className="footer-stats"><Stat label="ВЕРНЫЕ РЕШЕНИЯ" value={`${correctDecisions}/${location === "reception" ? activeComplaints.length : activeCases.length}`} tone={correctDecisions > 0 ? "good" : "default"} /><Stat label="ДОВЕРИЕ" value={`${trust}/5`} tone={trust < 2 ? "bad" : "default"} /><Stat label="РЕПУТАЦИЯ" value={`${reputation.quality}/5`} tone={reputation.quality < 2 ? "bad" : reputation.quality >= 4 ? "good" : "default"} /><Stat label="СТАТУС" value={finished ? "ЗАКРЫТО" : feedback ? "ПРОВЕРКА" : "ОЖИДАНИЕ"} /></div></footer>}
-      <PersonnelFileModal open={personnelFileOpen} onClose={() => setPersonnelFileOpen(false)} name={character?.name ?? ""} office={selectedOffice?.title ?? "Прокуратура"} region={region ?? ""} rank={prosecutorOffice === "military" ? "Лейтенант" : "Юрист 3 класса"} dayNumber={dayNumber} correctDecisions={correctDecisions} wrongDecisions={wrongDecisions} registeredCases={Object.keys(registryDecisions).length} trust={trust} reputation={reputation} reputationLabel={reputationLabel} rewardCounts={rewardCounts} disciplineCounts={disciplineCounts} events={[...dayConsequences, ...consequenceQueue]} serviceEnded={gameOver} />
+      <PersonnelFileModal archiveEntries={personnelArchiveEntries} open={personnelFileOpen} onClose={() => setPersonnelFileOpen(false)} name={character?.name ?? ""} office={selectedOffice?.title ?? "Прокуратура"} region={region ?? ""} rank={prosecutorOffice === "military" ? "Лейтенант" : "Юрист 3 класса"} dayNumber={dayNumber} correctDecisions={correctDecisions} wrongDecisions={wrongDecisions} registeredCases={Object.keys(registryDecisions).length} trust={trust} reputation={reputation} reputationLabel={reputationLabel} rewardCounts={rewardCounts} disciplineCounts={disciplineCounts} events={[...dayConsequences, ...consequenceQueue]} serviceEnded={gameOver} />
     </main>
   );
 }
