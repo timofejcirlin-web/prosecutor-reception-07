@@ -200,7 +200,7 @@ export function PersonnelFileModal(props: Props) {
               <p className="personnel-file-section-copy">Последовательность событий, автоматически зафиксированных в игровом сохранении. События показаны в обратном хронологическом порядке.</p>
               <div className="personnel-file-timeline-summary">
                 <div><strong>{countLabel(props.archiveEntries.length)}</strong><span>ЗАПИСЕЙ В ХРОНОЛОГИИ</span></div>
-                <div><strong>{countLabel(new Set(props.archiveEntries.map((entry) => entry.day)).size)}</strong><span>ДНЕЙ С ЗАПИСЯМИ</span></div>
+                <div><strong>{countLabel(props.archiveEntries.filter((entry, index, list) => list.findIndex((candidate) => candidate.day === entry.day) === index).length)}</strong><span>ДНЕЙ С ЗАПИСЯМИ</span></div>
               </div>
               {sortedArchive.length ? <div className="personnel-file-timeline">
                 {sortedArchive.map((entry) => <button type="button" className={`personnel-file-timeline-entry ${entry.kind}`} key={entry.id} onClick={() => { setOpenedDocumentId(entry.id); setTab("archive"); }}>
@@ -254,7 +254,7 @@ export function PersonnelFileModal(props: Props) {
             </>}
 
             {tab === "awards" && <>
-              <div className="personnel-file-page-heading"><span>РАЗДЕЛ III · ПООЩРЕНИЯ</span><b>ЛИСТ 03</b></div>
+              <div className="personnel-file-page-heading"><span>РАЗДЕЛ V · ПООЩРЕНИЯ</span><b>ЛИСТ 05</b></div>
               <h3 className="personnel-file-section-title">Поощрения и награды</h3>
               <p className="personnel-file-section-copy">Отмечены виды поощрений, фактически начисленные в ходе игры.</p>
               <div className="personnel-file-award-total"><Award size={23} /><div><strong>{awards.reduce((sum, [, count]) => sum + count, 0)}</strong><span>НАЧИСЛЕННЫХ ПООЩРЕНИЙ</span></div></div>
@@ -262,7 +262,7 @@ export function PersonnelFileModal(props: Props) {
             </>}
 
             {tab === "discipline" && <>
-              <div className="personnel-file-page-heading"><span>РАЗДЕЛ IV · ДИСЦИПЛИНА</span><b>ЛИСТ 04</b></div>
+              <div className="personnel-file-page-heading"><span>РАЗДЕЛ VI · ДИСЦИПЛИНА</span><b>ЛИСТ 06</b></div>
               <h3 className="personnel-file-section-title">Дисциплинарная история</h3>
               <p className="personnel-file-section-copy">Учитываются только взыскания, записанные игровой системой.</p>
               <div className="personnel-file-award-total discipline"><ShieldAlert size={23} /><div><strong>{sanctions.reduce((sum, [, count]) => sum + count, 0)}</strong><span>ЗАРЕГИСТРИРОВАННЫХ ВЗЫСКАНИЙ</span></div></div>
@@ -270,7 +270,7 @@ export function PersonnelFileModal(props: Props) {
             </>}
 
             {tab === "attestation" && <>
-              <div className="personnel-file-page-heading"><span>РАЗДЕЛ V · АТТЕСТАЦИЯ</span><b>ЛИСТ 05</b></div>
+              <div className="personnel-file-page-heading"><span>РАЗДЕЛ VII · АТТЕСТАЦИЯ</span><b>ЛИСТ 07</b></div>
               <h3 className="personnel-file-section-title">Показатели и служебная оценка</h3>
               <div className="personnel-file-attestation-status"><span>ТЕКУЩАЯ ОЦЕНКА</span><strong>{props.reputationLabel}</strong><small>Автоматическая оценка по показателям текущего сохранения</small></div>
               <div className="personnel-file-rating-list">
